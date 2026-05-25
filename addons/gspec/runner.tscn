@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b2x1y405a6b7c"]
+
+[ext_resource type="Script" uid="uid://dtblrsmllnalm" path="res://addons/gspec/run.gd" id="1_test"]
+
+[node name="Runner" type="Node"]
+script = ExtResource("1_test")
