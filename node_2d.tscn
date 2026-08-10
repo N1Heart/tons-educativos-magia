@@ -1,3 +1,117 @@
-[gd_scene format=3 uid="uid://lb83kvrmey0n"]
+[gd_scene load_steps=2 format=3 uid="uid://lb83kvrmey0n"]
+
+[ext_resource type="Script" uid="uid://bsu4scq6mhyuv" path="res://src/ui/TelaAutenticacao.gd" id="1_wtcfe"]
 
 [node name="Node2D" type="Node2D"]
+metadata/_edit_horizontal_guides_ = [49.0]
+
+[node name="TelaAutenticacao" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 76.0
+offset_top = 197.0
+offset_right = 76.0
+offset_bottom = 197.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+script = ExtResource("1_wtcfe")
+
+[node name="TextureRect" type="TextureRect" parent="TelaAutenticacao"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="CenterContainer" type="CenterContainer" parent="TelaAutenticacao"]
+layout_mode = 1
+offset_right = 188.0
+offset_bottom = 206.0
+metadata/_edit_use_anchors_ = true
+
+[node name="PanelContainer" type="PanelContainer" parent="TelaAutenticacao/CenterContainer"]
+layout_mode = 2
+
+[node name="LoginBox" type="VBoxContainer" parent="TelaAutenticacao/CenterContainer/PanelContainer"]
+layout_mode = 2
+
+[node name="AcessarConta" type="Label" parent="TelaAutenticacao/CenterContainer/PanelContainer/LoginBox"]
+layout_mode = 2
+text = "Login"
+horizontal_alignment = 1
+
+[node name="EmailLogin" type="LineEdit" parent="TelaAutenticacao/CenterContainer/PanelContainer/LoginBox"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Email"
+
+[node name="SenhaLogin" type="LineEdit" parent="TelaAutenticacao/CenterContainer/PanelContainer/LoginBox"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Senha"
+secret = true
+
+[node name="BntEntrar" type="Button" parent="TelaAutenticacao/CenterContainer/PanelContainer/LoginBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Entrar"
+
+[node name="HSeparator" type="HSeparator" parent="TelaAutenticacao/CenterContainer/PanelContainer/LoginBox"]
+layout_mode = 2
+
+[node name="BtnConvidado" type="Button" parent="TelaAutenticacao/CenterContainer/PanelContainer/LoginBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Entrar como convidado"
+
+[node name="Cadastro" type="Button" parent="TelaAutenticacao/CenterContainer/PanelContainer/LoginBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cadastro"
+
+[node name="CadastroBox" type="VBoxContainer" parent="TelaAutenticacao/CenterContainer/PanelContainer"]
+visible = false
+layout_mode = 2
+
+[node name="Label" type="Label" parent="TelaAutenticacao/CenterContainer/PanelContainer/CadastroBox"]
+layout_mode = 2
+text = "Nova conta"
+
+[node name="NomeCadastro" type="LineEdit" parent="TelaAutenticacao/CenterContainer/PanelContainer/CadastroBox"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Nome"
+
+[node name="EmailCadastro" type="LineEdit" parent="TelaAutenticacao/CenterContainer/PanelContainer/CadastroBox"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Email"
+
+[node name="SenhaCadastro" type="LineEdit" parent="TelaAutenticacao/CenterContainer/PanelContainer/CadastroBox"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Senha"
+secret = true
+
+[node name="PerfilDropdown" type="OptionButton" parent="TelaAutenticacao/CenterContainer/PanelContainer/CadastroBox"]
+unique_name_in_owner = true
+layout_mode = 2
+item_count = 2
+popup/item_0/text = "Aluno"
+popup/item_0/id = 0
+popup/item_1/text = "Professor"
+popup/item_1/id = 1
+
+[node name="BtnCadastro" type="Button" parent="TelaAutenticacao/CenterContainer/PanelContainer/CadastroBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Finalizar Cadastro"
+
+[node name="BtnVoltarLogin" type="Button" parent="TelaAutenticacao/CenterContainer/PanelContainer/CadastroBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Voltar"
