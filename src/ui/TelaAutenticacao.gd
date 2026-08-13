@@ -40,7 +40,7 @@ func _on_btn_convidado_pressed():
 	
 	if sucesso:
 		print("Convidado logado! Carregando menu do aluno...")
-		# Aqui você muda de cena: get_tree().change_scene_to_file("res://MenuAluno.tscn")
+		get_tree().change_scene_to_file("res://TelaAluno.tscn")
 	else:
 		print("Falha ao entrar como convidado.")
 		%BtnConvidado.disabled = false
@@ -56,9 +56,14 @@ func _on_btn_entrar_pressed():
 	%BntEntrar.disabled = true
 	var sucesso = await NakamaManager.login_conta(email, senha)
 	
-	if sucesso:
-		print("Login com sucesso!")
+	if sucesso == "professor":
+		print("acesso de professor liberado!")
+		get_tree().change_scene_to_file("res://TelaProfessor.tscn")
 		# Muda de cena
+	elif sucesso =="aluno":
+		print("acesso de aluno liberado")
+		get_tree().change_scene_to_file("res://TelaAluno.tscn")
+	
 	else:
 		print("Credenciais incorretas.")
 		%BtnEntrar.disabled = false
@@ -82,7 +87,8 @@ func _on_btn_cadastrar_pressed():
 	
 	if sucesso:
 		print("Cadastro realizado com sucesso como: ", tipo_conta)
-		# Muda de cena baseada no tipo de conta
+		login_box.visible = true
+		cadastro_box.visible = false
 	else:
 		print("Erro ao cadastrar.")
 		%Cadastro.disabled = false

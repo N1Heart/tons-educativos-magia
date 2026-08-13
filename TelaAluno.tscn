@@ -1,0 +1,127 @@
+[gd_scene load_steps=10 format=3 uid="uid://ds5ufdrckho7r"]
+
+[ext_resource type="Script" uid="uid://ckfoqc21aml0i" path="res://tela_aluno.gd" id="1_sdyhv"]
+[ext_resource type="Script" uid="uid://cma5iiuyxcb8o" path="res://container.gd" id="1_wsihw"]
+[ext_resource type="Texture2D" uid="uid://bajnpudbvliqf" path="res://assets/sprites/Idle_(32 x 32).png" id="2_sdyhv"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hv5bv"]
+atlas = ExtResource("2_sdyhv")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_odtwx"]
+atlas = ExtResource("2_sdyhv")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_m6ngn"]
+atlas = ExtResource("2_sdyhv")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eh135"]
+atlas = ExtResource("2_sdyhv")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8xajj"]
+atlas = ExtResource("2_sdyhv")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_42lpf"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hv5bv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_odtwx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_m6ngn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eh135")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8xajj")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="TelaAluno" type="Node2D"]
+
+[node name="TelaAluno" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_sdyhv")
+
+[node name="CenterContainer" type="CenterContainer" parent="TelaAluno"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 795.0
+offset_top = 167.0
+offset_right = 935.0
+offset_bottom = 330.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="TelaAluno/CenterContainer"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="TelaAluno/CenterContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TelaAluno/CenterContainer/PanelContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="TelaAluno/CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Prepare seu Mago"
+
+[node name="nomePersonagem" type="LineEdit" parent="TelaAluno/CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="TelaAluno/CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="TelaAluno/CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Código da turma"
+
+[node name="codTurma" type="LineEdit" parent="TelaAluno/CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="btnEntrarTurma" type="Button" parent="TelaAluno/CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Entrar no Mundo"
+
+[node name="Container" type="Container" parent="TelaAluno"]
+layout_mode = 0
+offset_left = 150.0
+offset_top = 83.0
+offset_right = 550.0
+offset_bottom = 483.0
+script = ExtResource("1_wsihw")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="TelaAluno/Container"]
+position = Vector2(215, 188)
+scale = Vector2(12.411189, 13.004287)
+sprite_frames = SubResource("SpriteFrames_42lpf")
+autoplay = "default"
+
+[node name="btnLogout" type="Button" parent="TelaAluno"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+text = "LOGOUT"

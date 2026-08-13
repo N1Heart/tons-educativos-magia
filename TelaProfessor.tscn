@@ -1,0 +1,110 @@
+[gd_scene load_steps=2 format=3 uid="uid://b3m06hv3nwbp5"]
+
+[ext_resource type="Script" uid="uid://c8dex4lx7jn8r" path="res://TelaProfessor.gd" id="1_bnaxn"]
+
+[node name="TelaProfessor" type="Node2D"]
+scale = Vector2(1.6390547, 1.7663897)
+
+[node name="TelaProfessor" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_bnaxn")
+
+[node name="MarginContainer" type="MarginContainer" parent="TelaProfessor"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 54.9097
+offset_top = 19.248297
+offset_right = 294.90973
+offset_bottom = 101.2483
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.93108374, 1.4497405)
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TelaProfessor/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="TelaProfessor/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Minhas Turmas Cadastradas"
+
+[node name="listaTurmas" type="ItemList" parent="TelaProfessor/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="btnAtualizarLista" type="Button" parent="TelaProfessor/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Atualizar turmas
+"
+
+[node name="MarginContainer2" type="MarginContainer" parent="TelaProfessor"]
+layout_mode = 0
+offset_left = 489.30646
+offset_top = 19.814428
+offset_right = 624.30646
+offset_bottom = 244.81442
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TelaProfessor/MarginContainer2"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="TelaProfessor/MarginContainer2/VBoxContainer"]
+layout_mode = 2
+text = "Criar Nova turma"
+
+[node name="opcaoPeriodo" type="OptionButton" parent="TelaProfessor/MarginContainer2/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+item_count = 4
+popup/item_0/text = "Matutino"
+popup/item_0/id = 0
+popup/item_1/text = "Vespertino"
+popup/item_1/id = 1
+popup/item_2/text = "Integral"
+popup/item_2/id = 2
+popup/item_3/text = "NOturno"
+popup/item_3/id = 3
+
+[node name="anoTurma" type="SpinBox" parent="TelaProfessor/MarginContainer2/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 9.0
+value = 1.0
+
+[node name="LetraTurma" type="LineEdit" parent="TelaProfessor/MarginContainer2/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Identificador ex(A , B ou C)"
+
+[node name="btnGerarCodigo" type="Button" parent="TelaProfessor/MarginContainer2/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Gerar codigo"
+
+[node name="displayCodigo" type="Label" parent="TelaProfessor/MarginContainer2/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="btnSalvarTurma" type="Button" parent="TelaProfessor/MarginContainer2/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Salvar Turma"
+
+[node name="Button" type="Button" parent="TelaProfessor"]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+text = "Logout"
