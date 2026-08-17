@@ -125,3 +125,22 @@ func fazer_logout():
 	session = null
 	print("Sessão encerrada.")
 	
+func listar_minhas_turmas() -> Array:
+	print("Iniciando busca de turmas para o ID: ", session.user_id)
+	
+	# A ordem EXATA e segura: Sessão, ID, Estado (0 = Superadmin), Limite (100), Cursor ("")
+	var result = await client.list_user_groups_async(session, session.user_id, 0, 100, "")
+	
+	if result is NakamaException:
+		printerr("Erro na busca: ", result.message)
+		return []
+		
+	print("O servidor respondeu! Total de turmas encontradas: ", result.user_groups.size())
+	
+	var lista_nomes = []
+	
+	for user_group in result.user_groups:
+		print("Lendo turma do banco: ", user_group.group.name)
+		lista_nomes.append(user_group.group.name)
+	   
+	return lista_nomes

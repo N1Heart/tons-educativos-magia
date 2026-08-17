@@ -3,12 +3,15 @@ extends Control
 var codigo_gerado = ""
 
 func _ready():
-	# Conectando os botões
+# Conectando os botões
 	%btnGerarCodigo.pressed.connect(_on_btn_gerar_codigo_pressed)
 	%btnSalvarTurma.pressed.connect(_on_btn_salvar_turma_pressed)
 	%btnLogout.pressed.connect(_on_btn_logout_pressed)
+	# AGORA SIM: Conectando o botão de atualizar!
+	%btnAtualizarLista.pressed.connect(_on_btn_atualizar_lista_pressed)
 	
-	# Futuramente você conectará o %BtnAtualizarLista para buscar as turmas no Nakama
+	# Carrega a lista automaticamente assim que a tela abre
+	_atualizar_lista_turmas()
 
 func _on_btn_gerar_codigo_pressed():
 	# 1. Pega a primeira letra do período (M, T ou N)
@@ -47,6 +50,7 @@ func _on_btn_salvar_turma_pressed():
 	if sucesso:
 		print("TUrma salva com sucesso no servido Nakama!")
 		%displayCodigo.text = "Turma Salva: " + codigo_gerado
+		_atualizar_lista_turmas()
 		
 		codigo_gerado = ""
 	else:
@@ -60,5 +64,30 @@ func _on_btn_logout_pressed():
 	get_tree().change_scene_to_file("res://TelaAutenticacao.tscn")
 	# O próximo passo será enviar esse 'codigo_gerado' para o Nakama 
 	# criar um 'Grupo' onde os alunos vão se conectar!
+
+func _on_btn_atualizar_lista_pressed():
+	_atualizar_lista_turmas()
+
+# A função que faz a mágica na interface
+func _atualizar_lista_turmas():
+	%btnAtualizarLista.disabled = true
 	
+	# Limpa a lista atual e mostra um aviso de carregamento
+	%listaTurmas.clear()
+	%listaTurmas.add_item("Carregando turmas...")
+	
+	# Busca lá no servidor
+	var turmas = await NakamaManager.listar_minhas_turmas()
+	
+	# Limpa o "Carregando..."
+	%listaTurmas.clear()
+	
+	# Preenche a lista com as turmas encontradas
+	if turmas.is_empty():
+		%listaTurmas.add_item("Nenhuma turma criada ainda.")
+	else:
+		for nome_turma in turmas:
+			%listaTurmas.add_item(nome_turma)
+			
+	%btnAtualizarLista.disabled = false
 	

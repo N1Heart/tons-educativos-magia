@@ -122,6 +122,9 @@ autoplay = "default"
 [node name="btnLogout" type="Button" parent="TelaAluno"]
 unique_name_in_owner = true
 layout_mode = 0
-offset_right = 8.0
-offset_bottom = 8.0
+offset_left = 17.0
+offset_top = 17.0
+offset_right = 92.0
+offset_bottom = 48.0
+scale = Vector2(1.5339913, 1.59487)
 text = "LOGOUT"

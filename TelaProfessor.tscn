@@ -19,10 +19,10 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 54.9097
-offset_top = 19.248297
-offset_right = 294.90973
-offset_bottom = 101.2483
+offset_left = 62.230995
+offset_top = -18.682173
+offset_right = 302.23102
+offset_bottom = 71.317825
 grow_horizontal = 2
 grow_vertical = 2
 scale = Vector2(0.93108374, 1.4497405)
@@ -34,28 +34,19 @@ theme_override_constants/margin_bottom = 10
 [node name="VBoxContainer" type="VBoxContainer" parent="TelaProfessor/MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+alignment = 1
 
 [node name="Label" type="Label" parent="TelaProfessor/MarginContainer/VBoxContainer"]
+z_index = 1
 layout_mode = 2
 text = "Minhas Turmas Cadastradas"
 
-[node name="listaTurmas" type="ItemList" parent="TelaProfessor/MarginContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="btnAtualizarLista" type="Button" parent="TelaProfessor/MarginContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Atualizar turmas
-"
-
 [node name="MarginContainer2" type="MarginContainer" parent="TelaProfessor"]
 layout_mode = 0
-offset_left = 489.30646
-offset_top = 19.814428
-offset_right = 624.30646
-offset_bottom = 244.81442
+offset_left = 427.07544
+offset_top = 44.72399
+offset_right = 631.07544
+offset_bottom = 296.724
 
 [node name="VBoxContainer" type="VBoxContainer" parent="TelaProfessor/MarginContainer2"]
 layout_mode = 2
@@ -74,8 +65,12 @@ popup/item_1/text = "Vespertino"
 popup/item_1/id = 1
 popup/item_2/text = "Integral"
 popup/item_2/id = 2
-popup/item_3/text = "NOturno"
+popup/item_3/text = "Noturno"
 popup/item_3/id = 3
+
+[node name="Label3" type="Label" parent="TelaProfessor/MarginContainer2/VBoxContainer"]
+layout_mode = 2
+text = "Ano"
 
 [node name="anoTurma" type="SpinBox" parent="TelaProfessor/MarginContainer2/VBoxContainer"]
 unique_name_in_owner = true
@@ -84,10 +79,13 @@ min_value = 1.0
 max_value = 9.0
 value = 1.0
 
+[node name="Label2" type="Label" parent="TelaProfessor/MarginContainer2/VBoxContainer"]
+layout_mode = 2
+text = "Identificador ex(A , B ou C)"
+
 [node name="LetraTurma" type="LineEdit" parent="TelaProfessor/MarginContainer2/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-placeholder_text = "Identificador ex(A , B ou C)"
 
 [node name="btnGerarCodigo" type="Button" parent="TelaProfessor/MarginContainer2/VBoxContainer"]
 unique_name_in_owner = true
@@ -103,8 +101,33 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Salvar Turma"
 
-[node name="Button" type="Button" parent="TelaProfessor"]
+[node name="btnLogout" type="Button" parent="TelaProfessor"]
+unique_name_in_owner = true
 layout_mode = 0
-offset_right = 8.0
-offset_bottom = 8.0
+offset_left = 9.761724
+offset_top = 8.491897
+offset_right = 71.76173
+offset_bottom = 39.491898
 text = "Logout"
+
+[node name="listaTurmas" type="ItemList" parent="TelaProfessor"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 61.620888
+offset_top = 64.538414
+offset_right = 281.62088
+offset_bottom = 214.53842
+scale = Vector2(1.0114375, 1.109731)
+size_flags_vertical = 3
+allow_search = false
+auto_width = true
+
+[node name="btnAtualizarLista" type="Button" parent="TelaProfessor"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 64.671425
+offset_top = 251.36017
+offset_right = 284.67142
+offset_bottom = 282.36017
+text = "Atualizar turmas
+"
