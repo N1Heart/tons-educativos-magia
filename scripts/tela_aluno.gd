@@ -30,4 +30,4 @@ func _on_btn_entrar_turma_pressed():
 
 func _on_btn_logout_pressed():
 	NakamaManager.fazer_logout()
-	get_tree().change_scene_to_file("res://TelaAutenticacao.tscn")
+	get_tree().change_scene_to_file("res://scenes/Login/TelaAutenticacao.tscn")

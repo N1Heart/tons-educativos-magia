@@ -1,0 +1,138 @@
+[gd_scene format=3 uid="uid://lb83kvrmey0n"]
+
+[ext_resource type="Script" uid="uid://bsu4scq6mhyuv" path="res://src/ui/TelaAutenticacao.gd" id="1_2untl"]
+[ext_resource type="Texture2D" uid="uid://cu38qm0y32smb" path="res://assets/Telalogin.png" id="2_lpptm"]
+
+[node name="Autenticacao" type="Node2D" unique_id=1869236833]
+metadata/_edit_horizontal_guides_ = [49.0]
+
+[node name="TelaAutenticacao" type="Control" parent="." unique_id=1142471669]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 75.0
+offset_top = 150.0
+offset_right = 75.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+script = ExtResource("1_2untl")
+
+[node name="TextureRect" type="TextureRect" parent="TelaAutenticacao" unique_id=112203535]
+layout_mode = 1
+offset_left = -75.0
+offset_top = -151.0
+offset_right = 1085.0
+offset_bottom = 617.0
+scale = Vector2(0.99251145, 0.8451441)
+texture = ExtResource("2_lpptm")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="CenterContainer" type="CenterContainer" parent="TelaAutenticacao" unique_id=406169036]
+layout_mode = 1
+offset_left = 794.0
+offset_top = 171.0
+offset_right = 982.0
+offset_bottom = 377.0
+
+[node name="PanelContainer" type="PanelContainer" parent="TelaAutenticacao/CenterContainer" unique_id=804957360]
+layout_mode = 2
+
+[node name="LoginBox" type="VBoxContainer" parent="TelaAutenticacao/CenterContainer/PanelContainer" unique_id=230061051]
+layout_mode = 2
+
+[node name="AcessarConta" type="Label" parent="TelaAutenticacao/CenterContainer/PanelContainer/LoginBox" unique_id=1843464187]
+layout_mode = 2
+text = "Login"
+horizontal_alignment = 1
+
+[node name="EmailLogin" type="LineEdit" parent="TelaAutenticacao/CenterContainer/PanelContainer/LoginBox" unique_id=2116576837]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Email"
+
+[node name="SenhaLogin" type="LineEdit" parent="TelaAutenticacao/CenterContainer/PanelContainer/LoginBox" unique_id=1032641721]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Senha"
+secret = true
+
+[node name="BntEntrar" type="Button" parent="TelaAutenticacao/CenterContainer/PanelContainer/LoginBox" unique_id=1893709722]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Entrar"
+
+[node name="HSeparator" type="HSeparator" parent="TelaAutenticacao/CenterContainer/PanelContainer/LoginBox" unique_id=1679214317]
+layout_mode = 2
+
+[node name="BtnConvidado" type="Button" parent="TelaAutenticacao/CenterContainer/PanelContainer/LoginBox" unique_id=2003030435]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Entrar como convidado"
+
+[node name="Cadastro" type="Button" parent="TelaAutenticacao/CenterContainer/PanelContainer/LoginBox" unique_id=723129875]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cadastro"
+
+[node name="CadastroBox" type="VBoxContainer" parent="TelaAutenticacao/CenterContainer/PanelContainer" unique_id=1250960397]
+visible = false
+layout_mode = 2
+
+[node name="Label" type="Label" parent="TelaAutenticacao/CenterContainer/PanelContainer/CadastroBox" unique_id=1332831729]
+layout_mode = 2
+text = "Nova conta"
+
+[node name="NomeCadastro" type="LineEdit" parent="TelaAutenticacao/CenterContainer/PanelContainer/CadastroBox" unique_id=825445435]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Nome"
+
+[node name="EmailCadastro" type="LineEdit" parent="TelaAutenticacao/CenterContainer/PanelContainer/CadastroBox" unique_id=867099270]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Email"
+
+[node name="SenhaCadastro" type="LineEdit" parent="TelaAutenticacao/CenterContainer/PanelContainer/CadastroBox" unique_id=441137978]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Senha"
+secret = true
+
+[node name="PerfilDropdown" type="OptionButton" parent="TelaAutenticacao/CenterContainer/PanelContainer/CadastroBox" unique_id=2100667258]
+unique_name_in_owner = true
+layout_mode = 2
+item_count = 2
+popup/item_0/text = "Aluno"
+popup/item_0/id = 0
+popup/item_1/text = "Professor"
+popup/item_1/id = 1
+
+[node name="BtnCadastro" type="Button" parent="TelaAutenticacao/CenterContainer/PanelContainer/CadastroBox" unique_id=858633093]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Finalizar Cadastro"
+
+[node name="BtnVoltarLogin" type="Button" parent="TelaAutenticacao/CenterContainer/PanelContainer/CadastroBox" unique_id=1129870643]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Voltar"
+
+[node name="TituloJogo" type="Label" parent="TelaAutenticacao" unique_id=1605349761]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 270.0
+offset_top = -55.0
+offset_right = 469.0
+offset_bottom = -32.0
+grow_horizontal = 2
+scale = Vector2(2.6084034, 2.8735683)
+text = "Tons educativos de Magia"

@@ -40,7 +40,7 @@ func _on_btn_convidado_pressed():
 	
 	if sucesso:
 		print("Convidado logado! Carregando menu do aluno...")
-		get_tree().change_scene_to_file("res://TelaAluno.tscn")
+		get_tree().change_scene_to_file("res://scenes/Login/TelaAluno.tscn")
 	else:
 		print("Falha ao entrar como convidado.")
 		%BtnConvidado.disabled = false
@@ -58,11 +58,12 @@ func _on_btn_entrar_pressed():
 	
 	if sucesso == "professor":
 		print("acesso de professor liberado!")
-		get_tree().change_scene_to_file("res://TelaProfessor.tscn")
+		get_tree().change_scene_to_file("res://scenes/Login/TelaProfessor.tscn")
 		# Muda de cena
 	elif sucesso =="aluno":
 		print("acesso de aluno liberado")
-		get_tree().change_scene_to_file("res://TelaAluno.tscn")
+		get_tree().change_scene_to_file("res://scenes/Login/TelaAluno.tscn")
+	
 	
 	else:
 		print("Credenciais incorretas.")

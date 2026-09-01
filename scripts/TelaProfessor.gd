@@ -61,7 +61,7 @@ func _on_btn_salvar_turma_pressed():
 	
 func _on_btn_logout_pressed():
 	NakamaManager.fazer_logout()
-	get_tree().change_scene_to_file("res://TelaAutenticacao.tscn")
+	get_tree().change_scene_to_file("res://scenes/Login/TelaAutenticacao.tscn")
 	# O próximo passo será enviar esse 'codigo_gerado' para o Nakama 
 	# criar um 'Grupo' onde os alunos vão se conectar!
 
