@@ -45,15 +45,15 @@ func _ready():
 	
 	get_viewport().size_changed.connect(center_grid_on_screen)
 	
-	Combat.hp_changed.connect(_on_hp_changed)
+	# Combat.hp_changed.connect(_on_hp_changed)  # obsoleto — Combat agora é multi-unidade (units_changed)
 	Combat.tics_changed.connect(_on_tics_changed)
 	Combat.turn_started.connect(_on_turn_started)
 	Combat.log_message.connect(_on_log_message)
 	Combat.combat_ended.connect(_on_combat_ended)
-	
+
 	await process_board_state() # limpeza silenciosa inicial (com cascatas) antes do combate começar
-	
-	Combat.start_combat(100, 100, 3) # HP jogador, HP monstro, Tics por turno
+
+	# Combat.start_combat(100, 100, 3) # obsoleto — este tabuleiro será substituído pelo novo (grid.gd/CombatTest.tscn)
 
 # --- HUD ---
 

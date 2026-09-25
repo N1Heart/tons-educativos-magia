@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/unit_icon.gd" id="1_icon"]
+
+[node name="UnitIcon" type="VBoxContainer"]
+custom_minimum_size = Vector2(40, 0)
+alignment = 1
+script = ExtResource("1_icon")
+
+[node name="Icon" type="TextureRect" parent="."]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+size_flags_horizontal = 4
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HPBar" type="ProgressBar" parent="."]
+custom_minimum_size = Vector2(36, 6)
+layout_mode = 2
+show_percentage = false

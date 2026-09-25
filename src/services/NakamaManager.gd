@@ -144,3 +144,34 @@ func listar_minhas_turmas() -> Array:
 		lista_nomes.append(user_group.group.name)
 	   
 	return lista_nomes
+	
+	
+func escrever_dados(colecao: String, chave: String, dados: Dictionary) -> bool:
+	if session == null:
+		return false
+
+	var json_string = JSON.stringify(dados)
+	var write_objects = [
+		NakamaWriteStorageObject.new(colecao, chave, 1, 1, json_string, "")
+	]
+	var result = await client.write_storage_objects_async(session, write_objects)
+
+	if result.is_exception():
+		printerr("Erro ao sincronizar '%s/%s': %s" % [colecao, chave, result.get_exception().message])
+		return false
+
+	return true
+
+
+func ler_dados(colecao: String, chave: String) -> Dictionary:
+	if session == null:
+		return {}
+
+	var read_object_id = NakamaStorageObjectId.new(colecao, chave, session.user_id)
+	var result = await client.read_storage_objects_async(session, [read_object_id])
+
+	if result.is_exception() or result.objects.is_empty():
+		return {}
+
+	var json_data = JSON.parse_string(result.objects[0].value)
+	return json_data if json_data != null else {}
