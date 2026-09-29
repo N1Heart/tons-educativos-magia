@@ -58,14 +58,19 @@ func _sync_perfil(user_id: String) -> void:
 		LocalDB.marcar_perfil_sincronizado(user_id)
 
 
-## Empacota todas as linhas pendentes de UMA tabela num único objeto Nakama
-## (chave = user_id) — evita gastar uma escrita de storage por linha.
+## Escreve CADA linha pendente como o seu próprio storage object (chave =
+## id da linha, que é globalmente único por ser AUTOINCREMENT no SQLite).
+##
+## Importante: antes isso escrevia tudo numa chave única (collection, user_id),
+## o que fazia cada sincronização SOBRESCREVER o histórico já salvo no Nakama
+## com só o lote pendente do momento — partidas e respostas de desafio
+## anteriores desapareciam do servidor (o SQLite local continuava íntegro,
+## só o espelho no Nakama é que ficava incompleto). Uma chave por linha evita
+## isso: nada é sobrescrito, só adicionado.
 func _sync_tabela(tabela: String, user_id: String, colecao: String) -> void:
 	var pendentes: Array = LocalDB.listar_pendentes(tabela, user_id)
-	if pendentes.is_empty():
-		return
-
-	var ok: bool = await NakamaManager.escrever_dados(colecao, user_id, {"itens": pendentes})
-	if ok:
-		for row in pendentes:
+	for row in pendentes:
+		var chave := str(row["id"])
+		var ok: bool = await NakamaManager.escrever_dados(colecao, chave, row)
+		if ok:
 			LocalDB.marcar_sincronizado(tabela, row["id"])

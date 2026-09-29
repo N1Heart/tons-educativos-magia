@@ -54,10 +54,15 @@ func _criar_tabelas() -> void:
 			nivel_dificuldade INTEGER,
 			pontuacao INTEGER,
 			tempo_decorrido REAL,
+			venceu INTEGER DEFAULT 0,
 			jogado_em INTEGER,
 			synced INTEGER DEFAULT 0
 		)
 	""")
+	# Migração pra quem já tinha o banco antigo sem a coluna 'venceu'
+	# (CREATE TABLE IF NOT EXISTS não adiciona coluna em tabela existente).
+	# Se a coluna já existir isso só falha silenciosamente — sem problema.
+	db.query("ALTER TABLE partidas_match3 ADD COLUMN venceu INTEGER DEFAULT 0")
 	db.query("""
 		CREATE TABLE IF NOT EXISTS desafios_respondidos (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -155,11 +160,11 @@ func listar_magias_desbloqueadas(user_id: String) -> Array[String]:
 
 func registrar_partida(user_id: String, partida: PartidaMatch3Model) -> void:
 	db.query_with_bindings("""
-		INSERT INTO partidas_match3 (user_id, nivel_dificuldade, pontuacao, tempo_decorrido, jogado_em, synced)
-		VALUES (?, ?, ?, ?, ?, 0)
+		INSERT INTO partidas_match3 (user_id, nivel_dificuldade, pontuacao, tempo_decorrido, venceu, jogado_em, synced)
+		VALUES (?, ?, ?, ?, ?, ?, 0)
 	""", [
 		user_id, partida.nivel_dificuldade, partida.pontuacao, partida.tempo_decorrido,
-		Time.get_unix_time_from_system()
+		1 if partida.venceu else 0, Time.get_unix_time_from_system()
 	])
 	SyncManager.request_sync()
 
@@ -172,6 +177,7 @@ func listar_partidas(user_id: String) -> Array[PartidaMatch3Model]:
 		p.nivel_dificuldade = row["nivel_dificuldade"]
 		p.pontuacao = row["pontuacao"]
 		p.tempo_decorrido = row["tempo_decorrido"]
+		p.venceu = row.get("venceu", 0) == 1
 		partidas.append(p)
 	return partidas
 

@@ -1,6 +1,7 @@
 extends Control
 
 var codigo_gerado = ""
+var _turmas_atuais: Array = []  # cache {id, nome} da última lista carregada
 
 func _ready():
 # Conectando os botões
@@ -9,7 +10,9 @@ func _ready():
 	%btnLogout.pressed.connect(_on_btn_logout_pressed)
 	# AGORA SIM: Conectando o botão de atualizar!
 	%btnAtualizarLista.pressed.connect(_on_btn_atualizar_lista_pressed)
-	
+	# Duplo clique numa turma abre o detalhe dela (Módulo 4)
+	%listaTurmas.item_activated.connect(_on_turma_ativada)
+
 	# Carrega a lista automaticamente assim que a tela abre
 	_atualizar_lista_turmas()
 
@@ -71,23 +74,32 @@ func _on_btn_atualizar_lista_pressed():
 # A função que faz a mágica na interface
 func _atualizar_lista_turmas():
 	%btnAtualizarLista.disabled = true
-	
+
 	# Limpa a lista atual e mostra um aviso de carregamento
 	%listaTurmas.clear()
 	%listaTurmas.add_item("Carregando turmas...")
-	
-	# Busca lá no servidor
-	var turmas = await NakamaManager.listar_minhas_turmas()
-	
+
+	# Busca lá no servidor — agora vem como {id, nome} por turma
+	_turmas_atuais = await NakamaManager.listar_minhas_turmas()
+
 	# Limpa o "Carregando..."
 	%listaTurmas.clear()
-	
+
 	# Preenche a lista com as turmas encontradas
-	if turmas.is_empty():
+	if _turmas_atuais.is_empty():
 		%listaTurmas.add_item("Nenhuma turma criada ainda.")
 	else:
-		for nome_turma in turmas:
-			%listaTurmas.add_item(nome_turma)
-			
+		for turma in _turmas_atuais:
+			%listaTurmas.add_item(turma["nome"])
+
 	%btnAtualizarLista.disabled = false
-	
+
+
+func _on_turma_ativada(index: int) -> void:
+	if index < 0 or index >= _turmas_atuais.size():
+		return
+	var turma: Dictionary = _turmas_atuais[index]
+	NakamaManager.turma_selecionada_id = turma["id"]
+	NakamaManager.turma_selecionada_nome = turma["nome"]
+	get_tree().change_scene_to_file("res://scenes/Login/TelaTurma.tscn")
+

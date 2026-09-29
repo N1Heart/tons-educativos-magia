@@ -4,6 +4,14 @@ class_name NakamaManagerClass
 var client: NakamaClient
 var session: NakamaSession
 
+# Estado simples de navegação entre telas do painel do professor (Godot não
+# passa parâmetro em change_scene_to_file, então guardamos aqui o que a
+# próxima tela precisa saber). Só usado pelo fluxo Turma -> Aluno.
+var turma_selecionada_id: String = ""
+var turma_selecionada_nome: String = ""
+var aluno_selecionado_id: String = ""
+var aluno_selecionado_nome: String = ""
+
 func _ready() -> void:
 	# A variável global 'Nakama' agora existe graças ao Autoload oficial
 	client = Nakama.create_client("defaultkey", "127.0.0.1", 7350, "http")
@@ -136,14 +144,16 @@ func listar_minhas_turmas() -> Array:
 		return []
 		
 	print("O servidor respondeu! Total de turmas encontradas: ", result.user_groups.size())
-	
-	var lista_nomes = []
-	
+
+	# Retorna {id, nome} em vez de só o nome — as telas de gestão de turma
+	# (apagar, listar alunos) precisam do group_id, não só do texto exibido.
+	var lista_turmas = []
+
 	for user_group in result.user_groups:
 		print("Lendo turma do banco: ", user_group.group.name)
-		lista_nomes.append(user_group.group.name)
-	   
-	return lista_nomes
+		lista_turmas.append({"id": user_group.group.id, "nome": user_group.group.name})
+
+	return lista_turmas
 	
 	
 func escrever_dados(colecao: String, chave: String, dados: Dictionary) -> bool:
@@ -174,4 +184,61 @@ func ler_dados(colecao: String, chave: String) -> Dictionary:
 		return {}
 
 	var json_data = JSON.parse_string(result.objects[0].value)
+	return json_data if json_data != null else {}
+
+
+# --- Painel do professor (Módulo 4): gestão de turma e estatísticas ---
+# O storage do aluno é gravado com permission_read=1 (só o dono lê) — de
+# propósito, pra um aluno não conseguir ler o storage de outro aluno direto.
+# Por isso a estatística do professor NÃO lê o storage do aluno direto daqui:
+# ela passa por uma RPC (modules/estatisticas.lua) que roda no servidor com
+# acesso total, calcula os números lá e devolve só o resultado agregado.
+
+func apagar_turma(id_turma: String) -> bool:
+	var result = await client.delete_group_async(session, id_turma)
+	if result.is_exception():
+		printerr("Erro ao apagar turma: ", id_turma, " - ", result.get_exception().message)
+		return false
+	return true
+
+
+## Retorna Array de {id, username, nome_display, is_professor} — os membros
+## do grupo. state 0/1 = superadmin/admin (o professor que criou a turma),
+## state 2 = membro comum (aluno).
+func listar_alunos_da_turma(id_turma: String) -> Array:
+	var result = await client.list_group_users_async(session, id_turma, null, 100, "")
+	if result.is_exception():
+		printerr("Erro ao listar alunos da turma: ", id_turma, " - ", result.get_exception().message)
+		return []
+
+	var alunos = []
+	for group_user in result.group_users:
+		alunos.append({
+			"id": group_user.user.id,
+			"username": group_user.user.username,
+			"is_professor": group_user.state <= 1,
+		})
+	return alunos
+
+
+func remover_aluno_da_turma(id_turma: String, id_aluno: String) -> bool:
+	var ids := PackedStringArray([id_aluno])
+	var result = await client.kick_group_users_async(session, id_turma, ids)
+	if result.is_exception():
+		printerr("Erro ao remover aluno %s da turma %s: %s" % [id_aluno, id_turma, result.get_exception().message])
+		return false
+	return true
+
+
+## Chama a RPC server-side "obter_estatisticas_aluno" (ver modules/estatisticas.lua).
+## Retorna um Dictionary já pronto pra tela exibir, ou {} se der erro.
+func obter_estatisticas_aluno(id_aluno: String) -> Dictionary:
+	var payload := JSON.stringify({"user_id": id_aluno})
+	var result = await client.rpc_async(session, "obter_estatisticas_aluno", payload)
+
+	if result.is_exception():
+		printerr("Erro ao chamar RPC de estatísticas para ", id_aluno, " - ", result.get_exception().message)
+		return {}
+
+	var json_data = JSON.parse_string(result.payload)
 	return json_data if json_data != null else {}
