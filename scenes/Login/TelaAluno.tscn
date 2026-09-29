@@ -1,0 +1,131 @@
+[gd_scene format=3 uid="uid://ds5ufdrckho7r"]
+
+[ext_resource type="Script" uid="uid://ckfoqc21aml0i" path="res://scripts/tela_aluno.gd" id="1_yhsxv"]
+[ext_resource type="Script" uid="uid://cma5iiuyxcb8o" path="res://container.gd" id="2_rakij"]
+[ext_resource type="Texture2D" uid="uid://bajnpudbvliqf" path="res://assets/sprites/Idle_(32 x 32).png" id="3_m44eb"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hv5bv"]
+atlas = ExtResource("3_m44eb")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_odtwx"]
+atlas = ExtResource("3_m44eb")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_m6ngn"]
+atlas = ExtResource("3_m44eb")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eh135"]
+atlas = ExtResource("3_m44eb")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8xajj"]
+atlas = ExtResource("3_m44eb")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_42lpf"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hv5bv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_odtwx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_m6ngn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eh135")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8xajj")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="TelaAluno" type="Node2D" unique_id=65673972]
+
+[node name="TelaAluno" type="Control" parent="." unique_id=172766857]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_yhsxv")
+
+[node name="CenterContainer" type="CenterContainer" parent="TelaAluno" unique_id=565755997]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 420.0
+offset_top = 101.0
+offset_right = 560.0
+offset_bottom = 264.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="TelaAluno/CenterContainer" unique_id=828889384]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="TelaAluno/CenterContainer/PanelContainer" unique_id=2051088319]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TelaAluno/CenterContainer/PanelContainer/MarginContainer" unique_id=1608280656]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="TelaAluno/CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=240295586]
+layout_mode = 2
+text = "Prepare seu Mago"
+
+[node name="nomePersonagem" type="LineEdit" parent="TelaAluno/CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=2016944936]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="TelaAluno/CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=979489825]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="TelaAluno/CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1030623668]
+layout_mode = 2
+text = "Código da turma"
+
+[node name="codTurma" type="LineEdit" parent="TelaAluno/CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1627655997]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="btnEntrarTurma" type="Button" parent="TelaAluno/CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=980200459]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Entrar no Mundo"
+
+[node name="Container" type="Container" parent="TelaAluno" unique_id=820760505]
+layout_mode = 0
+offset_left = 150.0
+offset_top = 83.0
+offset_right = 349.0
+offset_bottom = 288.0
+script = ExtResource("2_rakij")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="TelaAluno/Container" unique_id=1289776939]
+position = Vector2(114.71048, 85.965706)
+scale = Vector2(6.143094, 6.6271434)
+sprite_frames = SubResource("SpriteFrames_42lpf")
+autoplay = "default"
+
+[node name="btnLogout" type="Button" parent="TelaAluno" unique_id=841469528]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 17.0
+offset_top = 17.0
+offset_right = 52.0
+offset_bottom = 32.0
+scale = Vector2(1.5339913, 1.59487)
+theme_override_font_sizes/font_size = 7
+text = "Sair"

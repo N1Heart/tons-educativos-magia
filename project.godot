@@ -8,23 +8,48 @@
 
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
 
 config/name="tons_educativos_magia"
-run/main_scene="res://node_2d.tscn"
-config/features=PackedStringArray("4.5", "GL Compatibility")
+run/main_scene="res://scenes/Login/TelaAutenticacao.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
 
 NakamaManager="*res://src/services/NakamaManager.gd"
 Nakama="*res://addons/com.heroiclabs.nakama/Nakama.gd"
+Combat="*uid://ka3iiqa1tjg1"
+Audio="*uid://dnjrgvu2rssgg"
+SpellLoadout="*uid://beiyoowdlomg3"
+LocalDB="*uid://b88xfks1h47ii"
+SyncManager="*uid://chv25kjav3818"
+
+[display]
+
+window/size/viewport_width=640
+window/size/viewport_height=360
+window/size/mode=2
+window/stretch/mode="viewport"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg", "res://addons/godot-sqlite/plugin.cfg")
+
+[input]
+
+ui_touch={
+"deadzone": 0.2,
+"events": [Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":0,"position":Vector2(0, 0),"global_position":Vector2(0, 0),"factor":1.0,"button_index":1,"canceled":false,"pressed":false,"double_click":false,"script":null)
+]
+}
 
 [rendering]
 
+textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"

@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://dxroniyo0t43r"]
+
+[ext_resource type="PackedScene" uid="uid://c4ydfw8yw7w72" path="res://scenes/pecas/piece.tscn" id="1_v64i4"]
+[ext_resource type="Texture2D" uid="uid://dipnjt6flwn26" path="res://assets/pecasEditaveis/triangulo.png" id="2_48rjv"]
+
+[node name="triangulo" unique_id=1264187183 instance=ExtResource("1_v64i4")]
+
+[node name="Sprite2D" parent="." index="0" unique_id=696197292]
+texture = ExtResource("2_48rjv")

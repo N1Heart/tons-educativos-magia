@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://b46ohwfsgpsqd"]
+
+[ext_resource type="PackedScene" uid="uid://c4ydfw8yw7w72" path="res://scenes/pecas/piece.tscn" id="1_e2e3r"]
+[ext_resource type="Texture2D" uid="uid://dm67pkxv837rn" path="res://assets/pecasEditaveis/hexagono.png" id="2_hebqk"]
+
+[node name="hexagono" unique_id=1264187183 instance=ExtResource("1_e2e3r")]
+
+[node name="Sprite2D" parent="." index="0" unique_id=696197292]
+texture = ExtResource("2_hebqk")

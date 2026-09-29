@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://djua11oqvlp5w"]
+
+[ext_resource type="PackedScene" uid="uid://c4ydfw8yw7w72" path="res://scenes/pecas/piece.tscn" id="1_c5je0"]
+[ext_resource type="Texture2D" uid="uid://c06mcsca0c0sq" path="res://assets/pecasEditaveis/circulo.png" id="2_33cer"]
+
+[node name="circulo" unique_id=1264187183 instance=ExtResource("1_c5je0")]
+
+[node name="Sprite2D" parent="." index="0" unique_id=696197292]
+texture = ExtResource("2_33cer")
