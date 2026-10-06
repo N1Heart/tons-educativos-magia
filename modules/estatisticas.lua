@@ -1,3 +1,4 @@
+local nk = require("nakama")
 --[[
 Módulo 4 — RPC de estatísticas para o painel do professor.
 

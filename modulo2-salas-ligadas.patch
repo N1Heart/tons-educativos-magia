@@ -1,0 +1,394 @@
+diff --git a/entities/Porta.gd b/entities/Porta.gd
+new file mode 100644
+index 0000000..e5af081
+--- /dev/null
++++ b/entities/Porta.gd
+@@ -0,0 +1,23 @@
++extends Area2D
++
++## Porta/transição entre salas: qualquer corpo do grupo "jogador" que entrar
++## nesta área troca de cena para `cena_destino`.
++##
++## O ColorRect + Label dentro da cena só existem para ficar visível no editor
++## enquanto as salas não têm portas desenhadas no tilemap — pode esconder ou
++## apagar esse visual depois, a lógica de transição não depende dele.
++## Arraste este nó (ou a instância dele) para a posição correta de cada sala.
++
++@export_file("*.tscn") var cena_destino: String = ""
++
++
++func _ready() -> void:
++	body_entered.connect(_on_body_entered)
++
++
++func _on_body_entered(body: Node) -> void:
++	if cena_destino == "":
++		push_warning("Porta sem cena_destino configurada: %s" % get_path())
++		return
++	if body.is_in_group("jogador"):
++		get_tree().change_scene_to_file(cena_destino)
+diff --git a/entities/Porta.tscn b/entities/Porta.tscn
+new file mode 100644
+index 0000000..6dfe85f
+--- /dev/null
++++ b/entities/Porta.tscn
+@@ -0,0 +1,28 @@
++[gd_scene format=3 uid="uid://dporta0001xyz"]
++
++[ext_resource type="Script" path="res://entities/Porta.gd" id="1_porta"]
++
++[sub_resource type="RectangleShape2D" id="RectangleShape2D_porta"]
++size = Vector2(32, 64)
++
++[node name="Porta" type="Area2D"]
++script = ExtResource("1_porta")
++
++[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
++shape = SubResource("RectangleShape2D_porta")
++
++[node name="Visual" type="ColorRect" parent="."]
++offset_left = -16.0
++offset_top = -32.0
++offset_right = 16.0
++offset_bottom = 32.0
++color = Color(0.6, 0.3, 0.9, 0.45)
++mouse_filter = 2
++
++[node name="Label" type="Label" parent="."]
++offset_left = -32.0
++offset_top = -48.0
++offset_right = 32.0
++offset_bottom = -32.0
++text = "PORTA"
++horizontal_alignment = 1
+diff --git a/entities/npc_professor.gd b/entities/npc_professor.gd
+new file mode 100644
+index 0000000..1fa946a
+--- /dev/null
++++ b/entities/npc_professor.gd
+@@ -0,0 +1,16 @@
++extends CharacterBody2D
++
++## NPC "professor" de uma sala (formas, cores ou duelos).
++##
++## Por enquanto `interagir()` só mostra uma mensagem de placeholder no
++## console — na próxima etapa (quizzes) isso vira a tela de aula
++## (AulaModel) ou a prova (QuizModel), de acordo com `tipo`. O ponto de
++## entrada já está pronto: quando a UI existir, troca-se só o corpo desta
++## função.
++
++@export var tipo: String = ""  # "formas", "cores" ou "duelo"
++@export_multiline var mensagem: String = "Olá! Em breve terei uma aula para você."
++
++
++func interagir() -> void:
++	print("[Professor:%s] %s" % [tipo, mensagem])
+diff --git a/entities/professorCores.tscn b/entities/professorCores.tscn
+index 32031fb..a127c50 100644
+--- a/entities/professorCores.tscn
++++ b/entities/professorCores.tscn
+@@ -1,11 +1,15 @@
+ [gd_scene format=3 uid="uid://ci55navu03wg3"]
+ 
+ [ext_resource type="Texture2D" uid="uid://bx5w4g77b85vx" path="res://assets/sprites/Idle.png" id="1_qjydq"]
++[ext_resource type="Script" path="res://entities/npc_professor.gd" id="2_npc"]
+ 
+ [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_e2ube"]
+ radius = 22.0
+ height = 94.0
+ 
++[sub_resource type="CircleShape2D" id="CircleShape2D_zona"]
++radius = 40.0
++
+ [sub_resource type="AtlasTexture" id="AtlasTexture_ocolc"]
+ atlas = ExtResource("1_qjydq")
+ region = Rect2(0, 0, 231, 140)
+@@ -58,6 +62,9 @@ animations = [{
+ 
+ [node name="Professor2" type="CharacterBody2D" unique_id=1475615145]
+ scale = Vector2(0.7, 0.7)
++script = ExtResource("2_npc")
++tipo = "cores"
++mensagem = "Quer assistir uma aula sobre os elementos (cores) das peças?"
+ 
+ [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1038127199]
+ shape = SubResource("CapsuleShape2D_e2ube")
+@@ -66,3 +73,8 @@ shape = SubResource("CapsuleShape2D_e2ube")
+ position = Vector2(-5, -26)
+ sprite_frames = SubResource("SpriteFrames_e2ube")
+ flip_h = true
++
++[node name="ZonaInteracao" type="Area2D" parent="." groups=["interagivel"]]
++
++[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaInteracao"]
++shape = SubResource("CircleShape2D_zona")
+diff --git a/entities/professorDuelo.tscn b/entities/professorDuelo.tscn
+index 7b87ac2..b4d9949 100644
+--- a/entities/professorDuelo.tscn
++++ b/entities/professorDuelo.tscn
+@@ -1,10 +1,14 @@
+ [gd_scene format=3 uid="uid://8fi3bp0xl6fs"]
+ 
+ [ext_resource type="Texture2D" uid="uid://b31o75afo1qrf" path="res://assets/sprites/mage3.png" id="1_6c0gp"]
++[ext_resource type="Script" path="res://entities/npc_professor.gd" id="2_npc"]
+ 
+ [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_e2ube"]
+ height = 56.0
+ 
++[sub_resource type="CircleShape2D" id="CircleShape2D_zona"]
++radius = 40.0
++
+ [sub_resource type="AtlasTexture" id="AtlasTexture_ap4ap"]
+ atlas = ExtResource("1_6c0gp")
+ region = Rect2(0, 0, 140, 140)
+@@ -84,6 +88,9 @@ animations = [{
+ }]
+ 
+ [node name="Professor1" type="CharacterBody2D" unique_id=1475615145]
++script = ExtResource("2_npc")
++tipo = "duelo"
++mensagem = "Duelos entre alunos chegam em breve — por enquanto, treine no quintal dos fundos!"
+ 
+ [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2138883649]
+ shape = SubResource("CapsuleShape2D_e2ube")
+@@ -92,3 +99,8 @@ shape = SubResource("CapsuleShape2D_e2ube")
+ position = Vector2(-2, -1)
+ sprite_frames = SubResource("SpriteFrames_e2ube")
+ flip_h = true
++
++[node name="ZonaInteracao" type="Area2D" parent="." groups=["interagivel"]]
++
++[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaInteracao"]
++shape = SubResource("CircleShape2D_zona")
+diff --git a/entities/professorFormas.tscn b/entities/professorFormas.tscn
+index 41148de..f7600fc 100644
+--- a/entities/professorFormas.tscn
++++ b/entities/professorFormas.tscn
+@@ -1,11 +1,15 @@
+ [gd_scene format=3 uid="uid://qmbnhewmx82v"]
+ 
+ [ext_resource type="Texture2D" uid="uid://dteqvv75ugyu7" path="res://assets/sprites/Default.png" id="1_0yyv6"]
++[ext_resource type="Script" path="res://entities/npc_professor.gd" id="2_npc"]
+ 
+ [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_e2ube"]
+ radius = 12.0
+ height = 62.0
+ 
++[sub_resource type="CircleShape2D" id="CircleShape2D_zona"]
++radius = 40.0
++
+ [sub_resource type="AtlasTexture" id="AtlasTexture_xf7uh"]
+ atlas = ExtResource("1_0yyv6")
+ region = Rect2(0, 0, 36, 67)
+@@ -23,6 +27,9 @@ animations = [{
+ 
+ [node name="Professor1" type="CharacterBody2D" unique_id=1475615145]
+ scale = Vector2(0.7, 0.7)
++script = ExtResource("2_npc")
++tipo = "formas"
++mensagem = "Quer assistir uma aula sobre as formas das peças?"
+ 
+ [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=617052264]
+ shape = SubResource("CapsuleShape2D_e2ube")
+@@ -30,3 +37,8 @@ shape = SubResource("CapsuleShape2D_e2ube")
+ [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1498025134]
+ position = Vector2(2, -1)
+ sprite_frames = SubResource("SpriteFrames_e2ube")
++
++[node name="ZonaInteracao" type="Area2D" parent="." groups=["interagivel"]]
++
++[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaInteracao"]
++shape = SubResource("CircleShape2D_zona")
+diff --git a/entities/teste.gd b/entities/teste.gd
+index dc27996..f4b3732 100644
+--- a/entities/teste.gd
++++ b/entities/teste.gd
+@@ -4,6 +4,40 @@ extends CharacterBody2D
+ const SPEED = 150.0
+ const JUMP_VELOCITY = -400.0
+ @onready var char: AnimatedSprite2D = $CollisionShape2D/AnimatedSprite2D
++@onready var zona_interacao: Area2D = $ZonaInteracao
++
++## NPC mais próximo (grupo "interagivel") que o jogador pode interagir agora,
++## ou null se nenhum estiver no alcance. Vários podem se sobrepor; fica
++## guardado o mais recente que entrou, é suficiente pro tamanho das salas.
++var _interagivel_proximo: Node = null
++
++
++func _ready() -> void:
++	# A ação "interagir" não existe por padrão no InputMap do projeto —
++	# registra em código pra não depender de editar project.godot.
++	if not InputMap.has_action("interagir"):
++		InputMap.add_action("interagir")
++		var tecla := InputEventKey.new()
++		tecla.physical_keycode = KEY_E
++		InputMap.action_add_event("interagir", tecla)
++
++	zona_interacao.area_entered.connect(_on_zona_interacao_area_entered)
++	zona_interacao.area_exited.connect(_on_zona_interacao_area_exited)
++
++
++func _unhandled_input(event: InputEvent) -> void:
++	if event.is_action_pressed("interagir") and _interagivel_proximo != null:
++		_interagivel_proximo.interagir()
++
++
++func _on_zona_interacao_area_entered(area: Area2D) -> void:
++	if area.is_in_group("interagivel"):
++		_interagivel_proximo = area.get_parent()
++
++
++func _on_zona_interacao_area_exited(area: Area2D) -> void:
++	if area.is_in_group("interagivel") and area.get_parent() == _interagivel_proximo:
++		_interagivel_proximo = null
+ 
+ 
+ func _physics_process(delta: float) -> void:
+diff --git a/entities/teste.tscn b/entities/teste.tscn
+index 7727d63..5c53e61 100644
+--- a/entities/teste.tscn
++++ b/entities/teste.tscn
+@@ -10,6 +10,9 @@
+ 
+ [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_e2ube"]
+ 
++[sub_resource type="CircleShape2D" id="CircleShape2D_zona"]
++radius = 40.0
++
+ [sub_resource type="AtlasTexture" id="AtlasTexture_nk1pc"]
+ atlas = ExtResource("2_l8ahk")
+ region = Rect2(0, 0, 32, 32)
+@@ -197,7 +200,7 @@ animations = [{
+ "speed": 5.0
+ }]
+ 
+-[node name="Teste" type="CharacterBody2D" unique_id=1381545907]
++[node name="Teste" type="CharacterBody2D" unique_id=1381545907 groups=["jogador"]]
+ script = ExtResource("1_q28nx")
+ 
+ [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1677791858]
+@@ -211,3 +214,8 @@ autoplay = "idle"
+ [node name="Camera2D" type="Camera2D" parent="." unique_id=1752451774]
+ offset = Vector2(0, -96)
+ zoom = Vector2(1.5, 1.5)
++
++[node name="ZonaInteracao" type="Area2D" parent="."]
++
++[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaInteracao"]
++shape = SubResource("CircleShape2D_zona")
+diff --git a/scenes/salas/Saguao.tscn b/scenes/salas/Saguao.tscn
+index ad51807..d58f441 100644
+--- a/scenes/salas/Saguao.tscn
++++ b/scenes/salas/Saguao.tscn
+@@ -3,6 +3,7 @@
+ [ext_resource type="TileSet" uid="uid://damsk53mn0xgk" path="res://paredesInternas.tres" id="1_rrf6u"]
+ [ext_resource type="TileSet" uid="uid://bdl451ierx8mw" path="res://portasEjanelas.tres" id="2_rrf6u"]
+ [ext_resource type="PackedScene" uid="uid://bdirppqxgwt31" path="res://entities/teste.tscn" id="4_16xrc"]
++[ext_resource type="PackedScene" path="res://entities/Porta.tscn" id="5_porta"]
+ 
+ [node name="Saguao" type="Node2D" unique_id=986034946]
+ 
+@@ -17,3 +18,19 @@ tile_set = ExtResource("2_rrf6u")
+ 
+ [node name="Teste" parent="." unique_id=1381545907 instance=ExtResource("4_16xrc")]
+ position = Vector2(237, 308)
++
++[node name="PortaSalaDeFormas" parent="." instance=ExtResource("5_porta")]
++position = Vector2(50, 300)
++cena_destino = "res://scenes/salas/salaDeaula.tscn"
++
++[node name="PortaSalaDeCores" parent="." instance=ExtResource("5_porta")]
++position = Vector2(150, 300)
++cena_destino = "res://scenes/salas/salaDeArte.tscn"
++
++[node name="PortaSalaDeDuelos" parent="." instance=ExtResource("5_porta")]
++position = Vector2(330, 300)
++cena_destino = "res://scenes/salas/salaDeDuelos.tscn"
++
++[node name="PortaQuintalDosFundos" parent="." instance=ExtResource("5_porta")]
++position = Vector2(430, 300)
++cena_destino = "res://scenes/salas/fundosDoCastelo.tscn"
+diff --git a/scenes/salas/fundosDoCastelo.tscn b/scenes/salas/fundosDoCastelo.tscn
+index 0cc27f5..fd50057 100644
+--- a/scenes/salas/fundosDoCastelo.tscn
++++ b/scenes/salas/fundosDoCastelo.tscn
+@@ -8,6 +8,7 @@
+ [ext_resource type="Texture2D" uid="uid://ch2ybc0ecybqh" path="res://assets/sprites/Seasonal Tilesets/1 - Grassland/Background parts/2 - Hills.png" id="6_naawb"]
+ [ext_resource type="Texture2D" uid="uid://1fe37m8osdnc" path="res://assets/sprites/Seasonal Tilesets/1 - Grassland/Background parts/1 - Foreground_scenery.png" id="7_kx0an"]
+ [ext_resource type="PackedScene" uid="uid://bdirppqxgwt31" path="res://entities/teste.tscn" id="8_w1rnn"]
++[ext_resource type="PackedScene" path="res://entities/Porta.tscn" id="9_porta"]
+ 
+ [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1oaao"]
+ texture = ExtResource("1_71f3e")
+@@ -153,3 +154,11 @@ offset = Vector2(0, 154)
+ 
+ [node name="Teste" parent="." unique_id=1381545907 instance=ExtResource("8_w1rnn")]
+ position = Vector2(94, 310)
++
++[node name="PortaSaguao" parent="." instance=ExtResource("9_porta")]
++position = Vector2(50, 300)
++cena_destino = "res://scenes/salas/Saguao.tscn"
++
++[node name="PortaDuelo" parent="." instance=ExtResource("9_porta")]
++position = Vector2(400, 300)
++cena_destino = "res://scenes/salas/duelos.tscn"
+diff --git a/scenes/salas/salaDeArte.tscn b/scenes/salas/salaDeArte.tscn
+index 98183c0..23971a9 100644
+--- a/scenes/salas/salaDeArte.tscn
++++ b/scenes/salas/salaDeArte.tscn
+@@ -7,6 +7,7 @@
+ [ext_resource type="Texture2D" uid="uid://h5yotgixvaos" path="res://sprites/sala/quadro.png" id="4_qyu4q"]
+ [ext_resource type="PackedScene" uid="uid://bdirppqxgwt31" path="res://entities/teste.tscn" id="6_3jwn4"]
+ [ext_resource type="PackedScene" uid="uid://ci55navu03wg3" path="res://entities/professorCores.tscn" id="7_qyu4q"]
++[ext_resource type="PackedScene" path="res://entities/Porta.tscn" id="8_porta"]
+ 
+ [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_k3cnd"]
+ texture = ExtResource("3_qyu4q")
+@@ -51,3 +52,7 @@ position = Vector2(59, 307)
+ 
+ [node name="Professor2" parent="sala" unique_id=1475615145 instance=ExtResource("7_qyu4q")]
+ position = Vector2(542, 305)
++
++[node name="PortaSaguao" parent="." instance=ExtResource("8_porta")]
++position = Vector2(500, 300)
++cena_destino = "res://scenes/salas/Saguao.tscn"
+diff --git a/scenes/salas/salaDeDuelos.tscn b/scenes/salas/salaDeDuelos.tscn
+index 2744ab9..eef7e0e 100644
+--- a/scenes/salas/salaDeDuelos.tscn
++++ b/scenes/salas/salaDeDuelos.tscn
+@@ -8,6 +8,7 @@
+ [ext_resource type="Texture2D" uid="uid://h5yotgixvaos" path="res://sprites/sala/quadro.png" id="5_d83v3"]
+ [ext_resource type="PackedScene" uid="uid://bdirppqxgwt31" path="res://entities/teste.tscn" id="6_18w7l"]
+ [ext_resource type="PackedScene" uid="uid://8fi3bp0xl6fs" path="res://entities/professorDuelo.tscn" id="8_vu7bv"]
++[ext_resource type="PackedScene" path="res://entities/Porta.tscn" id="9_porta"]
+ 
+ [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_vu7bv"]
+ texture = ExtResource("3_s4hbn")
+@@ -70,3 +71,7 @@ position = Vector2(59, 307)
+ 
+ [node name="Professor1" parent="sala" unique_id=1475615145 instance=ExtResource("8_vu7bv")]
+ position = Vector2(105, 308)
++
++[node name="PortaSaguao" parent="." instance=ExtResource("9_porta")]
++position = Vector2(500, 300)
++cena_destino = "res://scenes/salas/Saguao.tscn"
+diff --git a/scenes/salas/salaDeaula.tscn b/scenes/salas/salaDeaula.tscn
+index 4e382be..bdd795c 100644
+--- a/scenes/salas/salaDeaula.tscn
++++ b/scenes/salas/salaDeaula.tscn
+@@ -6,6 +6,7 @@
+ [ext_resource type="Texture2D" uid="uid://h5yotgixvaos" path="res://sprites/sala/quadro.png" id="4_keg0p"]
+ [ext_resource type="PackedScene" uid="uid://bdirppqxgwt31" path="res://entities/teste.tscn" id="5_keg0p"]
+ [ext_resource type="PackedScene" uid="uid://qmbnhewmx82v" path="res://entities/professorFormas.tscn" id="5_s8qbq"]
++[ext_resource type="PackedScene" path="res://entities/Porta.tscn" id="6_porta"]
+ 
+ [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_keg0p"]
+ texture = ExtResource("4_h1nim")
+@@ -43,3 +44,7 @@ position = Vector2(520, 314)
+ 
+ [node name="Teste" parent="." unique_id=1381545907 instance=ExtResource("5_keg0p")]
+ position = Vector2(35, 304)
++
++[node name="PortaSaguao" parent="." instance=ExtResource("6_porta")]
++position = Vector2(400, 300)
++cena_destino = "res://scenes/salas/Saguao.tscn"

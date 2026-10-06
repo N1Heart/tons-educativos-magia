@@ -18,7 +18,7 @@ func _ready() -> void:
 
 	# Time do jogador: as 5 formas, cada uma com o elemento atualmente equipado.
 	var player_types: Array[TileType] = []
-	for shape_name in SpellLoadout.SHAPES:
+	for shape_name in SpellLoadout.formas_disponiveis(LocalDB.get_user_id_ativo()):
 		player_types.append(SpellLoadout.get_equipped_type(shape_name))
 
 	# Time do oponente: só 3 formas (quantidade variável) e elementos fixos, pra

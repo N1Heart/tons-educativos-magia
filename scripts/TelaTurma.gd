@@ -54,7 +54,7 @@ func _on_aluno_ativado(index: int) -> void:
 
 
 func _on_btn_remover_aluno_pressed() -> void:
-	var indices := %listaAlunos.get_selected_items()
+	var indices: PackedInt32Array = %listaAlunos.get_selected_items()
 	if indices.is_empty():
 		return
 

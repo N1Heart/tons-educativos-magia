@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://qmbnhewmx82v"]
+
+[ext_resource type="Texture2D" uid="uid://dteqvv75ugyu7" path="res://assets/sprites/Default.png" id="1_0yyv6"]
+[ext_resource type="Script" path="res://entities/npc_professor.gd" id="2_npc"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_e2ube"]
+radius = 12.0
+height = 62.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_zona"]
+radius = 40.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xf7uh"]
+atlas = ExtResource("1_0yyv6")
+region = Rect2(0, 0, 36, 67)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_e2ube"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xf7uh")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="Professor1" type="CharacterBody2D" unique_id=1475615145]
+scale = Vector2(0.7, 0.7)
+script = ExtResource("2_npc")
+tipo = "formas"
+mensagem = "Quer assistir uma aula sobre as formas das peças?"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=617052264]
+shape = SubResource("CapsuleShape2D_e2ube")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1498025134]
+position = Vector2(2, -1)
+sprite_frames = SubResource("SpriteFrames_e2ube")
+
+[node name="ZonaInteracao" type="Area2D" parent="." groups=["interagivel"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaInteracao"]
+shape = SubResource("CircleShape2D_zona")

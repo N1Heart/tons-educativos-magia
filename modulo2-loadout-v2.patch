@@ -1,0 +1,637 @@
+diff --git a/autoload/LocalDB.gd b/autoload/LocalDB.gd
+index 2f98355..173632b 100644
+--- a/autoload/LocalDB.gd
++++ b/autoload/LocalDB.gd
+@@ -70,7 +70,7 @@ func _criar_tabelas() -> void:
+ 			break
+ 	if not tem_coluna_venceu:
+ 		db.query("ALTER TABLE partidas_match3 ADD COLUMN venceu INTEGER DEFAULT 0")
+-
++	
+ 	db.query("""
+ 		CREATE TABLE IF NOT EXISTS desafios_respondidos (
+ 			id INTEGER PRIMARY KEY AUTOINCREMENT,
+@@ -84,6 +84,61 @@ func _criar_tabelas() -> void:
+ 			synced INTEGER DEFAULT 0
+ 		)
+ 	""")
++	# Loadout equipado (Módulo 2): qual elemento está equipado em cada forma.
++	# Diferente de partidas/desafios, aqui não é histórico — é ESTADO ATUAL,
++	# uma linha por forma (UNIQUE user_id+forma), sobrescrita a cada troca.
++	db.query("""
++		CREATE TABLE IF NOT EXISTS loadout_equipado (
++			id INTEGER PRIMARY KEY AUTOINCREMENT,
++			user_id TEXT,
++			forma TEXT,
++			elemento TEXT,
++			atualizado_em INTEGER,
++			synced INTEGER DEFAULT 0,
++			UNIQUE(user_id, forma)
++		)
++	""")
++	# Formas e elementos desbloqueados (Módulo 2) — EIXOS INDEPENDENTES de
++	# propósito: o aluno desbloqueia uma forma na sala das formas e um
++	# elemento na sala das cores, e depois recombina os dois livremente
++	# na tela de loadout (ver TelaLoadout.gd).
++	db.query("""
++		CREATE TABLE IF NOT EXISTS formas_desbloqueadas (
++			id INTEGER PRIMARY KEY AUTOINCREMENT,
++			user_id TEXT,
++			forma TEXT,
++			desbloqueada_em INTEGER,
++			synced INTEGER DEFAULT 0,
++			UNIQUE(user_id, forma)
++		)
++	""")
++	db.query("""
++		CREATE TABLE IF NOT EXISTS elementos_desbloqueados (
++			id INTEGER PRIMARY KEY AUTOINCREMENT,
++			user_id TEXT,
++			elemento TEXT,
++			desbloqueado_em INTEGER,
++			synced INTEGER DEFAULT 0,
++			UNIQUE(user_id, elemento)
++		)
++	""")
++	# Histórico de provas respondidas (uma linha por TENTATIVA, não por
++	# pergunta — perguntas individuais não têm valor de longo prazo aqui;
++	# quem quiser esse detalhe usa desafios_respondidos).
++	db.query("""
++		CREATE TABLE IF NOT EXISTS quizzes_respondidos (
++			id INTEGER PRIMARY KEY AUTOINCREMENT,
++			user_id TEXT,
++			quiz_id TEXT,
++			tipo TEXT,
++			alvo TEXT,
++			acertos INTEGER,
++			total INTEGER,
++			passou INTEGER,
++			respondido_em INTEGER,
++			synced INTEGER DEFAULT 0
++		)
++	""")
+ 
+ # --- Identidade ativa (logado ou convidado offline) ---
+ 
+@@ -106,6 +161,9 @@ func _get_ou_criar_device_id() -> String:
+ # --- Perfil do aluno ---
+ 
+ func salvar_perfil(aluno: AlunoModel) -> void:
++	db.query_with_bindings("SELECT user_id FROM aluno_perfil WHERE user_id = ?", [aluno.id])
++	var eh_perfil_novo := db.query_result.is_empty()
++
+ 	db.query_with_bindings("""
+ 		INSERT INTO aluno_perfil (user_id, email, nome, tipo_perfil, is_convidado, nivel_atual, codigo_turma, updated_at, synced)
+ 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+@@ -127,6 +185,14 @@ func salvar_perfil(aluno: AlunoModel) -> void:
+ 	for magia in aluno.magias_desbloqueadas:
+ 		desbloquear_magia(aluno.id, magia)
+ 
++	if eh_perfil_novo:
++		# Kit inicial: sem isso, um aluno novo não teria NENHUMA combinação
++		# jogável até passar na primeira prova (sala das formas OU das
++		# cores já bloquearia o combate/tabuleiro). Ajuste esse par livremente
++		# — hoje bate com o padrão hardcoded em SpellLoadout.equipped.
++		desbloquear_forma(aluno.id, "Quadrado")
++		desbloquear_elemento(aluno.id, "Agua")
++
+ 	SyncManager.request_sync()
+ 
+ 
+@@ -211,6 +277,101 @@ func ja_respondeu_desafio(user_id: String, desafio_id: String) -> bool:
+ 	db.query_with_bindings("SELECT id FROM desafios_respondidos WHERE user_id = ? AND desafio_id = ?", [user_id, desafio_id])
+ 	return not db.query_result.is_empty()
+ 
++# --- Provas (QuizModel) — Módulo 2 ---
++
++## Registra a tentativa E aplica o desbloqueio se passou. 'resultado' é o
++## Dictionary devolvido por QuizModel.calcular_resultado().
++func registrar_resultado_quiz(user_id: String, quiz: QuizModel, resultado: Dictionary) -> void:
++	db.query_with_bindings("""
++		INSERT INTO quizzes_respondidos (user_id, quiz_id, tipo, alvo, acertos, total, passou, respondido_em, synced)
++		VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
++	""", [
++		user_id, quiz.id, quiz.tipo, quiz.alvo,
++		resultado["acertos"], resultado["total"], 1 if resultado["passou"] else 0,
++		Time.get_unix_time_from_system()
++	])
++
++	if resultado["passou"]:
++		if quiz.tipo == "forma":
++			desbloquear_forma(user_id, quiz.alvo)
++		elif quiz.tipo == "elemento":
++			desbloquear_elemento(user_id, quiz.alvo)
++
++	SyncManager.request_sync()
++
++
++func ja_passou_quiz(user_id: String, tipo: String, alvo: String) -> bool:
++	db.query_with_bindings("""
++		SELECT id FROM quizzes_respondidos WHERE user_id = ? AND tipo = ? AND alvo = ? AND passou = 1
++	""", [user_id, tipo, alvo])
++	return not db.query_result.is_empty()
++
++# --- Formas e elementos desbloqueados (Módulo 2 — eixos independentes) ---
++
++func desbloquear_forma(user_id: String, forma: String) -> void:
++	db.query_with_bindings("""
++		INSERT OR IGNORE INTO formas_desbloqueadas (user_id, forma, desbloqueada_em, synced)
++		VALUES (?, ?, ?, 0)
++	""", [user_id, forma, Time.get_unix_time_from_system()])
++	SyncManager.request_sync()
++
++
++func listar_formas_desbloqueadas(user_id: String) -> Array[String]:
++	db.query_with_bindings("SELECT forma FROM formas_desbloqueadas WHERE user_id = ?", [user_id])
++	var formas: Array[String] = []
++	for row in db.query_result:
++		formas.append(row["forma"])
++	return formas
++
++
++func forma_desbloqueada(user_id: String, forma: String) -> bool:
++	db.query_with_bindings("SELECT id FROM formas_desbloqueadas WHERE user_id = ? AND forma = ?", [user_id, forma])
++	return not db.query_result.is_empty()
++
++
++func desbloquear_elemento(user_id: String, elemento: String) -> void:
++	db.query_with_bindings("""
++		INSERT OR IGNORE INTO elementos_desbloqueados (user_id, elemento, desbloqueado_em, synced)
++		VALUES (?, ?, ?, 0)
++	""", [user_id, elemento, Time.get_unix_time_from_system()])
++	SyncManager.request_sync()
++
++
++func listar_elementos_desbloqueados(user_id: String) -> Array[String]:
++	db.query_with_bindings("SELECT elemento FROM elementos_desbloqueados WHERE user_id = ?", [user_id])
++	var elementos: Array[String] = []
++	for row in db.query_result:
++		elementos.append(row["elemento"])
++	return elementos
++
++
++func elemento_desbloqueado(user_id: String, elemento: String) -> bool:
++	db.query_with_bindings("SELECT id FROM elementos_desbloqueados WHERE user_id = ? AND elemento = ?", [user_id, elemento])
++	return not db.query_result.is_empty()
++
++# --- Loadout equipado (Módulo 2) ---
++
++func salvar_equipado(user_id: String, forma: String, elemento: String) -> void:
++	db.query_with_bindings("""
++		INSERT INTO loadout_equipado (user_id, forma, elemento, atualizado_em, synced)
++		VALUES (?, ?, ?, ?, 0)
++		ON CONFLICT(user_id, forma) DO UPDATE SET
++			elemento = excluded.elemento,
++			atualizado_em = excluded.atualizado_em,
++			synced = 0
++	""", [user_id, forma, elemento, Time.get_unix_time_from_system()])
++	SyncManager.request_sync()
++
++
++## Retorna {"Forma": "Elemento", ...} só com o que esse usuário já salvou —
++## formas ausentes ficam por conta do valor padrão definido em SpellLoadout.
++func carregar_loadout(user_id: String) -> Dictionary:
++	db.query_with_bindings("SELECT forma, elemento FROM loadout_equipado WHERE user_id = ?", [user_id])
++	var loadout := {}
++	for row in db.query_result:
++		loadout[row["forma"]] = row["elemento"]
++	return loadout
++
+ # --- Suporte à sincronização (usado pelo SyncManager) ---
+ 
+ func listar_pendentes(tabela: String, user_id: String) -> Array:
+diff --git a/autoload/SpellLoadout.gd b/autoload/SpellLoadout.gd
+index 158463e..d211359 100644
+--- a/autoload/SpellLoadout.gd
++++ b/autoload/SpellLoadout.gd
+@@ -89,13 +89,28 @@ func get_equipped_type(shape_name: String) -> TileType:
+ 	return get_tile_type(shape_name, equipped.get(shape_name, ELEMENTS[0]))
+ 
+ 
+-func set_equipped(shape_name: String, element_name: String) -> void:
++func set_equipped(shape_name: String, element_name: String, persistir: bool = true) -> void:
+ 	if not SHAPES.has(shape_name) or not ELEMENTS.has(element_name):
+ 		push_warning("SpellLoadout: forma ou elemento inválido (%s / %s)" % [shape_name, element_name])
+ 		return
+ 	equipped[shape_name] = element_name
+ 	loadout_changed.emit(shape_name, element_name)
+ 
++	# persistir=false é usado só por carregar_equipado(), pra não regravar
++	# no banco o mesmo dado que acabou de ler de lá.
++	if persistir:
++		LocalDB.salvar_equipado(LocalDB.get_user_id_ativo(), shape_name, element_name)
++
++
++## Chame depois do login (ou ao abrir a tela de loadout) pra restaurar o que
++## o jogador tinha equipado da última vez. Formas sem registro salvo mantêm
++## o valor padrão de 'equipped' definido acima.
++func carregar_equipado(user_id: String) -> void:
++	var salvo := LocalDB.carregar_loadout(user_id)
++	for forma in salvo:
++		if SHAPES.has(forma) and ELEMENTS.has(salvo[forma]):
++			set_equipped(forma, salvo[forma], false)
++
+ 
+ func get_category(shape_name: String) -> String:
+ 	return SHAPE_CATEGORY.get(shape_name, "dano_rapido")
+diff --git a/autoload/SyncManager.gd b/autoload/SyncManager.gd
+index 49aaf3a..7df0cf7 100644
+--- a/autoload/SyncManager.gd
++++ b/autoload/SyncManager.gd
+@@ -44,6 +44,10 @@ func _do_sync() -> void:
+ 	await _sync_tabela("magias_desbloqueadas", user_id, "progresso_magias")
+ 	await _sync_tabela("partidas_match3", user_id, "progresso_partidas")
+ 	await _sync_tabela("desafios_respondidos", user_id, "progresso_desafios")
++	await _sync_tabela("formas_desbloqueadas", user_id, "progresso_formas")
++	await _sync_tabela("elementos_desbloqueados", user_id, "progresso_elementos")
++	await _sync_tabela("quizzes_respondidos", user_id, "progresso_quizzes")
++	await _sync_loadout(user_id)
+ 
+ 	_syncing = false
+ 
+@@ -74,3 +78,16 @@ func _sync_tabela(tabela: String, user_id: String, colecao: String) -> void:
+ 		var ok: bool = await NakamaManager.escrever_dados(colecao, chave, row)
+ 		if ok:
+ 			LocalDB.marcar_sincronizado(tabela, row["id"])
++
++
++## Loadout é ESTADO ATUAL, não histórico — cada forma tem sua própria chave
++## fixa (a chave = nome da forma, ex: "progresso_loadout"/"Quadrado"), então
++## sincronizar de novo naturalmente sobrescreve o valor anterior no Nakama.
++## Isso é o comportamento certo aqui (diferente do bug corrigido acima).
++func _sync_loadout(user_id: String) -> void:
++	var pendentes: Array = LocalDB.listar_pendentes("loadout_equipado", user_id)
++	for row in pendentes:
++		var chave: String = row["forma"]
++		var ok: bool = await NakamaManager.escrever_dados("progresso_loadout", chave, row)
++		if ok:
++			LocalDB.marcar_sincronizado("loadout_equipado", row["id"])
+diff --git a/scenes/Login/TelaAluno.tscn b/scenes/Login/TelaAluno.tscn
+index 02c64c9..1d2f6da 100644
+--- a/scenes/Login/TelaAluno.tscn
++++ b/scenes/Login/TelaAluno.tscn
+@@ -129,3 +129,12 @@ offset_bottom = 32.0
+ scale = Vector2(1.5339913, 1.59487)
+ theme_override_font_sizes/font_size = 7
+ text = "Sair"
++
++[node name="btnMagias" type="Button" parent="TelaAluno"]
++unique_name_in_owner = true
++layout_mode = 0
++offset_left = 17.0
++offset_top = 40.0
++offset_right = 90.0
++offset_bottom = 66.0
++text = "Minhas Magias"
+diff --git a/scenes/Login/TelaLoadout.tscn b/scenes/Login/TelaLoadout.tscn
+new file mode 100644
+index 0000000..aeaa5cd
+--- /dev/null
++++ b/scenes/Login/TelaLoadout.tscn
+@@ -0,0 +1,64 @@
++[gd_scene format=3]
++
++[ext_resource type="Script" path="res://scripts/TelaLoadout.gd" id="1_loadout"]
++
++[node name="TelaLoadout" type="Control"]
++layout_mode = 3
++anchors_preset = 15
++anchor_right = 1.0
++anchor_bottom = 1.0
++grow_horizontal = 2
++grow_vertical = 2
++script = ExtResource("1_loadout")
++
++[node name="btnVoltar" type="Button" parent="."]
++unique_name_in_owner = true
++layout_mode = 0
++offset_left = 8.0
++offset_top = 8.0
++offset_right = 78.0
++offset_bottom = 39.0
++text = "< Voltar"
++
++[node name="Label" type="Label" parent="."]
++layout_mode = 0
++offset_left = 8.0
++offset_top = 44.0
++offset_right = 300.0
++offset_bottom = 66.0
++text = "Personagem"
++
++[node name="Personagem" type="ColorRect" parent="."]
++layout_mode = 0
++offset_left = 8.0
++offset_top = 70.0
++offset_right = 108.0
++offset_bottom = 170.0
++color = Color(0.6, 0.6, 0.6, 1)
++
++[node name="LabelDisposicao" type="Label" parent="."]
++layout_mode = 0
++offset_left = 140.0
++offset_top = 44.0
++offset_right = 400.0
++offset_bottom = 66.0
++text = "Disposição das peças"
++
++[node name="listaFormas" type="VBoxContainer" parent="."]
++unique_name_in_owner = true
++layout_mode = 0
++offset_left = 140.0
++offset_top = 70.0
++offset_right = 460.0
++offset_bottom = 300.0
++theme_override_constants/separation = 8
++
++[node name="avisoVazio" type="Label" parent="."]
++unique_name_in_owner = true
++visible = false
++layout_mode = 0
++offset_left = 140.0
++offset_top = 70.0
++offset_right = 460.0
++offset_bottom = 140.0
++autowrap_mode = 2
+diff --git a/scripts/TelaLoadout.gd b/scripts/TelaLoadout.gd
+new file mode 100644
+index 0000000..dffb1b3
+--- /dev/null
++++ b/scripts/TelaLoadout.gd
+@@ -0,0 +1,109 @@
++extends Control
++
++## Tela de loadout de magias (mockup "Página X" — Personagem + Disposição das
++## peças). Deixa o jogador escolher, PRA CADA FORMA DESBLOQUEADA, qual
++## ELEMENTO DESBLOQUEADO equipar nela.
++##
++## Forma e elemento são eixos independentes (decisão do módulo 2): o aluno
++## desbloqueia uma forma na sala das formas e um elemento na sala das cores,
++## e pode recombinar os dois livremente aqui — por isso a tela só mostra uma
++## linha por forma JÁ DESBLOQUEADA, e cada dropdown só lista elementos JÁ
++## DESBLOQUEADOS (nunca os 5x6 = 30 combos inteiros de uma vez).
++
++## Uma linha (forma) da tela: os três controles que a representam.
++class _Linha:
++	var icone: TextureRect
++	var opcoes: OptionButton
++	var forma: String
++
++var _linhas: Array = []
++var _elementos_desbloqueados: Array[String] = []
++
++
++func _ready() -> void:
++	%btnVoltar.pressed.connect(_on_btn_voltar_pressed)
++
++	var uid := LocalDB.get_user_id_ativo()
++
++	# Garante que o loadout salvo do jogador (se algum) já está aplicado
++	# antes de montar a tela, senão ela mostraria o padrão hardcoded.
++	SpellLoadout.carregar_equipado(uid)
++
++	_elementos_desbloqueados = LocalDB.listar_elementos_desbloqueados(uid)
++	var formas_desbloqueadas := LocalDB.listar_formas_desbloqueadas(uid)
++
++	if formas_desbloqueadas.is_empty() or _elementos_desbloqueados.is_empty():
++		%avisoVazio.text = "Você ainda não desbloqueou nenhuma forma ou elemento — vá pra sala de aula!"
++		%avisoVazio.visible = true
++		return
++
++	%avisoVazio.visible = false
++	_montar_linhas(formas_desbloqueadas)
++	_atualizar_todos_os_icones()
++
++
++func _montar_linhas(formas_desbloqueadas: Array) -> void:
++	for forma in formas_desbloqueadas:
++		var linha := HBoxContainer.new()
++		linha.add_theme_constant_override("separation", 12)
++
++		var icone := TextureRect.new()
++		icone.custom_minimum_size = Vector2(48, 48)
++		icone.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
++		icone.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
++		linha.add_child(icone)
++
++		var nome := Label.new()
++		nome.text = forma
++		nome.custom_minimum_size = Vector2(90, 0)
++		nome.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
++		linha.add_child(nome)
++
++		var opcoes := OptionButton.new()
++		for elemento in _elementos_desbloqueados:
++			opcoes.add_item(elemento)
++		linha.add_child(opcoes)
++
++		%listaFormas.add_child(linha)
++
++		var registro := _Linha.new()
++		registro.icone = icone
++		registro.opcoes = opcoes
++		registro.forma = forma
++		_linhas.append(registro)
++
++		opcoes.item_selected.connect(_on_elemento_selecionado.bind(registro))
++
++
++func _atualizar_todos_os_icones() -> void:
++	for registro in _linhas:
++		var elemento_atual: String = SpellLoadout.equipped.get(registro.forma, "")
++
++		# O elemento equipado pode não estar mais entre os desbloqueados
++		# (ex: valor padrão hardcoded de uma forma recém-desbloqueada que
++		# ainda não tinha elemento nenhum escolhido) — nesse caso cai pro
++		# primeiro elemento desbloqueado disponível, e já corrige/persiste.
++		var indice: int = _elementos_desbloqueados.find(elemento_atual)
++		if indice == -1:
++			indice = 0
++			elemento_atual = _elementos_desbloqueados[0]
++			SpellLoadout.set_equipped(registro.forma, elemento_atual)
++
++		registro.opcoes.select(indice)
++		_atualizar_icone(registro, elemento_atual)
++
++
++func _atualizar_icone(registro: _Linha, elemento: String) -> void:
++	var tipo := SpellLoadout.get_tile_type(registro.forma, elemento)
++	registro.icone.texture = tipo.shape_texture
++	registro.icone.modulate = tipo.color
++
++
++func _on_elemento_selecionado(indice: int, registro: _Linha) -> void:
++	var elemento: String = _elementos_desbloqueados[indice]
++	SpellLoadout.set_equipped(registro.forma, elemento)
++	_atualizar_icone(registro, elemento)
++
++
++func _on_btn_voltar_pressed() -> void:
++	get_tree().change_scene_to_file("res://scenes/Login/TelaAluno.tscn")
+diff --git a/scripts/tela_aluno.gd b/scripts/tela_aluno.gd
+index e3bb671..1ab074b 100644
+--- a/scripts/tela_aluno.gd
++++ b/scripts/tela_aluno.gd
+@@ -4,6 +4,16 @@ func _ready():
+ 	# Conecta os botões
+ 	%btnEntrarTurma.pressed.connect(_on_btn_entrar_turma_pressed)
+ 	%btnLogout.pressed.connect(_on_btn_logout_pressed)
++	%btnMagias.pressed.connect(_on_btn_magias_pressed)
++
++	# Restaura o loadout salvo do jogador assim que ele chega no saguão —
++	# assim o combate já usa o equipamento certo mesmo se ele nunca abrir
++	# a tela de magias nesta sessão.
++	SpellLoadout.carregar_equipado(LocalDB.get_user_id_ativo())
++
++
++func _on_btn_magias_pressed():
++	get_tree().change_scene_to_file("res://scenes/Login/TelaLoadout.tscn")
+ 
+ func _on_btn_entrar_turma_pressed():
+ 	var nick = %nomePersonagem.text.strip_edges()
+diff --git a/src/models/AulaModel.gd b/src/models/AulaModel.gd
+new file mode 100644
+index 0000000..3138cd9
+--- /dev/null
++++ b/src/models/AulaModel.gd
+@@ -0,0 +1,31 @@
++class_name AulaModel
++extends RefCounted
++
++## Conteúdo da "aula" da sala de aula (interação com a cadeira) — repetível
++## à vontade, sem custo. "tipo"/"alvo" identificam QUAL forma ou elemento essa
++## aula ensina, e são o elo com a QuizModel correspondente (mesmo tipo+alvo).
++
++var id: String = ""          # ex: "aula_forma_pentagono", "aula_elemento_fogo"
++var tipo: String = "forma"   # "forma" ou "elemento"
++var alvo: String = ""        # ex: "Pentagono" ou "Fogo"
++var titulo: String = ""
++var conteudo: String = ""    # texto da aula; pode virar Array[String] (páginas) depois se precisar
++
++func exportar_para_dicionario() -> Dictionary:
++	return {
++		"id": id,
++		"tipo": tipo,
++		"alvo": alvo,
++		"titulo": titulo,
++		"conteudo": conteudo,
++	}
++
++
++static func importar_de_dicionario(d: Dictionary) -> AulaModel:
++	var a := AulaModel.new()
++	a.id = d.get("id", "")
++	a.tipo = d.get("tipo", "forma")
++	a.alvo = d.get("alvo", "")
++	a.titulo = d.get("titulo", "")
++	a.conteudo = d.get("conteudo", "")
++	return a
+diff --git a/src/models/DesafioQuizModel.gd b/src/models/DesafioQuizModel.gd
+index 1d3f1f9..d3c8fe1 100644
+--- a/src/models/DesafioQuizModel.gd
++++ b/src/models/DesafioQuizModel.gd
+@@ -1,13 +1,27 @@
+ class_name DesafioQuizModel
+ extends RefCounted
+ 
++## Uma pergunta isolada (usada tanto sozinha — teste do módulo 3 — quanto
++## como item de uma QuizModel — prova de verdade do módulo 2).
++
++## "objetiva" (múltipla escolha, ver 'alternativas') ou "vf" (verdadeiro/falso,
++## onde resposta_correta é sempre "Verdadeiro" ou "Falso" e alternativas fica vazio).
++var tipo: String = "objetiva"
+ var pergunta: String = ""
++var alternativas: Array[String] = []   # só usado quando tipo == "objetiva"
+ var resposta_correta: String = ""
++
++## Recompensa de UMA pergunta avulsa (fluxo antigo/teste, ver LocalDB.registrar_resposta_desafio).
++## Perguntas dentro de uma QuizModel NÃO usam isso — a recompensa da prova
++## inteira vive em QuizModel.tipo_recompensa/alvo_recompensa e só é aplicada
++## se o aluno passar na prova toda (ver LocalDB.registrar_resultado_quiz).
+ var recompensa_magia: String = ""
+ 
+ func exportar_para_dicionario() -> Dictionary:
+ 	return {
++		"tipo": tipo,
+ 		"pergunta": pergunta,
++		"alternativas": alternativas,
+ 		"respostaCorreta": resposta_correta,
+ 		"recompensaMagia": recompensa_magia
+ 	}
+diff --git a/src/models/QuizModel.gd b/src/models/QuizModel.gd
+new file mode 100644
+index 0000000..3bf8759
+--- /dev/null
++++ b/src/models/QuizModel.gd
+@@ -0,0 +1,71 @@
++class_name QuizModel
++extends RefCounted
++
++## A "prova" da sala de aula (interação com o professor) — um conjunto de
++## perguntas (objetiva + V/F). Passar desbloqueia UM alvo (uma forma OU um
++## elemento — nunca os dois juntos: são eixos independentes que o aluno
++## recombina livremente depois na tela de loadout).
++
++var id: String = ""          # ex: "prova_forma_pentagono", "prova_elemento_fogo"
++var tipo: String = "forma"   # "forma" ou "elemento" — o que passar desbloqueia
++var alvo: String = ""        # ex: "Pentagono" ou "Fogo"
++var perguntas: Array[DesafioQuizModel] = []
++var nota_de_corte: float = 0.7   # fração de acertos pra passar (padrão: 70%)
++
++
++## Resultado de uma tentativa: {acertos, total, percentual, passou}.
++## 'respostas_corretas' é um Array[bool], uma entrada por pergunta, NA MESMA
++## ORDEM de 'perguntas' — quem chama já resolveu resposta_dada == resposta_correta
++## pergunta a pergunta (a UI/tela de prova é quem compara, isso aqui só soma).
++func calcular_resultado(respostas_corretas: Array) -> Dictionary:
++	var total := perguntas.size()
++	var acertos := 0
++	for correta in respostas_corretas:
++		if correta:
++			acertos += 1
++
++	var percentual := 0.0
++	if total > 0:
++		percentual = float(acertos) / float(total)
++
++	return {
++		"acertos": acertos,
++		"total": total,
++		"percentual": percentual,
++		"passou": percentual >= nota_de_corte,
++	}
++
++
++func exportar_para_dicionario() -> Dictionary:
++	var perguntas_dict := []
++	for p in perguntas:
++		perguntas_dict.append(p.exportar_para_dicionario())
++	return {
++		"id": id,
++		"tipo": tipo,
++		"alvo": alvo,
++		"perguntas": perguntas_dict,
++		"notaDeCorte": nota_de_corte,
++	}
++
++
++static func importar_de_dicionario(d: Dictionary) -> QuizModel:
++	var q := QuizModel.new()
++	q.id = d.get("id", "")
++	q.tipo = d.get("tipo", "forma")
++	q.alvo = d.get("alvo", "")
++	q.nota_de_corte = d.get("notaDeCorte", 0.7)
++
++	q.perguntas = []
++	for pd in d.get("perguntas", []):
++		var p := DesafioQuizModel.new()
++		p.tipo = pd.get("tipo", "objetiva")
++		p.pergunta = pd.get("pergunta", "")
++		var alternativas: Array[String] = []
++		for alt in pd.get("alternativas", []):
++			alternativas.append(alt)
++		p.alternativas = alternativas
++		p.resposta_correta = pd.get("respostaCorreta", "")
++		q.perguntas.append(p)
++
++	return q

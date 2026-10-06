@@ -12,22 +12,23 @@ extends Node2D
 @export var y_start: int = 280
 @export var offset: int = 20
 
-#peças do array — pink_piece fica de fora por enquanto (ainda sem papel definido)
-var possible_pieces = [
-	preload("res://scenes/pecas/quadrado.tscn"),
-	preload("res://scenes/pecas/triangulo.tscn"),
-	preload("res://scenes/pecas/pentagono.tscn"),
-	preload("res://scenes/pecas/hexagono.tscn"),
-	preload("res://scenes/pecas/circulo.tscn"),
-]
-
-var piece_shape_map: Dictionary = {
-	possible_pieces[0]: "Quadrado",
-	possible_pieces[1]: "Triangulo",
-	possible_pieces[2]: "Pentagono",
-	possible_pieces[3]: "Hexagono",
-	possible_pieces[4]: "Circulo",
+const TAMANHOS_POR_FORMAS := {
+	3: Vector2i(6, 7),
+	4: Vector2i(7, 9),
+	5: Vector2i(9, 11),
 }
+#peças do array — pink_piece fica de fora por enquanto (ainda sem papel definido)
+const PIECE_SCENES := {
+	"Quadrado": preload("res://scenes/pecas/quadrado.tscn"),
+	"Triangulo": preload("res://scenes/pecas/triangulo.tscn"),
+	"Pentagono": preload("res://scenes/pecas/pentagono.tscn"),
+	"Hexagono": preload("res://scenes/pecas/hexagono.tscn"),
+	"Circulo": preload("res://scenes/pecas/circulo.tscn"),
+}
+
+# Preenchidos no _ready() só com as formas que o jogador já desbloqueou.
+var possible_pieces: Array = []
+var piece_shape_map: Dictionary = {}
 
 ## Emitido uma vez por GRUPO de match encontrado (não uma vez por resolução
 ## inteira) — cada grupo já sai pronto pra virar um SpellCast em combat.gd.
@@ -49,9 +50,34 @@ var can_swipe = true
 
 
 func _ready() -> void:
+	var uid := LocalDB.get_user_id_ativo()
+	SpellLoadout.preparar_para_jogo(uid)
+
+	var formas := SpellLoadout.formas_disponiveis(uid)
+	if formas.size() < SpellLoadout.MIN_FORMAS_COMBATE:
+		push_warning("Grid: só %d forma(s) em jogo; o tabuleiro vai cascatear. O combate deveria estar bloqueado." % formas.size())
+
+	for forma in formas:
+		var cena: PackedScene = PIECE_SCENES[forma]
+		possible_pieces.append(cena)
+		piece_shape_map[cena] = forma
+
+	_ajustar_tamanho(formas.size())  # antes de criar a matriz e as peças
 	all_pieces = make_2d_array()
 	spawn_pices()
+	
+## Aplica o tamanho da tabela mantendo o CENTRO do tabuleiro cheio (valores
+## width/height/x_start/y_start definidos no editor) no mesmo lugar da tela.
+func _ajustar_tamanho(qtd_formas: int) -> void:
+	var tamanho: Vector2i = TAMANHOS_POR_FORMAS[clampi(qtd_formas, 3, 5)]
 
+	var centro_x: float = x_start + (width - 1) * offset / 2.0
+	var centro_y: float = y_start - (height - 1) * offset / 2.0
+
+	width = tamanho.x
+	height = tamanho.y
+	x_start = int(round(centro_x - (width - 1) * offset / 2.0))
+	y_start = int(round(centro_y + (height - 1) * offset / 2.0))
 
 func make_2d_array():
 	var array = []

@@ -62,7 +62,15 @@ func _criar_tabelas() -> void:
 	# Migração pra quem já tinha o banco antigo sem a coluna 'venceu'
 	# (CREATE TABLE IF NOT EXISTS não adiciona coluna em tabela existente).
 	# Se a coluna já existir isso só falha silenciosamente — sem problema.
-	db.query("ALTER TABLE partidas_match3 ADD COLUMN venceu INTEGER DEFAULT 0")
+	db.query("PRAGMA table_info(partidas_match3)")
+	var tem_coluna_venceu := false
+	for col in db.query_result:
+		if col["name"] == "venceu":
+			tem_coluna_venceu = true
+			break
+	if not tem_coluna_venceu:
+		db.query("ALTER TABLE partidas_match3 ADD COLUMN venceu INTEGER DEFAULT 0")
+	
 	db.query("""
 		CREATE TABLE IF NOT EXISTS desafios_respondidos (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,6 +80,61 @@ func _criar_tabelas() -> void:
 			resposta_dada TEXT,
 			correta INTEGER,
 			recompensa_magia TEXT,
+			respondido_em INTEGER,
+			synced INTEGER DEFAULT 0
+		)
+	""")
+	# Loadout equipado (Módulo 2): qual elemento está equipado em cada forma.
+	# Diferente de partidas/desafios, aqui não é histórico — é ESTADO ATUAL,
+	# uma linha por forma (UNIQUE user_id+forma), sobrescrita a cada troca.
+	db.query("""
+		CREATE TABLE IF NOT EXISTS loadout_equipado (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id TEXT,
+			forma TEXT,
+			elemento TEXT,
+			atualizado_em INTEGER,
+			synced INTEGER DEFAULT 0,
+			UNIQUE(user_id, forma)
+		)
+	""")
+	# Formas e elementos desbloqueados (Módulo 2) — EIXOS INDEPENDENTES de
+	# propósito: o aluno desbloqueia uma forma na sala das formas e um
+	# elemento na sala das cores, e depois recombina os dois livremente
+	# na tela de loadout (ver TelaLoadout.gd).
+	db.query("""
+		CREATE TABLE IF NOT EXISTS formas_desbloqueadas (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id TEXT,
+			forma TEXT,
+			desbloqueada_em INTEGER,
+			synced INTEGER DEFAULT 0,
+			UNIQUE(user_id, forma)
+		)
+	""")
+	db.query("""
+		CREATE TABLE IF NOT EXISTS elementos_desbloqueados (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id TEXT,
+			elemento TEXT,
+			desbloqueado_em INTEGER,
+			synced INTEGER DEFAULT 0,
+			UNIQUE(user_id, elemento)
+		)
+	""")
+	# Histórico de provas respondidas (uma linha por TENTATIVA, não por
+	# pergunta — perguntas individuais não têm valor de longo prazo aqui;
+	# quem quiser esse detalhe usa desafios_respondidos).
+	db.query("""
+		CREATE TABLE IF NOT EXISTS quizzes_respondidos (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id TEXT,
+			quiz_id TEXT,
+			tipo TEXT,
+			alvo TEXT,
+			acertos INTEGER,
+			total INTEGER,
+			passou INTEGER,
 			respondido_em INTEGER,
 			synced INTEGER DEFAULT 0
 		)
@@ -98,6 +161,9 @@ func _get_ou_criar_device_id() -> String:
 # --- Perfil do aluno ---
 
 func salvar_perfil(aluno: AlunoModel) -> void:
+	db.query_with_bindings("SELECT user_id FROM aluno_perfil WHERE user_id = ?", [aluno.id])
+	var eh_perfil_novo := db.query_result.is_empty()
+
 	db.query_with_bindings("""
 		INSERT INTO aluno_perfil (user_id, email, nome, tipo_perfil, is_convidado, nivel_atual, codigo_turma, updated_at, synced)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
@@ -119,8 +185,21 @@ func salvar_perfil(aluno: AlunoModel) -> void:
 	for magia in aluno.magias_desbloqueadas:
 		desbloquear_magia(aluno.id, magia)
 
+	if eh_perfil_novo:
+		garantir_kit_inicial(aluno.id)
+
 	SyncManager.request_sync()
 
+const KIT_INICIAL_FORMAS: Array[String] = ["Quadrado", "Triangulo", "Circulo"]
+const KIT_INICIAL_ELEMENTOS: Array[String] = ["Agua", "Fogo", "Terra"]
+
+## Idempotente (INSERT OR IGNORE): pode chamar quantas vezes quiser. Também
+## serve de "migração" pra perfis que já existiam com o kit antigo.
+func garantir_kit_inicial(user_id: String) -> void:
+	for forma in KIT_INICIAL_FORMAS:
+		desbloquear_forma(user_id, forma)
+	for elemento in KIT_INICIAL_ELEMENTOS:
+		desbloquear_elemento(user_id, elemento)
 
 func carregar_perfil(user_id: String) -> AlunoModel:
 	db.query_with_bindings("SELECT * FROM aluno_perfil WHERE user_id = ?", [user_id])
@@ -202,6 +281,101 @@ func registrar_resposta_desafio(user_id: String, desafio_id: String, desafio: De
 func ja_respondeu_desafio(user_id: String, desafio_id: String) -> bool:
 	db.query_with_bindings("SELECT id FROM desafios_respondidos WHERE user_id = ? AND desafio_id = ?", [user_id, desafio_id])
 	return not db.query_result.is_empty()
+
+# --- Provas (QuizModel) — Módulo 2 ---
+
+## Registra a tentativa E aplica o desbloqueio se passou. 'resultado' é o
+## Dictionary devolvido por QuizModel.calcular_resultado().
+func registrar_resultado_quiz(user_id: String, quiz: QuizModel, resultado: Dictionary) -> void:
+	db.query_with_bindings("""
+		INSERT INTO quizzes_respondidos (user_id, quiz_id, tipo, alvo, acertos, total, passou, respondido_em, synced)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+	""", [
+		user_id, quiz.id, quiz.tipo, quiz.alvo,
+		resultado["acertos"], resultado["total"], 1 if resultado["passou"] else 0,
+		Time.get_unix_time_from_system()
+	])
+
+	if resultado["passou"]:
+		if quiz.tipo == "forma":
+			desbloquear_forma(user_id, quiz.alvo)
+		elif quiz.tipo == "elemento":
+			desbloquear_elemento(user_id, quiz.alvo)
+
+	SyncManager.request_sync()
+
+
+func ja_passou_quiz(user_id: String, tipo: String, alvo: String) -> bool:
+	db.query_with_bindings("""
+		SELECT id FROM quizzes_respondidos WHERE user_id = ? AND tipo = ? AND alvo = ? AND passou = 1
+	""", [user_id, tipo, alvo])
+	return not db.query_result.is_empty()
+
+# --- Formas e elementos desbloqueados (Módulo 2 — eixos independentes) ---
+
+func desbloquear_forma(user_id: String, forma: String) -> void:
+	db.query_with_bindings("""
+		INSERT OR IGNORE INTO formas_desbloqueadas (user_id, forma, desbloqueada_em, synced)
+		VALUES (?, ?, ?, 0)
+	""", [user_id, forma, Time.get_unix_time_from_system()])
+	SyncManager.request_sync()
+
+
+func listar_formas_desbloqueadas(user_id: String) -> Array[String]:
+	db.query_with_bindings("SELECT forma FROM formas_desbloqueadas WHERE user_id = ?", [user_id])
+	var formas: Array[String] = []
+	for row in db.query_result:
+		formas.append(row["forma"])
+	return formas
+
+
+func forma_desbloqueada(user_id: String, forma: String) -> bool:
+	db.query_with_bindings("SELECT id FROM formas_desbloqueadas WHERE user_id = ? AND forma = ?", [user_id, forma])
+	return not db.query_result.is_empty()
+
+
+func desbloquear_elemento(user_id: String, elemento: String) -> void:
+	db.query_with_bindings("""
+		INSERT OR IGNORE INTO elementos_desbloqueados (user_id, elemento, desbloqueado_em, synced)
+		VALUES (?, ?, ?, 0)
+	""", [user_id, elemento, Time.get_unix_time_from_system()])
+	SyncManager.request_sync()
+
+
+func listar_elementos_desbloqueados(user_id: String) -> Array[String]:
+	db.query_with_bindings("SELECT elemento FROM elementos_desbloqueados WHERE user_id = ?", [user_id])
+	var elementos: Array[String] = []
+	for row in db.query_result:
+		elementos.append(row["elemento"])
+	return elementos
+
+
+func elemento_desbloqueado(user_id: String, elemento: String) -> bool:
+	db.query_with_bindings("SELECT id FROM elementos_desbloqueados WHERE user_id = ? AND elemento = ?", [user_id, elemento])
+	return not db.query_result.is_empty()
+
+# --- Loadout equipado (Módulo 2) ---
+
+func salvar_equipado(user_id: String, forma: String, elemento: String) -> void:
+	db.query_with_bindings("""
+		INSERT INTO loadout_equipado (user_id, forma, elemento, atualizado_em, synced)
+		VALUES (?, ?, ?, ?, 0)
+		ON CONFLICT(user_id, forma) DO UPDATE SET
+			elemento = excluded.elemento,
+			atualizado_em = excluded.atualizado_em,
+			synced = 0
+	""", [user_id, forma, elemento, Time.get_unix_time_from_system()])
+	SyncManager.request_sync()
+
+
+## Retorna {"Forma": "Elemento", ...} só com o que esse usuário já salvou —
+## formas ausentes ficam por conta do valor padrão definido em SpellLoadout.
+func carregar_loadout(user_id: String) -> Dictionary:
+	db.query_with_bindings("SELECT forma, elemento FROM loadout_equipado WHERE user_id = ?", [user_id])
+	var loadout := {}
+	for row in db.query_result:
+		loadout[row["forma"]] = row["elemento"]
+	return loadout
 
 # --- Suporte à sincronização (usado pelo SyncManager) ---
 

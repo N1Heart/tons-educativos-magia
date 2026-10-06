@@ -17,7 +17,7 @@ extends Node2D
 
 ## Formas que o jogador leva pra esse combate (por enquanto, sempre as 5;
 ## no futuro isso vem do que o jogador já desbloqueou em exploração).
-@export var player_shapes: Array[String] = ["Quadrado", "Triangulo", "Pentagono", "Hexagono", "Circulo"]
+@export var player_shapes: Array[String] = []
 @export var player_hp_each: int = 30
 
 ## Encontro de teste — troque livremente pra simular oponentes diferentes.
@@ -27,6 +27,11 @@ var log_lines: Array[String] = []
 
 
 func _ready() -> void:
+	if not SpellLoadout.pode_entrar_em_combate(LocalDB.get_user_id_ativo()):
+		push_warning("duelos: " + SpellLoadout.motivo_bloqueio_combate(LocalDB.get_user_id_ativo()))
+		get_tree().change_scene_to_file.call_deferred("res://scenes/salas/fundosDoCastelo.tscn")
+		return
+		
 	Combat.bind_board(board)
 
 	Combat.units_changed.connect(_on_units_changed)
@@ -36,7 +41,9 @@ func _ready() -> void:
 	Combat.combat_ended.connect(_on_combat_ended)
 
 	var player_types: Array[TileType] = []
-	for shape_name in player_shapes:
+	var formas: Array[String] = player_shapes if not player_shapes.is_empty() \
+		else SpellLoadout.formas_disponiveis(LocalDB.get_user_id_ativo())
+	for shape_name in formas:
 		player_types.append(SpellLoadout.get_equipped_type(shape_name))
 
 	# Encontro de teste com quantidade variável (3 formas, não 5) — troque

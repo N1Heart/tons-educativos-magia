@@ -14,9 +14,8 @@ func _ready():
 	%BtnVoltarLogin.pressed.connect(_on_btn_voltar_login_pressed)
 	
 	%BtnConvidado.pressed.connect(_on_btn_convidado_pressed)
-	%BntEntrar.pressed.connect(_on_btn_entrar_pressed)
+	%BtnEntrar.pressed.connect(_on_btn_entrar_pressed)
 	%BtnCadastro.pressed.connect(_on_btn_cadastrar_pressed)
-
 # --- NAVEGAÇÃO ENTRE TELAS ---
 
 func _on_btn_ir_cadastro_pressed():
@@ -53,7 +52,7 @@ func _on_btn_entrar_pressed():
 		print("Preencha email e senha!")
 		return
 		
-	%BntEntrar.disabled = true
+	%BtnEntrar.disabled = true
 	var sucesso = await NakamaManager.login_conta(email, senha)
 	
 	if sucesso == "professor":

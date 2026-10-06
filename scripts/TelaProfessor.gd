@@ -102,4 +102,3 @@ func _on_turma_ativada(index: int) -> void:
 	NakamaManager.turma_selecionada_id = turma["id"]
 	NakamaManager.turma_selecionada_nome = turma["nome"]
 	get_tree().change_scene_to_file("res://scenes/Login/TelaTurma.tscn")
-

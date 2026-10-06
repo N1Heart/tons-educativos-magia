@@ -1,0 +1,106 @@
+[gd_scene format=3 uid="uid://8fi3bp0xl6fs"]
+
+[ext_resource type="Texture2D" uid="uid://b31o75afo1qrf" path="res://assets/sprites/mage3.png" id="1_6c0gp"]
+[ext_resource type="Script" path="res://entities/npc_professor.gd" id="2_npc"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_e2ube"]
+height = 56.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_zona"]
+radius = 40.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ap4ap"]
+atlas = ExtResource("1_6c0gp")
+region = Rect2(0, 0, 140, 140)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_auq2d"]
+atlas = ExtResource("1_6c0gp")
+region = Rect2(140, 0, 140, 140)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d65vg"]
+atlas = ExtResource("1_6c0gp")
+region = Rect2(280, 0, 140, 140)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qgby7"]
+atlas = ExtResource("1_6c0gp")
+region = Rect2(420, 0, 140, 140)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yphii"]
+atlas = ExtResource("1_6c0gp")
+region = Rect2(560, 0, 140, 140)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mbm8y"]
+atlas = ExtResource("1_6c0gp")
+region = Rect2(700, 0, 140, 140)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rh4mt"]
+atlas = ExtResource("1_6c0gp")
+region = Rect2(840, 0, 140, 140)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_r00k2"]
+atlas = ExtResource("1_6c0gp")
+region = Rect2(980, 0, 140, 140)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ksccw"]
+atlas = ExtResource("1_6c0gp")
+region = Rect2(1120, 0, 140, 140)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7q0y6"]
+atlas = ExtResource("1_6c0gp")
+region = Rect2(1260, 0, 140, 140)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_e2ube"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ap4ap")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_auq2d")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d65vg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qgby7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yphii")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mbm8y")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rh4mt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_r00k2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ksccw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7q0y6")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="Professor1" type="CharacterBody2D" unique_id=1475615145]
+script = ExtResource("2_npc")
+tipo = "duelo"
+mensagem = "Duelos entre alunos chegam em breve — por enquanto, treine no quintal dos fundos!"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2138883649]
+shape = SubResource("CapsuleShape2D_e2ube")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=697506446]
+position = Vector2(-2, -1)
+sprite_frames = SubResource("SpriteFrames_e2ube")
+flip_h = true
+
+[node name="ZonaInteracao" type="Area2D" parent="." groups=["interagivel"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaInteracao"]
+shape = SubResource("CircleShape2D_zona")

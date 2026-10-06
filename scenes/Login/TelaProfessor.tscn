@@ -19,13 +19,13 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 62.230995
-offset_top = -18.682173
-offset_right = 302.23102
-offset_bottom = 71.317825
+offset_left = 48.198517
+offset_top = -10.190277
+offset_right = 288.19855
+offset_bottom = 79.80972
 grow_horizontal = 2
 grow_vertical = 2
-scale = Vector2(0.93108374, 1.4497405)
+scale = Vector2(0.53469497, 0.7664768)
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
@@ -43,10 +43,11 @@ text = "Minhas Turmas Cadastradas"
 
 [node name="MarginContainer2" type="MarginContainer" parent="TelaProfessor" unique_id=534250565]
 layout_mode = 0
-offset_left = 427.07544
-offset_top = 44.72399
-offset_right = 631.07544
-offset_bottom = 296.724
+offset_left = 210.48717
+offset_top = 14.719291
+offset_right = 414.48718
+offset_bottom = 293.7193
+scale = Vector2(0.65707225, 0.62483346)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="TelaProfessor/MarginContainer2" unique_id=289848169]
 layout_mode = 2
@@ -108,16 +109,17 @@ offset_left = 9.761724
 offset_top = 8.491897
 offset_right = 71.76173
 offset_bottom = 39.491898
+scale = Vector2(0.5125522, 0.56922454)
 text = "Logout"
 
 [node name="listaTurmas" type="ItemList" parent="TelaProfessor" unique_id=83396186]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 61.620888
-offset_top = 64.538414
-offset_right = 281.62088
-offset_bottom = 214.53842
-scale = Vector2(1.0114375, 1.109731)
+offset_left = 48.19851
+offset_top = 37.930473
+offset_right = 268.19852
+offset_bottom = 187.93048
+scale = Vector2(0.5733068, 0.74577224)
 size_flags_vertical = 3
 allow_search = false
 auto_width = true

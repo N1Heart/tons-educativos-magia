@@ -44,6 +44,10 @@ func _do_sync() -> void:
 	await _sync_tabela("magias_desbloqueadas", user_id, "progresso_magias")
 	await _sync_tabela("partidas_match3", user_id, "progresso_partidas")
 	await _sync_tabela("desafios_respondidos", user_id, "progresso_desafios")
+	await _sync_tabela("formas_desbloqueadas", user_id, "progresso_formas")
+	await _sync_tabela("elementos_desbloqueados", user_id, "progresso_elementos")
+	await _sync_tabela("quizzes_respondidos", user_id, "progresso_quizzes")
+	await _sync_loadout(user_id)
 
 	_syncing = false
 
@@ -74,3 +78,16 @@ func _sync_tabela(tabela: String, user_id: String, colecao: String) -> void:
 		var ok: bool = await NakamaManager.escrever_dados(colecao, chave, row)
 		if ok:
 			LocalDB.marcar_sincronizado(tabela, row["id"])
+
+
+## Loadout é ESTADO ATUAL, não histórico — cada forma tem sua própria chave
+## fixa (a chave = nome da forma, ex: "progresso_loadout"/"Quadrado"), então
+## sincronizar de novo naturalmente sobrescreve o valor anterior no Nakama.
+## Isso é o comportamento certo aqui (diferente do bug corrigido acima).
+func _sync_loadout(user_id: String) -> void:
+	var pendentes: Array = LocalDB.listar_pendentes("loadout_equipado", user_id)
+	for row in pendentes:
+		var chave: String = row["forma"]
+		var ok: bool = await NakamaManager.escrever_dados("progresso_loadout", chave, row)
+		if ok:
+			LocalDB.marcar_sincronizado("loadout_equipado", row["id"])

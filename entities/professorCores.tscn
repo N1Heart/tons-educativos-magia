@@ -1,0 +1,80 @@
+[gd_scene format=3 uid="uid://ci55navu03wg3"]
+
+[ext_resource type="Texture2D" uid="uid://bx5w4g77b85vx" path="res://assets/sprites/Idle.png" id="1_qjydq"]
+[ext_resource type="Script" path="res://entities/npc_professor.gd" id="2_npc"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_e2ube"]
+radius = 22.0
+height = 94.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_zona"]
+radius = 40.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ocolc"]
+atlas = ExtResource("1_qjydq")
+region = Rect2(0, 0, 231, 140)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n2d17"]
+atlas = ExtResource("1_qjydq")
+region = Rect2(231, 0, 231, 140)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j7v62"]
+atlas = ExtResource("1_qjydq")
+region = Rect2(462, 0, 231, 140)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2lw11"]
+atlas = ExtResource("1_qjydq")
+region = Rect2(693, 0, 231, 140)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e25kb"]
+atlas = ExtResource("1_qjydq")
+region = Rect2(924, 0, 231, 140)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_je5k0"]
+atlas = ExtResource("1_qjydq")
+region = Rect2(1155, 0, 231, 140)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_e2ube"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ocolc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_n2d17")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j7v62")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2lw11")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e25kb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_je5k0")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="Professor2" type="CharacterBody2D" unique_id=1475615145]
+scale = Vector2(0.7, 0.7)
+script = ExtResource("2_npc")
+tipo = "cores"
+mensagem = "Quer assistir uma aula sobre os elementos (cores) das peças?"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1038127199]
+shape = SubResource("CapsuleShape2D_e2ube")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1966453941]
+position = Vector2(-5, -26)
+sprite_frames = SubResource("SpriteFrames_e2ube")
+flip_h = true
+
+[node name="ZonaInteracao" type="Area2D" parent="." groups=["interagivel"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaInteracao"]
+shape = SubResource("CircleShape2D_zona")

@@ -17,6 +17,9 @@ signal loadout_changed(shape_name: String, element_name: String)
 const SHAPES: Array[String] = ["Quadrado", "Triangulo", "Pentagono", "Hexagono", "Circulo"]
 const ELEMENTS: Array[String] = ["Fogo", "Agua", "Eletricidade", "Terra", "Cura", "Tempo"]
 
+const MIN_FORMAS_COMBATE := 3
+const MIN_ELEMENTOS_COMBATE := 3
+
 const SHAPE_TEXTURE_PATHS := {
 	"Quadrado": "res://assets/pecasEditaveis/quadrado.png",
 	"Triangulo": "res://assets/pecasEditaveis/triangulo.png",
@@ -61,6 +64,19 @@ var equipped: Dictionary = {
 
 var _cache: Dictionary = {}  # "Forma_Elemento" -> TileType
 
+func pode_entrar_em_combate(user_id: String) -> bool:
+	return motivo_bloqueio_combate(user_id) == ""
+
+
+## Texto vazio = liberado. Pensado pra virar fala de NPC quando tivermos o diálogo.
+func motivo_bloqueio_combate(user_id: String) -> String:
+	var n_formas := formas_disponiveis(user_id).size()
+	var n_elementos := elementos_disponiveis(user_id).size()
+	if n_formas < MIN_FORMAS_COMBATE:
+		return "Você precisa de pelo menos %d formas (tem %d). Assista às aulas na sala das formas." % [MIN_FORMAS_COMBATE, n_formas]
+	if n_elementos < MIN_ELEMENTOS_COMBATE:
+		return "Você precisa de pelo menos %d cores (tem %d). Assista às aulas na sala das cores." % [MIN_ELEMENTOS_COMBATE, n_elementos]
+	return ""
 
 func get_tile_type(shape_name: String, element_name: String) -> TileType:
 	var key := "%s_%s" % [shape_name, element_name]
@@ -89,13 +105,78 @@ func get_equipped_type(shape_name: String) -> TileType:
 	return get_tile_type(shape_name, equipped.get(shape_name, ELEMENTS[0]))
 
 
-func set_equipped(shape_name: String, element_name: String) -> void:
+func set_equipped(shape_name: String, element_name: String, persistir: bool = true) -> void:
 	if not SHAPES.has(shape_name) or not ELEMENTS.has(element_name):
 		push_warning("SpellLoadout: forma ou elemento inválido (%s / %s)" % [shape_name, element_name])
 		return
 	equipped[shape_name] = element_name
 	loadout_changed.emit(shape_name, element_name)
 
+	# persistir=false é usado só por carregar_equipado(), pra não regravar
+	# no banco o mesmo dado que acabou de ler de lá.
+	if persistir:
+		LocalDB.salvar_equipado(LocalDB.get_user_id_ativo(), shape_name, element_name)
+
+
+## Chame depois do login (ou ao abrir a tela de loadout) pra restaurar o que
+## o jogador tinha equipado da última vez. Formas sem registro salvo mantêm
+## o valor padrão de 'equipped' definido acima.
+func carregar_equipado(user_id: String) -> void:
+	var salvo := LocalDB.carregar_loadout(user_id)
+	for forma in salvo:
+		if SHAPES.has(forma) and ELEMENTS.has(salvo[forma]):
+			set_equipped(forma, salvo[forma], false)
+
 
 func get_category(shape_name: String) -> String:
 	return SHAPE_CATEGORY.get(shape_name, "dano_rapido")
+
+const MIN_FORMAS_TABULEIRO := 3
+
+## Atalho de teste: true ignora os desbloqueios (libera as 5 formas e os 6 elementos).
+var debug_liberar_tudo := false
+
+
+func formas_disponiveis(user_id: String) -> Array[String]:
+	var resultado: Array[String] = []
+	var desbloqueadas := LocalDB.listar_formas_desbloqueadas(user_id)
+	for forma in SHAPES:  # mantém a ordem canônica
+		if debug_liberar_tudo or desbloqueadas.has(forma):
+			resultado.append(forma)
+
+	# Rede de segurança: com menos de 3 formas o tabuleiro vira um laço de
+	# cascatas. Não deveria acontecer com o kit inicial, mas evita travar o jogo.
+	if resultado.size() < MIN_FORMAS_TABULEIRO:
+		push_warning("SpellLoadout: só %d forma(s) desbloqueada(s); completando até %d." % [resultado.size(), MIN_FORMAS_TABULEIRO])
+		for forma in SHAPES:
+			if not resultado.has(forma):
+				resultado.append(forma)
+			if resultado.size() >= MIN_FORMAS_TABULEIRO:
+				break
+	return resultado
+
+
+func elementos_disponiveis(user_id: String) -> Array[String]:
+	var resultado: Array[String] = []
+	var desbloqueados := LocalDB.listar_elementos_desbloqueados(user_id)
+	for elemento in ELEMENTS:
+		if debug_liberar_tudo or desbloqueados.has(elemento):
+			resultado.append(elemento)
+	return resultado
+
+
+## Se a forma estiver com um elemento que o jogador ainda não desbloqueou (ex:
+## o padrão "Triangulo = Fogo"), troca pelo primeiro elemento disponível.
+func normalizar_equipados(user_id: String) -> void:
+	var elementos := elementos_disponiveis(user_id)
+	if elementos.is_empty():
+		return
+	for forma in formas_disponiveis(user_id):
+		if not elementos.has(equipped.get(forma, "")):
+			set_equipped(forma, elementos[0])
+
+
+## Chame ao entrar em qualquer cena de combate: restaura o salvo e corrige o inválido.
+func preparar_para_jogo(user_id: String) -> void:
+	carregar_equipado(user_id)
+	normalizar_equipados(user_id)
