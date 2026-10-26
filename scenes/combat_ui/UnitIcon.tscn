@@ -1,20 +1,39 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://dre86hijtx25"]
 
-[ext_resource type="Script" path="res://scripts/unit_icon.gd" id="1_icon"]
+[ext_resource type="Script" uid="uid://co111dqa4t6l7" path="res://scripts/unit_icon.gd" id="1_icon"]
 
-[node name="UnitIcon" type="VBoxContainer"]
+[node name="UnitIcon" type="VBoxContainer" unique_id=1035065238]
 custom_minimum_size = Vector2(40, 0)
 alignment = 1
 script = ExtResource("1_icon")
 
-[node name="Icon" type="TextureRect" parent="."]
+[node name="Icon" type="TextureRect" parent="." unique_id=169881798]
 custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
 size_flags_horizontal = 4
 expand_mode = 1
 stretch_mode = 5
 
-[node name="HPBar" type="ProgressBar" parent="."]
+[node name="HPBar" type="ProgressBar" parent="." unique_id=1632082755]
 custom_minimum_size = Vector2(36, 6)
 layout_mode = 2
 show_percentage = false
+
+[node name="ShieldBar" type="ProgressBar" parent="." unique_id=487314565]
+visible = false
+modulate = Color(0.4, 0.7, 1, 1)
+custom_minimum_size = Vector2(36, 8)
+layout_mode = 2
+show_percentage = false
+
+[node name="Valor" type="Label" parent="ShieldBar" unique_id=811997145]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
+vertical_alignment = 1

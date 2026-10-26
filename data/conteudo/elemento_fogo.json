@@ -1,0 +1,109 @@
+{
+  "versao": 1,
+  "tipo": "elemento",
+  "alvo": "Fogo",
+  "nome_menu": "Vermelho (Fogo)",
+  "aula": {
+    "id": "aula_elemento_fogo",
+    "tipo": "elemento",
+    "alvo": "Fogo",
+    "titulo": "Vermelho — Fogo",
+    "falas": [
+      "Hoje vamos estudar o Vermelho, a cor do Fogo! É uma das cores mais intensas que existem: chama a atenção imediatamente, transmite energia e urgência. No nosso Círculo Mágico, é o elemento da força, da coragem e da transformação.",
+      "Lembre como funciona o Círculo Mágico: cada cor está ligada a um elemento. As cores primárias são os elementos primordiais (Fogo, Água e Eletricidade); as secundárias são os elementos combinados (Terra, Cura e Tempo); e as complementares indicam os elementos opostos. A magia é fantasia, mas para dominá-la é preciso saber a ciência de verdade!",
+      "A ciência da cor: nas tintas, o vermelho é uma das três cores primárias (com o azul e o amarelo). Ele não pode ser obtido misturando outras cores, mas ajuda a formar outras: com o amarelo vira laranja e com o azul vira roxo.",
+      "O vermelho é uma cor quente, assim como o laranja e o amarelo. Cores quentes lembram o sol e o fogo e parecem “saltar” em direção a quem olha.",
+      "Na luz, entre as cores do arco-íris, o vermelho tem o maior comprimento de onda (cerca de 620 a 750 nanômetros). Logo depois dele vem o infravermelho, que não enxergamos, mas sentimos como calor. A cor oposta ao vermelho é o verde: lado a lado, cores complementares criam o maior contraste possível.",
+      "Por que o vermelho combina com o Fogo? Brasas e chamas mais “fracas” brilham em tons de vermelho. Curiosamente, quanto mais quente o fogo, mais ele muda de cor: vai para o laranja, o amarelo, o branco e até o azul. Por isso a parte azul da chama do fogão é mais quente que a ponta vermelha de uma fogueira.",
+      "O vermelho também é a cor do alerta: extintores, hidrantes e caminhões de bombeiro são vermelhos para serem encontrados rapidamente, justamente quando há fogo.",
+      "Grimório, ficha do elemento Fogo. Essência: força, coragem, paixão e transformação. É um elemento primordial, assim como sua cor é primária. Feitiços de exemplo: Faísca Inicial (acende uma chama na palma da mão), Muralha Ardente (cria uma barreira de calor) e Chama Guardiã (aquece e protege aliados).",
+      "Combinações: Fogo + Eletricidade = Terra (vermelho + amarelo = laranja). Fogo + Água = Tempo (vermelho + azul = roxo). O oposto do Fogo é a Cura (verde): o Fogo consome e transforma; a Cura restaura e reconstrói.",
+      "Você sabia? Marte, o planeta vermelho, tem essa cor por causa do óxido de ferro, a mesma “ferrugem” que aparece em pregos velhos, espalhado pelo solo. E touros não distinguem bem o vermelho: o que os provoca é o movimento da capa, não a cor.",
+      "Por que “pare” é vermelho? Por ter o maior comprimento de onda, a luz vermelha se espalha menos no ar e atravessa melhor a neblina, ótima para sinais de parada e luzes de freio."
+    ]
+  },
+  "prova": {
+    "id": "prova_elemento_fogo",
+    "tipo": "elemento",
+    "alvo": "Fogo",
+    "notaDeCorte": 0.7,
+    "perguntas": [
+      {
+        "tipo": "vf",
+        "pergunta": "O vermelho é uma cor primária: não pode ser obtido misturando outras cores.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "Vermelho, azul e amarelo são as primárias das tintas."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "O vermelho é classificado como uma cor fria.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "É uma cor quente, como o laranja e o amarelo."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "Em uma chama, a parte azul costuma ser mais quente que a parte vermelha.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "Quanto mais quente o fogo, mais sua cor caminha para o branco e o azul."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "No Círculo Mágico, o elemento oposto ao Fogo é a Água.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "O oposto é a Cura, pois o verde é a complementar do vermelho."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Qual é a cor complementar (oposta) do vermelho?",
+        "alternativas": [
+          "Azul",
+          "Verde",
+          "Amarelo",
+          "Roxo"
+        ],
+        "respostaCorreta": "Verde",
+        "explicacao": "Vermelho e verde estão em lados opostos do círculo cromático."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Entre as cores do arco-íris, o vermelho é a que possui:",
+        "alternativas": [
+          "O menor comprimento de onda",
+          "Nenhum comprimento de onda",
+          "O maior comprimento de onda",
+          "A luz ultravioleta"
+        ],
+        "respostaCorreta": "O maior comprimento de onda",
+        "explicacao": "O vermelho vai de ~620 a 750 nm, o maior do espectro visível."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Por que o planeta Marte parece vermelho?",
+        "alternativas": [
+          "Por causa do óxido de ferro (ferrugem) no solo",
+          "Porque é muito quente",
+          "Porque reflete o Sol nascente",
+          "Porque tem lava na superfície"
+        ],
+        "respostaCorreta": "Por causa do óxido de ferro (ferrugem) no solo",
+        "explicacao": "O óxido de ferro espalhado pelo solo dá a cor avermelhada."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "No Círculo Mágico, Fogo + Água resultam em qual elemento?",
+        "alternativas": [
+          "Terra",
+          "Cura",
+          "Eletricidade",
+          "Tempo"
+        ],
+        "respostaCorreta": "Tempo",
+        "explicacao": "Vermelho + azul = roxo, a cor do Tempo."
+      }
+    ]
+  }
+}

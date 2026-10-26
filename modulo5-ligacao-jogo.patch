@@ -1,0 +1,340 @@
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base7/entities/npc_professor.gd tons-educativos-magia/entities/npc_professor.gd
+--- a/entities/npc_professor.gd	2026-10-05 21:31:00.000000000 -0400
++++ b/entities/npc_professor.gd	2026-10-13 16:24:49.890553054 -0400
+@@ -3,7 +3,7 @@
+ ## NPC "professor" de uma sala (formas, cores ou duelos).
+ ##
+ ## Nas salas de formas/cores, conversar abre o menu de PROVAS (a aula fica na
+-## cadeira da sala). Na sala de duelos só mostra a fala de `mensagem`.
++## cadeira da sala). Na sala de duelos abre o menu da sala do professor (entrar/sair do PvE e PvP em grupo).
+ 
+ @export var tipo: String = ""  # "formas", "cores" ou "duelo"
+ @export var nome_exibicao: String = "Professor"
+@@ -17,5 +17,7 @@
+ 	var dados := {"nome": nome_exibicao, "retrato": retrato}
+ 	if tipo == "formas" or tipo == "cores":
+ 		FluxoSala.iniciar(self, "prova", tipo, dados)
++	elif tipo == "duelo":
++		FluxoSala.iniciar(self, "duelo", tipo, dados)
+ 	else:
+ 		FluxoSala.iniciar(self, "falas", tipo, dados, [mensagem])
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base7/entities/professorDuelo.tscn tons-educativos-magia/entities/professorDuelo.tscn
+--- a/entities/professorDuelo.tscn	2026-10-05 21:31:00.000000000 -0400
++++ b/entities/professorDuelo.tscn	2026-10-13 16:24:49.903654388 -0400
+@@ -91,7 +91,7 @@
+ script = ExtResource("2_npc")
+ nome_exibicao = "Mestre dos Duelos"
+ tipo = "duelo"
+-mensagem = "Duelos entre alunos chegam em breve — por enquanto, treine no quintal dos fundos!"
++mensagem = "Quer enfrentar seus colegas? Peça ao professor o código da sala!"
+ 
+ [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2138883649]
+ shape = SubResource("CapsuleShape2D_e2ube")
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base7/scripts/TelaLobby.gd tons-educativos-magia/scripts/TelaLobby.gd
+--- a/scripts/TelaLobby.gd	2026-10-13 15:17:43.000000000 -0400
++++ b/scripts/TelaLobby.gd	2026-10-13 16:24:49.893312108 -0400
+@@ -51,6 +51,7 @@
+ 	LobbyManager.atividade_iniciada.connect(_on_atividade_iniciada)
+ 	LobbyManager.sala_encerrada.connect(_on_sala_encerrada)
+ 	DueloRede.estados_atualizados.connect(_atualizar)
++	DueloRede.status_mudou.connect(_on_status_mudou)
+ 
+ 	if _professor:
+ 		_montar_sala()
+@@ -142,6 +143,8 @@
+ 		linha.add_child(_btn_encerrar_atividade)
+ 		linha.add_child(_botao("Encerrar sala", _voltar))
+ 	else:
++		if Engine.has_meta("lobby_retorno"):
++			linha.add_child(_botao("Voltar ao jogo (continua na sala)", _voltar_ao_jogo))
+ 		linha.add_child(_botao("Sair da sala", _voltar))
+ 	_caixa.add_child(linha)
+ 
+@@ -191,7 +194,28 @@
+ func _voltar() -> void:
+ 	await LobbyManager.sair()
+ 	if is_inside_tree():
+-		get_tree().change_scene_to_file(CENA_PROFESSOR if _professor else CENA_ALUNO)
++		if _professor:
++			get_tree().change_scene_to_file(CENA_PROFESSOR)
++		else:
++			_ir_para_retorno()
++
++
++## Sai da tela de espera mas continua na sala: o aluno anda pelo jogo e, se o
++## professor iniciar uma atividade, é levado direto pra partida.
++func _voltar_ao_jogo() -> void:
++	_ir_para_retorno()
++
++
++## Volta ao ponto do jogo de onde veio (ou ao menu do aluno).
++func _ir_para_retorno() -> void:
++	var destino := CENA_ALUNO
++	if Engine.has_meta("lobby_retorno"):
++		var pedido: Dictionary = Engine.get_meta("lobby_retorno")
++		Engine.remove_meta("lobby_retorno")
++		destino = pedido.get("cena", destino)
++		if pedido.has("posicao"):
++			Engine.set_meta("spawn_proxima_cena", {"cena": destino, "posicao": pedido["posicao"]})
++	get_tree().change_scene_to_file(destino)
+ 
+ 
+ # ------------------------------------------------------------------ eventos
+@@ -238,25 +262,15 @@
+ 	return "PvE cooperativo" if modo == "pve" else "PvP (duelo)"
+ 
+ 
+-func _on_atividade_iniciada(modo: String) -> void:
+-	if _status == null or not is_instance_valid(_status):
+-		return
+-	if _professor:
++func _on_atividade_iniciada(_modo: String) -> void:
++	# Quem entra na partida (e mostra os avisos) é o DueloRede, de qualquer tela.
++	if _professor and _status != null and is_instance_valid(_status):
+ 		_atualizar()
+-		return
+-	if modo == "":
+-		_status.text = "Aguardando o professor iniciar a atividade..."
+-		return
+-	_status.text = "Preparando a partida (%s)..." % _nome_atividade(modo)
+-	var resultado: String = await DueloRede.preparar(LobbyManager.atividade_dados)
+-	if not is_inside_tree():
+-		return
+-	if resultado == "SEM_PAR":
+-		_status.text = "Você ficou sem par nesta rodada. Aguarde o professor."
+-	elif resultado != "":
+-		_status.text = resultado
+-	else:
+-		get_tree().change_scene_to_file(CENA_DUELO)
++
++
++func _on_status_mudou(texto: String) -> void:
++	if not _professor and _status != null and is_instance_valid(_status):
++		_status.text = texto
+ 
+ 
+ func _on_sala_encerrada(motivo: String) -> void:
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base7/src/services/DueloRede.gd tons-educativos-magia/src/services/DueloRede.gd
+--- a/src/services/DueloRede.gd	2026-10-13 15:47:13.000000000 -0400
++++ b/src/services/DueloRede.gd	2026-10-13 16:25:24.585698143 -0400
+@@ -22,9 +22,13 @@
+ signal membro_saiu(user_id: String)       # alguém do meu grupo saiu (ou caiu)
+ signal atividade_encerrada                # o professor encerrou a atividade
+ signal sala_perdida(motivo: String)       # o professor fechou a sala / conexão caiu
++signal status_mudou(texto: String)       # mensagem pro aluno (sala de espera / aviso na tela)
+ signal feiticos_recebidos                 # PvP (anfitrião): chegaram os feitiços do outro jogador
+ signal estados_atualizados                # chegou resumo de algum aluno (professor)
+ 
++const CENA_DUELO := "res://scenes/salas/duelos.tscn"
++const CENA_LOBBY := "res://scenes/Login/TelaLobby.tscn"
++
+ const OP_PRONTO := 101
+ const OP_TURNO := 102
+ const OP_SAIDA := 103
+@@ -75,6 +79,57 @@
+ 		if ativo:
+ 			atividade_encerrada.emit()
+ 		limpar_partida()
++		status_mudou.emit("Aguardando o professor iniciar a atividade...")
++		return
++	if not LobbyManager.sou_professor:
++		_entrar_na_atividade()
++
++
++## O professor iniciou: quem está na sala entra na partida de onde estiver
++## (sala de espera ou andando pelo jogo), a não ser que esteja ocupado.
++func _entrar_na_atividade() -> void:
++	if ativo:
++		return
++	if Combat.combat_active or FluxoSala._em_andamento:
++		_avisar("Atividade em grupo iniciada, mas você está ocupado. Termine e fale com o Mestre dos Duelos.")
++		return
++	_avisar("Preparando a partida...")
++	var resultado: String = await preparar(LobbyManager.atividade_dados)
++	if resultado == "SEM_PAR":
++		_avisar("Você ficou sem par nesta rodada. Aguarde o professor.")
++	elif resultado != "":
++		_avisar(resultado)
++	elif Combat.combat_active or FluxoSala._em_andamento:
++		limpar_partida()  # ficou ocupado enquanto esperava os colegas
++		_avisar("A partida em grupo começou, mas você estava ocupado.")
++	else:
++		if MenuPausa.esta_aberto():
++			MenuPausa.fechar()
++		get_tree().change_scene_to_file(CENA_DUELO)
++
++
++## Mostra o aviso na sala de espera e, em outras telas, num balão no topo.
++func _avisar(texto: String) -> void:
++	status_mudou.emit(texto)
++	var cena := get_tree().current_scene
++	if cena != null and cena.scene_file_path == CENA_LOBBY:
++		return
++	var camada := CanvasLayer.new()
++	camada.layer = 90
++	var painel := PanelContainer.new()
++	painel.set_anchors_preset(Control.PRESET_CENTER_TOP)
++	painel.grow_horizontal = Control.GROW_DIRECTION_BOTH
++	painel.offset_top = 8
++	var rotulo := Label.new()
++	rotulo.text = texto
++	rotulo.add_theme_font_size_override("font_size", 12)
++	rotulo.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++	rotulo.custom_minimum_size = Vector2(380, 0)
++	rotulo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
++	painel.add_child(rotulo)
++	camada.add_child(painel)
++	add_child(camada)
++	get_tree().create_timer(4.0).timeout.connect(camada.queue_free)
+ 
+ 
+ ## Zera o estado da partida (volta ao comportamento normal de PvE solo).
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base7/src/ui/FluxoSala.gd tons-educativos-magia/src/ui/FluxoSala.gd
+--- a/src/ui/FluxoSala.gd	2026-10-05 21:31:00.000000000 -0400
++++ b/src/ui/FluxoSala.gd	2026-10-13 16:24:49.891494434 -0400
+@@ -10,9 +10,12 @@
+ ##   FluxoSala.iniciar(self, "aula",  "formas", {"nome": "Mestre das Formas"})
+ ##   FluxoSala.iniciar(self, "prova", "cores",  {"nome": "Mestre das Cores"})
+ ##   FluxoSala.iniciar(self, "falas", "",       {"nome": "Mestre dos Duelos"}, ["Olá!"])
++##   FluxoSala.iniciar(self, "duelo", "duelo",  {"nome": "Mestre dos Duelos"})   # sala do professor
+ 
+ static var _em_andamento := false
+ 
++const CENA_LOBBY := "res://scenes/Login/TelaLobby.tscn"
++
+ var _dialogo: CaixaDialogo
+ var _jogador: Node
+ var _uid: String = ""
+@@ -42,16 +45,21 @@
+ 	add_child(_dialogo)
+ 	_dialogo.abrir(str(professor.get("nome", "Professor")), professor.get("retrato", null))
+ 
++	var abrir_lobby := false
+ 	match modo:
+ 		"aula", "prova":
+ 			await _menu_temas(tipo_sala, modo)
+ 		"falas":
+ 			for fala in falas:
+ 				await _dialogo.falar(str(fala))
++		"duelo":
++			abrir_lobby = await _menu_duelo()
+ 
+ 	_dialogo.fechar()
+ 	_definir_controle(true)
+ 	_em_andamento = false
++	if abrir_lobby:
++		_ir_para_a_sala_de_espera()
+ 	queue_free()
+ 
+ 
+@@ -60,6 +68,53 @@
+ 		_jogador.set("controle_ativo", ativo)
+ 
+ 
++# ------------------------------------------------------------- sala do professor
++
++## Menu do Mestre dos Duelos: entrar na sala que o professor abriu (PvE em
++## equipe / PvP), voltar à sala de espera ou sair dela. Devolve true se o
++## jogador escolheu ir para a sala de espera (a troca de cena acontece depois
++## que o diálogo fecha).
++func _menu_duelo() -> bool:
++	while true:
++		if LobbyManager.esta_em_sala():
++			var pergunta := "Você está na sala %s. O que quer fazer?" % LobbyManager.codigo
++			var opcoes: Array[String] = ["Ver a sala de espera", "Sair da sala", "Cancelar"]
++			var i: int = await _dialogo.escolher(pergunta, opcoes)
++			if i == 0:
++				return true
++			if i == 1:
++				LobbyManager.sair()
++				await _dialogo.falar("Você saiu da sala. Volte quando o professor abrir outra!")
++				continue
++			return false
++		else:
++			var opcoes: Array[String] = ["Entrar na sala do professor", "Como funciona?", "Cancelar"]
++			var i: int = await _dialogo.escolher("Quer enfrentar seus colegas? Peça ao professor o código da sala.", opcoes)
++			if i == 0:
++				var motivo := SpellLoadout.motivo_bloqueio_combate(_uid)
++				if motivo != "":
++					await _dialogo.falar(motivo)
++					continue
++				return true
++			if i == 1:
++				await _dialogo.falar("O professor abre uma sala e mostra um código de 4 letras. Você digita o código e espera na sala. Quando ele iniciar, você joga com a sua equipe contra um monstro (PvE) ou duela com um colega (PvP).")
++				await _dialogo.falar("No duelo os dois jogam ao mesmo tempo, cada um no seu ritmo, e os feitiços são resolvidos juntos, por ordem de prioridade. Treine bastante antes!")
++				continue
++			return false
++	return false
++
++
++## Guarda o ponto do mundo pra voltar depois e abre a sala de espera.
++func _ir_para_a_sala_de_espera() -> void:
++	var cena := get_tree().current_scene
++	var retorno := {"cena": cena.scene_file_path}
++	if is_instance_valid(_jogador) and _jogador is Node2D:
++		retorno["posicao"] = (_jogador as Node2D).global_position
++	Engine.set_meta("lobby_retorno", retorno)
++	Engine.set_meta("lobby_modo", "aluno")
++	get_tree().change_scene_to_file(CENA_LOBBY)
++
++
+ # --------------------------------------------------------------------- menu
+ 
+ func _menu_temas(tipo_sala: String, modo: String) -> void:
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base7/src/ui/MenuPausa.gd tons-educativos-magia/src/ui/MenuPausa.gd
+--- a/src/ui/MenuPausa.gd	2026-10-13 15:17:30.000000000 -0400
++++ b/src/ui/MenuPausa.gd	2026-10-13 16:24:49.893902747 -0400
+@@ -16,6 +16,7 @@
+ const ARQUIVO_CONFIG := "user://config.cfg"
+ const FONTE := 14
+ 
++var _indicador: Label = null
+ var _raiz: Control = null
+ var _caixa: VBoxContainer = null
+ 
+@@ -25,6 +26,35 @@
+ 	process_mode = Node.PROCESS_MODE_ALWAYS
+ 	_garantir_acoes()
+ 	_aplicar_config(_ler_config())
++	_montar_indicador_sala()
++
++
++## Aviso discreto no canto: o aluno está numa sala do professor enquanto anda pelo jogo.
++func _montar_indicador_sala() -> void:
++	_indicador = Label.new()
++	_indicador.add_theme_font_size_override("font_size", 10)
++	_indicador.add_theme_color_override("font_color", Color(0.6, 0.9, 1.0))
++	_indicador.add_theme_color_override("font_outline_color", Color.BLACK)
++	_indicador.add_theme_constant_override("outline_size", 3)
++	_indicador.set_anchors_preset(Control.PRESET_TOP_RIGHT)
++	_indicador.grow_horizontal = Control.GROW_DIRECTION_BEGIN
++	_indicador.offset_top = 4
++	_indicador.offset_right = -6
++	_indicador.visible = false
++	add_child(_indicador)
++	var relogio := Timer.new()
++	relogio.wait_time = 0.5
++	relogio.autostart = true
++	relogio.timeout.connect(_atualizar_indicador_sala)
++	add_child(relogio)
++
++
++func _atualizar_indicador_sala() -> void:
++	var mostrar: bool = LobbyManager.esta_em_sala() and not LobbyManager.sou_professor \
++		and _pode_abrir() and not DueloRede.ativo
++	_indicador.visible = mostrar
++	if mostrar:
++		_indicador.text = "Sala %s — aguardando o professor" % LobbyManager.codigo
+ 
+ 
+ func _garantir_acoes() -> void:
+@@ -169,6 +199,9 @@
+ 
+ 	var continuar := _botao("Continuar", fechar)
+ 	var inventario := _botao("Magias / Inventário  [I]", _abrir_inventario)
++	if DueloRede.ativo:
++		inventario.disabled = true
++		inventario.text = "Magias (indisponível em grupo)"
+ 	if _em_combate():
+ 		inventario.disabled = true
+ 		inventario.text = "Magias (indisponível em combate)"

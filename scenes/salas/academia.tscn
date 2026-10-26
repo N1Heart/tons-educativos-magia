@@ -501,8 +501,6 @@ sources/0 = SubResource("TileSetAtlasSource_s6mkq")
 
 [node name="Camera2d" parent="." unique_id=1480513400 instance=ExtResource("9_s6mkq")]
 position = Vector2(-78, 248)
-process_callback = 0
-position_smoothing_enabled = true
 
 [node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=455623808]
 z_index = 1
@@ -525,56 +523,6 @@ rotation = 3.1415927
 rotation = 1.5707964
 shape = SubResource("WorldBoundaryShape2D_e2ube")
 
-[node name="5" type="Parallax2D" parent="." unique_id=1905807386]
-scale = Vector2(2.2, 1.7)
-scroll_scale = Vector2(0.1, 0.1)
-repeat_size = Vector2(288, 208)
-
-[node name="Sprite2D" type="Sprite2D" parent="5" unique_id=932827741]
-texture_repeat = 2
-texture = ExtResource("2_fkt0l")
-centered = false
-
-[node name="4" type="Parallax2D" parent="." unique_id=2126747535]
-scale = Vector2(2.2, 1.7)
-scroll_scale = Vector2(0.2, 0.2)
-repeat_size = Vector2(288, 0)
-
-[node name="Sprite2D" type="Sprite2D" parent="4" unique_id=1689720085]
-texture_repeat = 3
-texture = ExtResource("3_2y6wu")
-centered = false
-
-[node name="3" type="Parallax2D" parent="." unique_id=1393475669]
-scale = Vector2(2.2, 1.7)
-scroll_scale = Vector2(0.3, 0.3)
-repeat_size = Vector2(288, 0)
-
-[node name="Sprite2D" type="Sprite2D" parent="3" unique_id=1161400739]
-texture_repeat = 2
-texture = ExtResource("4_s6mkq")
-centered = false
-
-[node name="2" type="Parallax2D" parent="." unique_id=1610656520]
-scale = Vector2(2.2, 1.7)
-scroll_scale = Vector2(0.3, 0.3)
-repeat_size = Vector2(288, 0)
-
-[node name="Sprite2D" type="Sprite2D" parent="2" unique_id=1426245013]
-texture_repeat = 2
-texture = ExtResource("5_4yw8a")
-centered = false
-
-[node name="1" type="Parallax2D" parent="." unique_id=428891557]
-scale = Vector2(2.2, 1.7)
-scroll_scale = Vector2(0.4, 0.4)
-repeat_size = Vector2(288, 0)
-
-[node name="Sprite2D" type="Sprite2D" parent="1" unique_id=847718138]
-texture_repeat = 2
-texture = ExtResource("6_4csj2")
-centered = false
-
 [node name="Teste" parent="." unique_id=1381545907 instance=ExtResource("7_fkt0l")]
 z_index = 2
 position = Vector2(128, 311)
@@ -587,3 +535,56 @@ tile_set = SubResource("TileSet_lbo00")
 [node name="Porta" parent="." unique_id=782612751 instance=ExtResource("10_4yw8a")]
 position = Vector2(480, 316)
 cena_destino = "uid://dtkx1dhx6xc2x"
+
+[node name="fundos" type="Node2D" parent="." unique_id=996769783]
+z_index = -3
+
+[node name="5" type="Parallax2D" parent="fundos" unique_id=1905807386]
+scale = Vector2(2.2, 1.7)
+scroll_scale = Vector2(0.1, 0.1)
+repeat_size = Vector2(288, 208)
+
+[node name="Sprite2D" type="Sprite2D" parent="fundos/5" unique_id=932827741]
+texture_repeat = 2
+texture = ExtResource("2_fkt0l")
+centered = false
+
+[node name="4" type="Parallax2D" parent="fundos" unique_id=2126747535]
+scale = Vector2(2.2, 1.7)
+scroll_scale = Vector2(0.2, 0.2)
+repeat_size = Vector2(288, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="fundos/4" unique_id=1689720085]
+texture_repeat = 3
+texture = ExtResource("3_2y6wu")
+centered = false
+
+[node name="3" type="Parallax2D" parent="fundos" unique_id=1393475669]
+scale = Vector2(2.2, 1.7)
+scroll_scale = Vector2(0.3, 0.3)
+repeat_size = Vector2(288, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="fundos/3" unique_id=1161400739]
+texture_repeat = 2
+texture = ExtResource("4_s6mkq")
+centered = false
+
+[node name="2" type="Parallax2D" parent="fundos" unique_id=1610656520]
+scale = Vector2(2.2, 1.7)
+scroll_scale = Vector2(0.3, 0.3)
+repeat_size = Vector2(288, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="fundos/2" unique_id=1426245013]
+texture_repeat = 2
+texture = ExtResource("5_4yw8a")
+centered = false
+
+[node name="1" type="Parallax2D" parent="fundos" unique_id=428891557]
+scale = Vector2(2.2, 1.7)
+scroll_scale = Vector2(0.4, 0.4)
+repeat_size = Vector2(288, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="fundos/1" unique_id=847718138]
+texture_repeat = 2
+texture = ExtResource("6_4csj2")
+centered = false

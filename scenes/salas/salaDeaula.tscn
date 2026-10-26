@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://qmbnhewmx82v" path="res://entities/professorFormas.tscn" id="5_s8qbq"]
 [ext_resource type="PackedScene" uid="uid://dporta0001xy0" path="res://entities/Porta.tscn" id="6_porta"]
 [ext_resource type="PackedScene" uid="uid://cxi6l52qlb8q0" path="res://entities/camera_2d.tscn" id="8_r5tb0"]
+[ext_resource type="PackedScene" path="res://entities/Cadeira.tscn" id="10_cad"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_keg0p"]
 texture = ExtResource("4_h1nim")
@@ -52,3 +53,25 @@ cena_destino = "res://scenes/salas/Saguao.tscn"
 
 [node name="Camera2d" parent="." unique_id=1480513400 instance=ExtResource("8_r5tb0")]
 position = Vector2(22, 300)
+
+[node name="cadeiras" type="Node2D" parent="." unique_id=677147423]
+position = Vector2(440, 310)
+
+[node name="Cadeira" parent="cadeiras" unique_id=1830785776 instance=ExtResource("10_cad")]
+nome_exibicao = "Mestre das Formas"
+
+[node name="Cadeira2" parent="cadeiras" unique_id=1049133721 instance=ExtResource("10_cad")]
+position = Vector2(-70, 1)
+nome_exibicao = "Mestre das Formas"
+
+[node name="Cadeira3" parent="cadeiras" unique_id=1796728955 instance=ExtResource("10_cad")]
+position = Vector2(-149, 1)
+nome_exibicao = "Mestre das Formas"
+
+[node name="Cadeira4" parent="cadeiras" unique_id=229333133 instance=ExtResource("10_cad")]
+position = Vector2(-226, 1)
+nome_exibicao = "Mestre das Formas"
+
+[node name="Cadeira5" parent="cadeiras" unique_id=926617300 instance=ExtResource("10_cad")]
+position = Vector2(-308, 2)
+nome_exibicao = "Mestre das Formas"

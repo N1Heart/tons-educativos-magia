@@ -1,0 +1,104 @@
+--- a/entities/monsters/esquleto.tscn	2026-10-17 16:54:52.000000000 -0400
++++ b/entities/monsters/esquleto.tscn	2026-10-17 17:49:24.290929076 -0400
+@@ -282,6 +282,7 @@
+ }]
+ 
+ [node name="MonsterTemplate" unique_id=572115898 instance=ExtResource("1_jo6bh")]
++nome_exibicao = "esqueleto"
+ 
+ [node name="AnimatedSprite2D" parent="." index="1" unique_id=312418595]
+ sprite_frames = SubResource("SpriteFrames_rx00w")
+--- a/entities/monsters/monster_template.gd	2026-10-16 13:05:34.000000000 -0400
++++ b/entities/monsters/monster_template.gd	2026-10-17 17:49:24.290285548 -0400
+@@ -7,5 +7,30 @@
+ @export var nome_exibicao: String = ""
+ @export var faixa: Faixa
+ 
+-## Tamanho do sprite no retrato do inimigo durante o combate (1 = tamanho original).
+-@export var escala_combate: float = 1.5
++## Tamanho do sprite no retrato do inimigo durante o combate (1 = tamanho
++## original). 0 = automático: o combate mede o desenho e ajusta ao retrato.
++@export var escala_combate: float = 0.0
++
++
++## Área ocupada pelo desenho (sem a margem transparente) no primeiro quadro de
++## "idle", em coordenadas locais do monstro (já considera o flip_h). Rect2()
++## vazio se não for possível medir.
++func area_visivel() -> Rect2:
++	var spr := get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
++	if spr == null or spr.sprite_frames == null or not spr.sprite_frames.has_animation(&"idle"):
++		return Rect2()
++	var tex := spr.sprite_frames.get_frame_texture(&"idle", 0)
++	if tex == null:
++		return Rect2()
++	var img := tex.get_image()
++	if img == null:
++		return Rect2()
++	var usado := img.get_used_rect()
++	if usado.size == Vector2i.ZERO:
++		return Rect2()
++	var centro := Vector2(img.get_size()) / 2.0
++	var r := Rect2(Vector2(usado.position) - centro, Vector2(usado.size))
++	if spr.flip_h:
++		r.position.x = -(r.position.x + r.size.x)
++	return Rect2(r.position + spr.position, r.size)
++
+--- a/scripts/duelos.gd	2026-10-16 13:05:34.000000000 -0400
++++ b/scripts/duelos.gd	2026-10-17 17:49:24.290724476 -0400
+@@ -66,6 +66,10 @@
+ var _registrada := false
+ 
+ # --- Criatura do PvE (sprite no retrato do inimigo) ---
++## Quanto do retrato a criatura pode ocupar e onde ficam seus pés (fração da altura).
++const MONSTRO_ALTURA_MAX := 0.78
++const MONSTRO_LARGURA_MAX := 0.7
++const MONSTRO_BASE := 0.92
+ const ESCALA_ANIM := {&"idle": 1.0, &"dano": 2.0, &"ataque": 2.0, &"morte": 1.5}
+ var _monstro: Monster = null
+ var _spr_monstro: AnimatedSprite2D = null
+@@ -321,10 +325,9 @@
+ 	_monstro = (escolhida["cena"] as PackedScene).instantiate() as Monster
+ 	var retrato := $HUD/EnemyPanel/Portrait as Control
+ 	retrato.add_child(_monstro)
+-	_monstro.scale = Vector2.ONE * _monstro.escala_combate
+-	var centralizar := func(): _monstro.position = retrato.size * Vector2(0.5, 0.5)
+-	retrato.resized.connect(centralizar)
+-	centralizar.call()
++	var encaixar := func(): _encaixar_monstro(retrato)
++	retrato.resized.connect(encaixar)
++	encaixar.call()
+ 	_spr_monstro = _monstro.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+ 	if _spr_monstro != null and _spr_monstro.sprite_frames != null:
+ 		var frames := _spr_monstro.sprite_frames
+@@ -336,6 +339,31 @@
+ 	($HUD/EnemyPanel/NameLabel as Label).text = _monstro.nome_exibicao.capitalize()
+ 
+ 
++## Ajusta tamanho e posição da criatura ao retrato: mede o desenho (sem a
++## margem transparente), escala para caber (em passos inteiros quando ≥ 2, para
++## manter os pixels nítidos), centraliza na horizontal e apoia os pés na base.
++func _encaixar_monstro(retrato: Control) -> void:
++	if _monstro == null:
++		return
++	var area := _monstro.area_visivel()
++	var escala := _monstro.escala_combate
++	if area.size.x <= 0.0 or area.size.y <= 0.0:
++		if escala <= 0.0:
++			escala = 1.5
++		_monstro.scale = Vector2.ONE * escala
++		_monstro.position = retrato.size * Vector2(0.5, 0.5)
++		return
++	if escala <= 0.0:
++		escala = minf(retrato.size.y * MONSTRO_ALTURA_MAX / area.size.y, retrato.size.x * MONSTRO_LARGURA_MAX / area.size.x)
++		escala = clampf(escala, 0.5, 4.0)
++		if escala >= 2.0:
++			escala = floorf(escala)
++	_monstro.scale = Vector2.ONE * escala
++	var centro_x := (area.position.x + area.size.x * 0.5) * escala
++	var base_y := (area.position.y + area.size.y) * escala
++	_monstro.position = Vector2(retrato.size.x * 0.5 - centro_x, retrato.size.y * MONSTRO_BASE - base_y)
++
++
+ func _tocar_monstro(anim: StringName) -> void:
+ 	if _spr_monstro == null or _spr_monstro.sprite_frames == null or _monstro_morto:
+ 		return

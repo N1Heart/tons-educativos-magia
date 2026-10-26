@@ -1,0 +1,109 @@
+{
+  "versao": 1,
+  "tipo": "forma",
+  "alvo": "Circulo",
+  "nome_menu": "Círculo",
+  "aula": {
+    "id": "aula_forma_circulo",
+    "tipo": "forma",
+    "alvo": "Circulo",
+    "titulo": "Círculos",
+    "falas": [
+      "Hoje o assunto é o Círculo! Diferente do triângulo, do quadrado, do pentágono e do hexágono, o círculo não é um polígono: não tem lados retos nem vértices, sua borda é uma única linha curva.",
+      "A circunferência é o conjunto de todos os pontos de um plano que estão à mesma distância de um ponto central.",
+      "Circunferência ou círculo? A circunferência é só a linha da borda, como um bambolê ou um anel. O círculo é a região completa: a borda mais tudo o que está dentro, como uma pizza ou uma moeda. Medimos o comprimento da circunferência e a área do círculo.",
+      "O centro (O) é o ponto do meio, à mesma distância de todos os pontos da borda. O raio (r) liga o centro a um ponto da circunferência. A corda liga dois pontos quaisquer da circunferência.",
+      "O diâmetro (d) é a corda que passa pelo centro. É a maior corda possível e mede o dobro do raio: d = 2 × r. Um círculo de raio 5 cm tem diâmetro 10 cm.",
+      "Agora o famoso π (pi)! Se você dividir o comprimento de qualquer circunferência pelo seu diâmetro, o resultado é sempre o mesmo número: π ≈ 3,14159... Ele é irracional: tem infinitas casas decimais que nunca se repetem em padrão. Por isso 3,14 é apenas uma aproximação: π não é exatamente 3,14.",
+      "O comprimento da circunferência é C = 2 × π × r. Com r = 10 cm e π = 3,14: C = 62,8 cm. A área do círculo é A = π × r². Com r = 3 cm: A = 3,14 × 9 = 28,26 cm².",
+      "Ângulos no círculo: uma volta completa ao redor do centro mede 360°, meia volta mede 180° e um quarto de volta, 90°. Uma pizza cortada em 8 fatias iguais tem setores de 360 ÷ 8 = 45° cada.",
+      "Você sabia? As tampas de bueiro são redondas porque o círculo tem a mesma largura em qualquer direção: a tampa nunca consegue cair dentro do buraco, não importa como seja girada.",
+      "O Dia do Pi é comemorado em 14 de março, pois em inglês a data é escrita 3/14. E Arquimedes, há mais de 2.200 anos, calculou π desenhando polígonos de até 96 lados dentro e fora de um círculo: concluiu que ele fica entre 3,1408 e 3,1429.",
+      "Mais uma: entre todas as figuras com o mesmo perímetro, o círculo é a que tem a maior área. Por isso bolhas de sabão e gotas tendem a ficar redondas."
+    ]
+  },
+  "prova": {
+    "id": "prova_forma_circulo",
+    "tipo": "forma",
+    "alvo": "Circulo",
+    "notaDeCorte": 0.7,
+    "perguntas": [
+      {
+        "tipo": "vf",
+        "pergunta": "O diâmetro de um círculo mede o dobro do raio.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "d = 2 × r."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "Circunferência e círculo são exatamente a mesma coisa.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "A circunferência é só a borda; o círculo é a borda mais a região interior."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "O número π vale exatamente 3,14.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "π é irracional (3,14159...); 3,14 é só uma aproximação."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "A corda que passa pelo centro do círculo é chamada de diâmetro.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "O diâmetro é a maior corda e sempre passa pelo centro."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Se o raio de um círculo mede 5 cm, quanto mede o seu diâmetro?",
+        "alternativas": [
+          "2,5 cm",
+          "5 cm",
+          "10 cm",
+          "25 cm"
+        ],
+        "respostaCorreta": "10 cm",
+        "explicacao": "d = 2 × 5 = 10 cm."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Usando π = 3,14, qual é o comprimento de uma circunferência de raio 10 cm?",
+        "alternativas": [
+          "31,4 cm",
+          "62,8 cm",
+          "314 cm",
+          "20 cm"
+        ],
+        "respostaCorreta": "62,8 cm",
+        "explicacao": "C = 2 × 3,14 × 10 = 62,8 cm."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Usando π = 3,14, qual é a área de um círculo de raio 3 cm?",
+        "alternativas": [
+          "9,42 cm²",
+          "18,84 cm²",
+          "28,26 cm²",
+          "6 cm²"
+        ],
+        "respostaCorreta": "28,26 cm²",
+        "explicacao": "A = 3,14 × 3² = 3,14 × 9 = 28,26 cm²."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Por que as tampas de bueiro costumam ser redondas?",
+        "alternativas": [
+          "Porque são mais baratas de pintar",
+          "Porque o círculo tem a mesma largura em todas as direções e a tampa não cai no buraco",
+          "Porque é uma lei internacional",
+          "Porque o círculo é um polígono de muitos lados"
+        ],
+        "respostaCorreta": "Porque o círculo tem a mesma largura em todas as direções e a tampa não cai no buraco",
+        "explicacao": "A largura constante do círculo impede que a tampa passe pela abertura."
+      }
+    ]
+  }
+}

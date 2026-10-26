@@ -1,0 +1,109 @@
+{
+  "versao": 1,
+  "tipo": "forma",
+  "alvo": "Triangulo",
+  "nome_menu": "Triângulo",
+  "aula": {
+    "id": "aula_forma_triangulo",
+    "tipo": "forma",
+    "alvo": "Triangulo",
+    "titulo": "Triângulos",
+    "falas": [
+      "Hoje vamos estudar o Triângulo! É o polígono mais simples que existe: 3 lados, 3 vértices (os “cantos”) e 3 ângulos internos.",
+      "Não dá para fechar uma figura com menos de três segmentos de reta. Por isso o triângulo é a “peça básica” da geometria: qualquer polígono pode ser dividido em triângulos.",
+      "Primeira regra: em qualquer triângulo, grande ou pequeno, a soma dos três ângulos internos é sempre 180°. Quer provar? Recorte um triângulo de papel, rasgue as três pontas e junte-as lado a lado: elas formam uma linha reta, que mede 180°.",
+      "Uma consequência importante: um triângulo só pode ter um ângulo reto (90°) ou um ângulo obtuso (maior que 90°). Dois ângulos de 90° já somariam 180°, e não sobraria nada para o terceiro!",
+      "Quanto aos lados, o triângulo pode ser equilátero (os três lados iguais e os três ângulos de 60°), isósceles (pelo menos dois lados iguais) ou escaleno (os três lados diferentes).",
+      "Quanto aos ângulos: acutângulo (os três ângulos agudos, menores que 90°), retângulo (tem um ângulo reto; o lado oposto a ele é a hipotenusa e os outros dois são os catetos) e obtusângulo (tem um ângulo maior que 90°).",
+      "Atenção: nem todo trio de medidas forma um triângulo. Cada lado precisa ser menor que a soma dos outros dois. Varetas de 2 cm, 3 cm e 10 cm não servem, porque 2 + 3 = 5, que é menor que 10. Já 3, 4 e 5 funciona, pois 3 + 4 = 7, que é maior que 5.",
+      "Nos triângulos retângulos vale o Teorema de Pitágoras: a² = b² + c². Com catetos 3 e 4: 9 + 16 = 25, logo a hipotenusa mede 5.",
+      "Fórmulas para lembrar: perímetro P = a + b + c (soma dos três lados); área A = (base × altura) ÷ 2; soma dos ângulos internos = 180°.",
+      "Você sabia? O triângulo é a forma mais rígida: se você empurrar um quadrado feito de palitos, ele se deforma; um triângulo, não. Por isso pontes, torres de energia, guindastes e telhados usam estruturas triangulares.",
+      "Conta-se que construtores antigos usavam uma corda com 12 intervalos iguais, esticada em 3-4-5, para obter cantos perfeitamente retos. E no Triângulo de Sierpinski, retirando o triângulo do meio repetidas vezes, surge uma figura infinita em que cada parte se parece com o todo: um fractal!"
+    ]
+  },
+  "prova": {
+    "id": "prova_forma_triangulo",
+    "tipo": "forma",
+    "alvo": "Triangulo",
+    "notaDeCorte": 0.7,
+    "perguntas": [
+      {
+        "tipo": "vf",
+        "pergunta": "A soma dos ângulos internos de qualquer triângulo é 180°.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "Vale para todo triângulo, independentemente do tamanho ou da forma."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "O triângulo equilátero tem dois lados iguais e um lado diferente.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "Esse é o isósceles. No equilátero, os três lados são iguais."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "É possível desenhar um triângulo com dois ângulos retos.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "Dois ângulos de 90° já somam 180°, sem sobrar nada para o terceiro ângulo."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "Com varetas de 2 cm, 3 cm e 10 cm é possível montar um triângulo.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "2 + 3 = 5, que é menor que 10. A desigualdade triangular não é respeitada."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Qual é a área de um triângulo com base 10 cm e altura 6 cm?",
+        "alternativas": [
+          "16 cm²",
+          "30 cm²",
+          "60 cm²",
+          "36 cm²"
+        ],
+        "respostaCorreta": "30 cm²",
+        "explicacao": "A = (10 × 6) ÷ 2 = 30 cm²."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Como se chama o triângulo que possui um ângulo de 90°?",
+        "alternativas": [
+          "Acutângulo",
+          "Obtusângulo",
+          "Equilátero",
+          "Retângulo"
+        ],
+        "respostaCorreta": "Retângulo",
+        "explicacao": "Triângulo retângulo é o que possui um ângulo reto (90°)."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Em um triângulo retângulo, os catetos medem 3 cm e 4 cm. Quanto mede a hipotenusa?",
+        "alternativas": [
+          "5 cm",
+          "7 cm",
+          "12 cm",
+          "25 cm"
+        ],
+        "respostaCorreta": "5 cm",
+        "explicacao": "Pelo Teorema de Pitágoras: 3² + 4² = 25, e a raiz quadrada de 25 é 5."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Por que engenheiros usam muitos triângulos em pontes e torres?",
+        "alternativas": [
+          "Porque são mais bonitos",
+          "Porque gastam menos tinta",
+          "Porque o triângulo é uma forma rígida, que não se deforma facilmente",
+          "Porque são mais leves que o ferro"
+        ],
+        "respostaCorreta": "Porque o triângulo é uma forma rígida, que não se deforma facilmente",
+        "explicacao": "Um triângulo não muda de forma se as medidas dos lados não mudarem — isso dá estabilidade."
+      }
+    ]
+  }
+}

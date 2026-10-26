@@ -1,14 +1,11 @@
 [gd_scene format=3 uid="uid://ci55navu03wg3"]
 
 [ext_resource type="Texture2D" uid="uid://bx5w4g77b85vx" path="res://assets/sprites/Idle.png" id="1_qjydq"]
-[ext_resource type="Script" path="res://entities/npc_professor.gd" id="2_npc"]
+[ext_resource type="Script" uid="uid://b2md7kvkvy6am" path="res://entities/npc_professor.gd" id="2_npc"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_e2ube"]
 radius = 22.0
 height = 94.0
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_zona"]
-radius = 40.0
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ocolc"]
 atlas = ExtResource("1_qjydq")
@@ -60,10 +57,14 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_zona"]
+radius = 40.0
+
 [node name="Professor2" type="CharacterBody2D" unique_id=1475615145]
 scale = Vector2(0.7, 0.7)
 script = ExtResource("2_npc")
 tipo = "cores"
+nome_exibicao = "Mestre das Cores"
 mensagem = "Quer assistir uma aula sobre os elementos (cores) das peças?"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1038127199]
@@ -72,9 +73,11 @@ shape = SubResource("CapsuleShape2D_e2ube")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1966453941]
 position = Vector2(-5, -26)
 sprite_frames = SubResource("SpriteFrames_e2ube")
+autoplay = "default"
+frame_progress = 0.5058672
 flip_h = true
 
-[node name="ZonaInteracao" type="Area2D" parent="." groups=["interagivel"]]
+[node name="ZonaInteracao" type="Area2D" parent="." unique_id=301875936 groups=["interagivel"]]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaInteracao"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaInteracao" unique_id=274218476]
 shape = SubResource("CircleShape2D_zona")

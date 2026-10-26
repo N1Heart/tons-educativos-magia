@@ -1,0 +1,188 @@
+--- a/scripts/combat_sprite.gd	2026-10-26 17:04:57.000000000 -0400
++++ b/scripts/combat_sprite.gd	2026-10-26 17:06:32.401315601 -0400
+@@ -73,24 +73,27 @@
+ 
+ ## Ajusta tamanho e posição ao retrato: escala para caber (em passos inteiros
+ ## quando ≥ 2, para manter os pixels nítidos), centraliza na horizontal e apoia
+-## os pés na base. 'escala_fixa' > 0 força um tamanho.
+-func encaixar(retrato: Control, escala_fixa: float = 0.0) -> void:
++## os pés na base. 'escala_fixa' > 0 força um tamanho. Com vários lutadores no
++## mesmo retrato (equipe), cada um usa a sua fatia: 'fatia' de 0 a 'total' - 1.
++func encaixar(retrato: Control, escala_fixa: float = 0.0, fatia: int = 0, total: int = 1) -> void:
+ 	if no == null or not is_instance_valid(no):
+ 		return
++	var largura := retrato.size.x / maxi(1, total)
++	var centro_fatia := largura * (fatia + 0.5)
+ 	var area := area_visivel(spr)
+ 	if no == spr:
+ 		area.position -= spr.position  # a posição do próprio sprite é o que estamos calculando
+ 	var escala := escala_fixa
+ 	if area.size.x <= 0.0 or area.size.y <= 0.0:
+ 		no.scale = Vector2.ONE * (escala if escala > 0.0 else 1.5)
+-		no.position = retrato.size * Vector2(0.5, 0.5)
++		no.position = Vector2(centro_fatia, retrato.size.y * 0.5)
+ 		return
+ 	if escala <= 0.0:
+-		escala = minf(retrato.size.y * ALTURA_MAX / area.size.y, retrato.size.x * LARGURA_MAX / area.size.x)
++		escala = minf(retrato.size.y * ALTURA_MAX / area.size.y, largura * LARGURA_MAX / area.size.x)
+ 		escala = clampf(escala, 0.5, 4.0)
+ 		if escala >= 2.0:
+ 			escala = floorf(escala)
+ 	no.scale = Vector2.ONE * escala
+ 	var centro_x := (area.position.x + area.size.x * 0.5) * escala
+ 	var base_y := (area.position.y + area.size.y) * escala
+-	no.position = Vector2(retrato.size.x * 0.5 - centro_x, retrato.size.y * BASE - base_y)
++	no.position = Vector2(centro_fatia - centro_x, retrato.size.y * BASE - base_y)
+--- a/scripts/duelos.gd	2026-10-26 17:05:59.000000000 -0400
++++ b/scripts/duelos.gd	2026-10-26 17:10:11.507386782 -0400
+@@ -68,7 +68,11 @@
+ # --- Lutadores no retrato (criatura do PvE e personagem do jogador) ---
+ var _monstro: Monster = null
+ var _vis_monstro: CombatSprite = null
+-var _vis_jogador: CombatSprite = null
++var _vis_jogador: CombatSprite = null            # o meu personagem
++var _vis_time: Array[CombatSprite] = []          # todos os do meu time (inclui o meu)
++var _vis_por_nome := {}                          # nome do jogador -> CombatSprite (equipe)
++const COR_OPONENTE := Color(1.0, 0.7, 0.75)
++const CORES_COLEGAS := [Color(0.75, 1.0, 0.8), Color(1.0, 0.9, 0.7), Color(0.8, 0.85, 1.0)]
+ var _hp_inimigo_antes := -1
+ var _hp_time_antes := -1
+ 
+@@ -129,7 +133,9 @@
+ 
+ 	if _em_rede:
+ 		_preparar_rede()
+-	if not (_em_rede and DueloRede.modo_combate == "pvp"):
++	if _em_rede and DueloRede.modo_combate == "pvp":
++		_montar_oponente()
++	else:
+ 		_montar_monstro()
+ 	_montar_jogador()
+ 
+@@ -250,6 +256,7 @@
+ 	if not Combat.combat_active:
+ 		return
+ 	Combat.aplicar_snapshot(snapshot, DueloRede.modo_combate == "pvp", DueloRede.meu_turno(), DueloRede.limite_atingido())
++	_animar_colega(snapshot)
+ 	if Combat.combat_active:
+ 		_enviar_estado("")
+ 	_atualizar_rotulo_turno()
+@@ -328,35 +335,86 @@
+ 	($HUD/EnemyPanel/NameLabel as Label).text = _monstro.nome_exibicao.capitalize()
+ 
+ 
+-## Coloca o personagem do jogador (mesmas animações do personagem do mapa) no
+-## retrato do time. Usa só os quadros do personagem, não a cena de movimento.
+-func _montar_jogador() -> void:
++## Quadros de animação do personagem do mapa (mesmas animações no combate).
++## Usa só os quadros, não a cena de movimento.
++func _quadros_do_personagem() -> SpriteFrames:
+ 	var cena := load("res://entities/teste.tscn") as PackedScene
+ 	if cena == null:
+-		return
++		return null
+ 	var modelo := cena.instantiate()
+ 	var origem := modelo.find_children("*", "AnimatedSprite2D", true, false)
+ 	var frames: SpriteFrames = null
+ 	if not origem.is_empty():
+ 		frames = (origem[0] as AnimatedSprite2D).sprite_frames
+ 	modelo.free()
+-	if frames == null:
+-		return
++	return frames
++
++
++## Cria um personagem dentro de um retrato. 'fatia'/'total' dividem o retrato
++## entre vários personagens (equipe).
++func _criar_personagem(frames: SpriteFrames, retrato: Control, espelhar: bool, cor: Color, fatia: int, total: int) -> CombatSprite:
+ 	var spr := AnimatedSprite2D.new()
+ 	spr.sprite_frames = frames.duplicate()  # cópia: o combate muda o "loop" das animações
+-	var retrato := $HUD/PlayerPanel/Portrait as Control
++	spr.flip_h = espelhar
++	spr.modulate = cor
+ 	retrato.add_child(spr)
+-	_vis_jogador = CombatSprite.new(spr, spr)
+-	var encaixar := func(): _vis_jogador.encaixar(retrato)
++	var vis := CombatSprite.new(spr, spr)
++	var encaixar := func(): vis.encaixar(retrato, 0.0, fatia, total)
+ 	retrato.resized.connect(encaixar)
+ 	encaixar.call()
++	return vis
++
++
++## Personagens do meu time no retrato de baixo: só o meu no solo e no PvP; no
++## PvE em equipe, todos os membros lado a lado (os colegas com um tom diferente).
++func _montar_jogador() -> void:
++	var frames := _quadros_do_personagem()
++	if frames == null:
++		return
++	var retrato := $HUD/PlayerPanel/Portrait as Control
++	var equipe := _em_rede and DueloRede.modo_combate == "coop" and DueloRede.membros.size() > 1
++	if equipe:
++		var n := DueloRede.membros.size()
++		for i in n:
++			var eu := i == DueloRede.meu_indice
++			var cor: Color = Color.WHITE if eu else CORES_COLEGAS[i % CORES_COLEGAS.size()]
++			var vis := _criar_personagem(frames, retrato, false, cor, i, n)
++			_vis_time.append(vis)
++			_vis_por_nome[str(DueloRede.membros[i]["nome"])] = vis
++			if eu:
++				_vis_jogador = vis
++	else:
++		_vis_jogador = _criar_personagem(frames, retrato, false, Color.WHITE, 0, 1)
++		_vis_time.append(_vis_jogador)
+ 	Combat.spell_resolving.connect(_on_feitico_resolvido)
+ 
+ 
+-## O personagem faz a animação de ataque quando uma magia dele é resolvida.
++## PvP: o adversário aparece no retrato de cima com o mesmo personagem,
++## espelhado e com outra cor, e usa as mesmas reações de vida do monstro.
++func _montar_oponente() -> void:
++	var frames := _quadros_do_personagem()
++	if frames == null:
++		return
++	var retrato := $HUD/EnemyPanel/Portrait as Control
++	_vis_monstro = _criar_personagem(frames, retrato, true, COR_OPONENTE, 0, 1)
++
++
++## Animação de ataque quando uma magia é resolvida: a minha move o meu
++## personagem; a do monstro (ou do adversário, no PvP) move o lado de cima.
+ func _on_feitico_resolvido(feitico: SpellCast) -> void:
+-	if _vis_jogador != null and feitico.caster == "player":
+-		_vis_jogador.tocar(&"ataque")
++	if feitico.caster == "player":
++		if _vis_jogador != null:
++			_vis_jogador.tocar(&"ataque")
++	elif _vis_monstro != null:
++		_vis_monstro.tocar(&"ataque")
++
++
++## Equipe: um colega jogou o turno, então o personagem dele ataca (nas outras
++## máquinas só chega o resultado do turno, sem as magias uma a uma).
++func _animar_colega(snapshot: Dictionary) -> void:
++	var vis: CombatSprite = _vis_por_nome.get(str(snapshot.get("nome", "")), null)
++	if vis != null and vis != _vis_jogador:
++		vis.tocar(&"ataque")
+ 
+ 
+ ## Reage às mudanças de HP: quem perde vida leva dano (ou morre, se zerar) e o
+@@ -379,13 +437,14 @@
+ 				_vis_monstro.tocar(&"dano")
+ 			elif time_perdeu:
+ 				_vis_monstro.tocar(&"ataque")
+-		if _vis_jogador != null:
++		var equipe := _vis_time.size() > 1
++		for vis in _vis_time:
+ 			if hp_time <= 0 and _hp_time_antes > 0:
+-				_vis_jogador.tocar(&"morte")
++				vis.tocar(&"morte")
+ 			elif time_perdeu:
+-				_vis_jogador.tocar(&"dano")
+-			elif inimigo_perdeu and not _vis_jogador.tocando(&"ataque"):
+-				_vis_jogador.tocar(&"ataque")
++				vis.tocar(&"dano")
++			elif inimigo_perdeu and not equipe and not vis.tocando(&"ataque"):
++				vis.tocar(&"ataque")
+ 	_hp_inimigo_antes = hp_inimigo
+ 	_hp_time_antes = hp_time
+ 

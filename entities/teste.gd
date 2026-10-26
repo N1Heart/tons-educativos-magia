@@ -11,6 +11,10 @@ const JUMP_VELOCITY = -400.0
 ## guardado o mais recente que entrou, é suficiente pro tamanho das salas.
 var _interagivel_proximo: Node = null
 
+## false enquanto uma caixa de diálogo está aberta (aula/prova): o jogador
+## não anda, não pula e não dispara outra interação por baixo do diálogo.
+var controle_ativo: bool = true
+
 
 func _ready() -> void:
 	# A ação "interagir" não existe por padrão no InputMap do projeto —
@@ -21,11 +25,22 @@ func _ready() -> void:
 		tecla.physical_keycode = KEY_E
 		InputMap.action_add_event("interagir", tecla)
 
+	# Quem trocou de cena pode ter pedido pra o jogador nascer num ponto
+	# específico (ex: voltar do combate pra frente da porta dos duelos).
+	if Engine.has_meta("spawn_proxima_cena"):
+		var pedido: Dictionary = Engine.get_meta("spawn_proxima_cena")
+		Engine.remove_meta("spawn_proxima_cena")
+		var cena_atual := get_tree().current_scene
+		if cena_atual != null and cena_atual.scene_file_path == pedido.get("cena", ""):
+			global_position = pedido.get("posicao", global_position)
+
 	zona_interacao.area_entered.connect(_on_zona_interacao_area_entered)
 	zona_interacao.area_exited.connect(_on_zona_interacao_area_exited)
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not controle_ativo:
+		return
 	if event.is_action_pressed("interagir") and _interagivel_proximo != null:
 		_interagivel_proximo.interagir()
 
@@ -46,12 +61,12 @@ func _physics_process(delta: float) -> void:
 		velocity += get_gravity() * delta
 
 	# Handle jump.
-	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
+	if controle_ativo and Input.is_action_just_pressed("ui_accept") and is_on_floor():
 		velocity.y = JUMP_VELOCITY
 
 	# Get the input direction and handle the movement/deceleration.
 	# As good practice, you should replace UI actions with custom gameplay actions.
-	var direction := Input.get_axis("ui_left", "ui_right")
+	var direction := Input.get_axis("ui_left", "ui_right") if controle_ativo else 0.0
 	if direction:
 		velocity.x = direction * SPEED
 	else:

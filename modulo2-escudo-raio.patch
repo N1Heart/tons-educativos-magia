@@ -1,0 +1,126 @@
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo2-*.patch' base/scenes/combat_ui/UnitIcon.tscn tons-educativos-magia/scenes/combat_ui/UnitIcon.tscn
+--- a/scenes/combat_ui/UnitIcon.tscn	2026-09-29 19:37:38.000000000 -0400
++++ b/scenes/combat_ui/UnitIcon.tscn	2026-10-08 21:08:02.205417696 -0400
+@@ -18,3 +18,20 @@
+ custom_minimum_size = Vector2(36, 6)
+ layout_mode = 2
+ show_percentage = false
++
++[node name="ShieldBar" type="ProgressBar" parent="."]
++visible = false
++modulate = Color(0.4, 0.7, 1, 1)
++custom_minimum_size = Vector2(36, 8)
++layout_mode = 2
++show_percentage = false
++
++[node name="Valor" type="Label" parent="ShieldBar"]
++layout_mode = 1
++anchors_preset = 15
++anchor_right = 1.0
++anchor_bottom = 1.0
++theme_override_colors/font_color = Color(0, 0, 0, 1)
++theme_override_font_sizes/font_size = 8
++horizontal_alignment = 1
++vertical_alignment = 1
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo2-*.patch' base/scripts/combat.gd tons-educativos-magia/scripts/combat.gd
+--- a/scripts/combat.gd	2026-10-08 19:09:16.000000000 -0400
++++ b/scripts/combat.gd	2026-10-08 21:08:37.552178410 -0400
+@@ -28,6 +28,9 @@
+ const SLOW_TIC_PENALTY: int = 1
+ const TEMPO_CIRCLE_BONUS_TICS: int = 1
+ 
++## Dano deste elemento ignora o escudo: destrói o escudo inteiro e o dano passa.
++const ELEMENTO_QUEBRA_ESCUDO := "Eletricidade"
++
+ const CATEGORY_BASE := {
+ 	"dano_rapido": 8,
+ 	"dano_forte": 16,
+@@ -288,9 +291,13 @@
+ 	match category:
+ 		"dano_rapido", "dano_forte":
+ 			var targets = _random_targets(target_units, _target_count(spell.match_size, target_units.size()))
++			var quebra: bool = element == ELEMENTO_QUEBRA_ESCUDO
++			var escudo_destruido: int = 0
+ 			for t in targets:
+-				t.take_damage(amount)
++				escudo_destruido += t.take_damage(amount, quebra)
+ 			log_message.emit("%d de dano em %d alvo(s) (%s)" % [amount, targets.size(), element])
++			if escudo_destruido > 0:
++				log_message.emit("A Eletricidade destruiu %d de escudo!" % escudo_destruido)
+ 		"defesa_rapida", "defesa_forte":
+ 			caster_unit.add_shield(amount)
+ 			log_message.emit("+%d de escudo (%s)" % [amount, element])
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo2-*.patch' base/scripts/combat_unit.gd tons-educativos-magia/scripts/combat_unit.gd
+--- a/scripts/combat_unit.gd	2026-09-29 19:37:38.000000000 -0400
++++ b/scripts/combat_unit.gd	2026-10-08 21:08:02.203747101 -0400
+@@ -10,6 +10,9 @@
+ var max_hp: int
+ var current_hp: int
+ var shield: int = 0
++## Verdadeiro quando o escudo acabou de ser destruído por Eletricidade; a UI
++## lê (e limpa) isso pra piscar a barra de escudo.
++var escudo_quebrado: bool = false
+ 
+ 
+ func _init(p_tile_type: TileType, p_max_hp: int = 20) -> void:
+@@ -23,10 +26,20 @@
+ 	return current_hp > 0
+ 
+ 
+-func take_damage(amount: int) -> void:
++## `quebra_escudo` (Eletricidade): destrói o escudo inteiro e o dano passa
++## cheio para o HP. Devolve quanto de escudo foi destruído.
++func take_damage(amount: int, quebra_escudo: bool = false) -> int:
++	if quebra_escudo:
++		var destruido := shield
++		if destruido > 0:
++			shield = 0
++			escudo_quebrado = true
++		current_hp = max(0, current_hp - amount)
++		return destruido
+ 	var absorbed = min(shield, amount)
+ 	shield -= absorbed
+ 	current_hp = max(0, current_hp - (amount - absorbed))
++	return 0
+ 
+ 
+ func heal(amount: int) -> void:
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo2-*.patch' base/scripts/unit_icon.gd tons-educativos-magia/scripts/unit_icon.gd
+--- a/scripts/unit_icon.gd	2026-09-29 19:37:38.000000000 -0400
++++ b/scripts/unit_icon.gd	2026-10-08 21:08:02.205078114 -0400
+@@ -7,6 +7,11 @@
+ 
+ @onready var icon_rect: TextureRect = $Icon
+ @onready var hp_bar: ProgressBar = $HPBar
++@onready var shield_bar: ProgressBar = $ShieldBar
++@onready var shield_label: Label = $ShieldBar/Valor
++
++## Escudo acima disso enche a barra; o número continua mostrando o valor real.
++const ESCUDO_MAX_BARRA := 32
+ 
+ 
+ func set_unit(unit: CombatUnit) -> void:
+@@ -18,4 +23,23 @@
+ 	hp_bar.max_value = unit.max_hp
+ 	hp_bar.value = unit.current_hp
+ 
++	shield_bar.max_value = ESCUDO_MAX_BARRA
++	shield_bar.value = unit.shield
++	shield_bar.visible = unit.shield > 0 and unit.is_alive()
++	shield_label.text = str(unit.shield)
++	if unit.escudo_quebrado:
++		unit.escudo_quebrado = false
++		_piscar_escudo_quebrado()
++
+ 	modulate.a = 1.0 if unit.is_alive() else 0.35
++
++
++## Escudo destruído pela Eletricidade: a barra aparece amarela por um instante e some.
++func _piscar_escudo_quebrado() -> void:
++	shield_bar.visible = true
++	shield_bar.value = ESCUDO_MAX_BARRA
++	shield_label.text = "!"
++	shield_bar.modulate = Color(1.0, 0.9, 0.2)
++	var t := create_tween()
++	t.tween_property(shield_bar, "modulate:a", 0.0, 0.5)
++	t.tween_callback(func(): shield_bar.visible = false)

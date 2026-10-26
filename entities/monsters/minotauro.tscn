@@ -1,0 +1,240 @@
+[gd_scene format=3 uid="uid://byg6gq2gbpoon"]
+
+[ext_resource type="PackedScene" uid="uid://xpy25bucywnx" path="res://entities/monsters/monsterTemplate.tscn" id="1_0q733"]
+[ext_resource type="Texture2D" uid="uid://ctrfxxwvjd5uw" path="res://sprites/monsters/minotauro/Minotaur - Sprite Sheet.png" id="2_d675y"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pljud"]
+atlas = ExtResource("2_d675y")
+region = Rect2(95, 0, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eujrn"]
+atlas = ExtResource("2_d675y")
+region = Rect2(0, 288, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tgb32"]
+atlas = ExtResource("2_d675y")
+region = Rect2(95, 288, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_il5dj"]
+atlas = ExtResource("2_d675y")
+region = Rect2(190, 288, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jpt30"]
+atlas = ExtResource("2_d675y")
+region = Rect2(285, 288, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mbfv1"]
+atlas = ExtResource("2_d675y")
+region = Rect2(380, 288, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gawwg"]
+atlas = ExtResource("2_d675y")
+region = Rect2(475, 288, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_akeun"]
+atlas = ExtResource("2_d675y")
+region = Rect2(570, 288, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_64ams"]
+atlas = ExtResource("2_d675y")
+region = Rect2(665, 288, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p74hy"]
+atlas = ExtResource("2_d675y")
+region = Rect2(760, 288, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dusc0"]
+atlas = ExtResource("2_d675y")
+region = Rect2(0, 768, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xl6h2"]
+atlas = ExtResource("2_d675y")
+region = Rect2(95, 768, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ypt5v"]
+atlas = ExtResource("2_d675y")
+region = Rect2(190, 768, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_l3bnj"]
+atlas = ExtResource("2_d675y")
+region = Rect2(0, 0, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c3agy"]
+atlas = ExtResource("2_d675y")
+region = Rect2(95, 0, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ac2xt"]
+atlas = ExtResource("2_d675y")
+region = Rect2(190, 0, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vi36g"]
+atlas = ExtResource("2_d675y")
+region = Rect2(285, 0, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mcnum"]
+atlas = ExtResource("2_d675y")
+region = Rect2(380, 0, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ajyo3"]
+atlas = ExtResource("2_d675y")
+region = Rect2(0, 192, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6jvde"]
+atlas = ExtResource("2_d675y")
+region = Rect2(95, 192, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_re5tj"]
+atlas = ExtResource("2_d675y")
+region = Rect2(190, 192, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_masxk"]
+atlas = ExtResource("2_d675y")
+region = Rect2(285, 192, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2rsdr"]
+atlas = ExtResource("2_d675y")
+region = Rect2(380, 192, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_37y32"]
+atlas = ExtResource("2_d675y")
+region = Rect2(0, 864, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8xq7d"]
+atlas = ExtResource("2_d675y")
+region = Rect2(95, 864, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1rp6i"]
+atlas = ExtResource("2_d675y")
+region = Rect2(190, 864, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pjjkj"]
+atlas = ExtResource("2_d675y")
+region = Rect2(285, 864, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7ij6w"]
+atlas = ExtResource("2_d675y")
+region = Rect2(380, 864, 95, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_v4n4k"]
+atlas = ExtResource("2_d675y")
+region = Rect2(475, 864, 95, 96)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_1yv2w"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pljud")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eujrn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tgb32")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_il5dj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jpt30")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mbfv1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gawwg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_akeun")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_64ams")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_p74hy")
+}],
+"loop": 1,
+"name": &"ataque",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dusc0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xl6h2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ypt5v")
+}],
+"loop": 1,
+"name": &"dano",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_l3bnj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_c3agy")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ac2xt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vi36g")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mcnum")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ajyo3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6jvde")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_re5tj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_masxk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2rsdr")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_37y32")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8xq7d")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1rp6i")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pjjkj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7ij6w")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_v4n4k")
+}],
+"loop": 1,
+"name": &"morte",
+"speed": 5.0
+}]
+
+[node name="MonsterTemplate" unique_id=572115898 instance=ExtResource("1_0q733")]
+nome_exibicao = "minotauro"
+faixa = 2
+
+[node name="AnimatedSprite2D" parent="." index="1" unique_id=312418595]
+sprite_frames = SubResource("SpriteFrames_1yv2w")
+animation = &"dano"
+autoplay = ""
+frame_progress = 0.18692484

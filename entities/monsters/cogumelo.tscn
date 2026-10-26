@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://kat4qhoemcej"]
+
+[ext_resource type="PackedScene" uid="uid://xpy25bucywnx" path="res://entities/monsters/monsterTemplate.tscn" id="1_pxhpi"]
+
+[node name="MonsterTemplate" unique_id=572115898 instance=ExtResource("1_pxhpi")]
+nome_exibicao = "cogumelo"
+
+[node name="AnimatedSprite2D" parent="." index="1" unique_id=312418595]
+frame_progress = 0.14958975
+flip_h = true

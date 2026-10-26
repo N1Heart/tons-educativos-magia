@@ -9,6 +9,12 @@ func _ready():
 	%btnMagias.pressed.connect(_on_btn_magias_pressed)
 	%btnEntrarMundo.pressed.connect(_on_btn_entrar_mundo_pressed)
 
+	# Sala em tempo real: botão criado aqui pra não mexer na cena.
+	var btn_sala := Button.new()
+	btn_sala.text = "Entrar em sala (código do professor)"
+	btn_sala.pressed.connect(_on_btn_entrar_sala_pressed)
+	%btnEntrarMundo.get_parent().add_child(btn_sala)
+
 	var uid := LocalDB.get_user_id_ativo()
 
 	# Restaura o loadout salvo do jogador assim que ele chega no saguão —
@@ -17,6 +23,10 @@ func _ready():
 	SpellLoadout.carregar_equipado(uid)
 
 	_verificar_perfil_existente(uid)
+
+	# Convidado: o nome do personagem já foi escolhido na tela de entrada.
+	if NakamaManager.convidado_nome != "" and %nomePersonagem.text == "":
+		%nomePersonagem.text = NakamaManager.convidado_nome
 
 
 ## Se o jogador já tem personagem salvo localmente, pula direto pra tela de
@@ -46,7 +56,12 @@ func _on_btn_entrar_turma_pressed():
 	%btnEntrarTurma.disabled = true
 	print("Procurando turma...")
 
-	var sucesso = await NakamaManager.entrar_turma(codigo)
+	# Sem conexão (convidado offline): aceita o código agora e confirma na
+	# turma depois, quando o servidor aparecer (SyncManager).
+	var online: bool = NakamaManager.session != null
+	var sucesso: bool = true
+	if online:
+		sucesso = await NakamaManager.entrar_turma(codigo)
 
 	if sucesso:
 		print("Acesso liberado! Salvando personagem...")
@@ -58,7 +73,10 @@ func _on_btn_entrar_turma_pressed():
 		aluno.codigo_turma = codigo
 		aluno.tipo_perfil = "Aluno"
 		aluno.nivel_atual = 1
+		aluno.is_convidado = NakamaManager.convidado_id_ativo != ""
 		LocalDB.salvar_perfil(aluno)  # também concede o kit inicial (forma+elemento) se for perfil novo
+		if not online:
+			LocalDB.marcar_turma_pendente(uid, true)
 
 		SpellLoadout.carregar_equipado(uid)
 		_verificar_perfil_existente(uid)
@@ -69,6 +87,11 @@ func _on_btn_entrar_turma_pressed():
 
 func _on_btn_entrar_mundo_pressed():
 	get_tree().change_scene_to_file("res://scenes/salas/academia.tscn")
+
+
+func _on_btn_entrar_sala_pressed():
+	Engine.set_meta("lobby_modo", "aluno")
+	get_tree().change_scene_to_file("res://scenes/Login/TelaLobby.tscn")
 
 
 func _on_btn_magias_pressed():

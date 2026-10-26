@@ -41,9 +41,16 @@ func _carregar_estatisticas() -> void:
 	var texto := ""
 	texto += "Tempo de jogo: %dm %ds\n" % [minutos, segundos]
 	texto += "Partidas jogadas: %d\n" % dados.get("total_partidas", 0)
+	texto += "Nível máximo alcançado: %d\n" % dados.get("nivel_maximo", 0)
 	texto += "Taxa de vitórias: %.0f%%\n" % dados.get("taxa_vitorias_percent", 0.0)
 	texto += "Desafios respondidos: %d\n" % dados.get("total_desafios_respondidos", 0)
 	texto += "Taxa de acertos em quizzes: %.0f%%\n" % dados.get("taxa_acertos_percent", 0.0)
+
+	if dados.get("alerta_dificuldade", false):
+		texto += "\n⚠ ALERTA: demora média de %.1fs por jogada nas últimas partidas (limite %.0fs). Pode ser sinal de dificuldade de aprendizado.\n\n" % [
+			dados.get("latencia_recente_segundos", 0.0), dados.get("limiar_latencia_segundos", 0.0)]
+	elif dados.get("latencia_recente_segundos", 0.0) > 0.0:
+		texto += "Tempo médio por jogada: %.1fs\n" % dados.get("latencia_recente_segundos", 0.0)
 
 	if dados.get("objeto_maior_dificuldade_disponivel", false):
 		texto += "Objeto de maior dificuldade: %s\n" % dados.get("objeto_maior_dificuldade", "-")

@@ -18,11 +18,23 @@ func _ready() -> void:
 	%btnRemoverAluno.pressed.connect(_on_btn_remover_aluno_pressed)
 	%listaAlunos.item_activated.connect(_on_aluno_ativado)
 
+	# Sala em tempo real (PvE/PvP): botão criado aqui pra não mexer na cena.
+	var btn_sala := Button.new()
+	btn_sala.text = "Abrir sala (PvE / PvP)"
+	btn_sala.pressed.connect(_on_btn_abrir_sala_pressed)
+	%btnRemoverAluno.get_parent().add_child(btn_sala)
+	%btnRemoverAluno.get_parent().move_child(btn_sala, 1)
+
 	_atualizar_lista_alunos()
 
 
 func _on_btn_voltar_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/Login/TelaProfessor.tscn")
+
+
+func _on_btn_abrir_sala_pressed() -> void:
+	Engine.set_meta("lobby_modo", "professor")
+	get_tree().change_scene_to_file("res://scenes/Login/TelaLobby.tscn")
 
 
 func _atualizar_lista_alunos() -> void:
@@ -42,6 +54,21 @@ func _atualizar_lista_alunos() -> void:
 	else:
 		for aluno in _alunos_atuais:
 			%listaAlunos.add_item(aluno["username"])
+		_marcar_alertas()
+
+
+## Depois de mostrar a lista, consulta as estatísticas de cada aluno e marca
+## com ⚠ quem está com alerta de dificuldade de aprendizado (RF4). Roda em
+## segundo plano pra não atrasar a tela.
+func _marcar_alertas() -> void:
+	var alunos := _alunos_atuais
+	for i in alunos.size():
+		var dados: Dictionary = await NakamaManager.obter_estatisticas_aluno(alunos[i]["id"])
+		# A tela pode ter sido fechada ou a lista recarregada enquanto esperava
+		if not is_instance_valid(%listaAlunos) or alunos != _alunos_atuais or i >= %listaAlunos.item_count:
+			return
+		if dados.get("alerta_dificuldade", false):
+			%listaAlunos.set_item_text(i, "⚠ " + alunos[i]["username"])
 
 
 func _on_aluno_ativado(index: int) -> void:

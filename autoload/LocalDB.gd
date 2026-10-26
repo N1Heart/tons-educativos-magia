@@ -37,6 +37,15 @@ func _criar_tabelas() -> void:
 			synced INTEGER DEFAULT 0
 		)
 	""")
+	# Turma digitada sem conexão: o vínculo com o servidor fica pendente até
+	# o SyncManager conseguir entrar na turma (ver SyncManager._tentar_vincular_turma).
+	db.query("PRAGMA table_info(aluno_perfil)")
+	var colunas_perfil: Array[String] = []
+	for col in db.query_result:
+		colunas_perfil.append(col["name"])
+	if not colunas_perfil.has("turma_pendente"):
+		db.query("ALTER TABLE aluno_perfil ADD COLUMN turma_pendente INTEGER DEFAULT 0")
+
 	db.query("""
 		CREATE TABLE IF NOT EXISTS magias_desbloqueadas (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,21 +64,27 @@ func _criar_tabelas() -> void:
 			pontuacao INTEGER,
 			tempo_decorrido REAL,
 			venceu INTEGER DEFAULT 0,
+			jogadas INTEGER DEFAULT 0,
+			latencia_media REAL DEFAULT 0,
+			latencia_max REAL DEFAULT 0,
 			jogado_em INTEGER,
 			synced INTEGER DEFAULT 0
 		)
 	""")
-	# Migração pra quem já tinha o banco antigo sem a coluna 'venceu'
+	# Migração pra quem já tinha o banco antigo sem colunas novas
 	# (CREATE TABLE IF NOT EXISTS não adiciona coluna em tabela existente).
-	# Se a coluna já existir isso só falha silenciosamente — sem problema.
 	db.query("PRAGMA table_info(partidas_match3)")
-	var tem_coluna_venceu := false
+	var colunas_partida: Array[String] = []
 	for col in db.query_result:
-		if col["name"] == "venceu":
-			tem_coluna_venceu = true
-			break
-	if not tem_coluna_venceu:
+		colunas_partida.append(col["name"])
+	if not colunas_partida.has("venceu"):
 		db.query("ALTER TABLE partidas_match3 ADD COLUMN venceu INTEGER DEFAULT 0")
+	if not colunas_partida.has("jogadas"):
+		db.query("ALTER TABLE partidas_match3 ADD COLUMN jogadas INTEGER DEFAULT 0")
+	if not colunas_partida.has("latencia_media"):
+		db.query("ALTER TABLE partidas_match3 ADD COLUMN latencia_media REAL DEFAULT 0")
+	if not colunas_partida.has("latencia_max"):
+		db.query("ALTER TABLE partidas_match3 ADD COLUMN latencia_max REAL DEFAULT 0")
 	
 	db.query("""
 		CREATE TABLE IF NOT EXISTS desafios_respondidos (
@@ -142,10 +157,41 @@ func _criar_tabelas() -> void:
 
 # --- Identidade ativa (logado ou convidado offline) ---
 
+## Identidade usada como chave de TODO o banco local. Convidado: id derivado
+## do computador + nome do personagem (vale online e offline, então o
+## progresso não muda de dono quando a conexão vai e volta). Conta
+## cadastrada: o id do usuário no Nakama.
 func get_user_id_ativo() -> String:
+	if NakamaManager.convidado_id_ativo != "":
+		return NakamaManager.convidado_id_ativo
 	if NakamaManager.session != null:
 		return NakamaManager.session.user_id
 	return _get_ou_criar_device_id()
+
+
+## Id estável deste computador (arquivo user://device_id.txt).
+func get_id_dispositivo() -> String:
+	return _get_ou_criar_device_id()
+
+
+## Personagens de convidado já criados neste computador (id começa com 'prefixo').
+func listar_personagens_convidado(prefixo: String) -> Array:
+	db.query_with_bindings(
+		"SELECT user_id, nome FROM aluno_perfil WHERE is_convidado = 1 AND substr(user_id, 1, ?) = ? ORDER BY updated_at DESC",
+		[prefixo.length(), prefixo])
+	var lista: Array = []
+	for row in db.query_result:
+		lista.append({"id": row["user_id"], "nome": row["nome"]})
+	return lista
+
+
+func marcar_turma_pendente(user_id: String, pendente: bool) -> void:
+	db.query_with_bindings("UPDATE aluno_perfil SET turma_pendente = ? WHERE user_id = ?", [1 if pendente else 0, user_id])
+
+
+func turma_pendente(user_id: String) -> bool:
+	db.query_with_bindings("SELECT turma_pendente FROM aluno_perfil WHERE user_id = ?", [user_id])
+	return not db.query_result.is_empty() and db.query_result[0]["turma_pendente"] == 1
 
 
 func _get_ou_criar_device_id() -> String:
@@ -239,17 +285,18 @@ func listar_magias_desbloqueadas(user_id: String) -> Array[String]:
 
 func registrar_partida(user_id: String, partida: PartidaMatch3Model) -> void:
 	db.query_with_bindings("""
-		INSERT INTO partidas_match3 (user_id, nivel_dificuldade, pontuacao, tempo_decorrido, venceu, jogado_em, synced)
-		VALUES (?, ?, ?, ?, ?, ?, 0)
+		INSERT INTO partidas_match3 (user_id, nivel_dificuldade, pontuacao, tempo_decorrido, venceu, jogadas, latencia_media, latencia_max, jogado_em, synced)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
 	""", [
 		user_id, partida.nivel_dificuldade, partida.pontuacao, partida.tempo_decorrido,
-		1 if partida.venceu else 0, Time.get_unix_time_from_system()
+		1 if partida.venceu else 0, partida.jogadas, partida.latencia_media, partida.latencia_max,
+		Time.get_unix_time_from_system()
 	])
 	SyncManager.request_sync()
 
 
 func listar_partidas(user_id: String) -> Array[PartidaMatch3Model]:
-	db.query_with_bindings("SELECT * FROM partidas_match3 WHERE user_id = ? ORDER BY jogado_em DESC", [user_id])
+	db.query_with_bindings("SELECT * FROM partidas_match3 WHERE user_id = ? ORDER BY id DESC", [user_id])
 	var partidas: Array[PartidaMatch3Model] = []
 	for row in db.query_result:
 		var p := PartidaMatch3Model.new()
@@ -257,8 +304,30 @@ func listar_partidas(user_id: String) -> Array[PartidaMatch3Model]:
 		p.pontuacao = row["pontuacao"]
 		p.tempo_decorrido = row["tempo_decorrido"]
 		p.venceu = row.get("venceu", 0) == 1
+		p.jogadas = int(row.get("jogadas", 0))
+		p.latencia_media = float(row.get("latencia_media", 0.0))
+		p.latencia_max = float(row.get("latencia_max", 0.0))
 		partidas.append(p)
 	return partidas
+
+
+const NIVEL_DIFICULDADE_MAX := 5
+
+
+## Ajuste automático de dificuldade (RF3): sem nenhuma configuração do
+## professor, o próximo nível sai do histórico do aluno. Vitória sobe 1;
+## duas derrotas seguidas descem 1; o resto mantém. Fica entre 1 e o máximo.
+func proximo_nivel_dificuldade(user_id: String) -> int:
+	var partidas := listar_partidas(user_id)  # mais recente primeiro
+	if partidas.is_empty():
+		return 1
+	var ultima := partidas[0]
+	var nivel := ultima.nivel_dificuldade
+	if ultima.venceu:
+		nivel += 1
+	elif partidas.size() >= 2 and not partidas[1].venceu:
+		nivel -= 1
+	return clampi(nivel, 1, NIVEL_DIFICULDADE_MAX)
 
 # --- Desafios / quizzes respondidos ---
 

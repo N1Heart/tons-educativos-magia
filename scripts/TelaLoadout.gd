@@ -105,5 +105,19 @@ func _on_elemento_selecionado(indice: int, registro: _Linha) -> void:
 	_atualizar_icone(registro, elemento)
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_on_btn_voltar_pressed()
+
+
+## Volta pra onde o jogador estava (aberto pelo menu ESC / tecla I dentro do
+## jogo) ou, sem pedido nenhum, pro menu do aluno.
 func _on_btn_voltar_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/Login/TelaAluno.tscn")
+	var destino := "res://scenes/Login/TelaAluno.tscn"
+	if Engine.has_meta("voltar_para"):
+		var pedido: Dictionary = Engine.get_meta("voltar_para")
+		Engine.remove_meta("voltar_para")
+		destino = pedido.get("cena", destino)
+		if pedido.has("posicao"):
+			Engine.set_meta("spawn_proxima_cena", {"cena": destino, "posicao": pedido["posicao"]})
+	get_tree().change_scene_to_file(destino)

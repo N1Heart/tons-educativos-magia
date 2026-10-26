@@ -35,11 +35,18 @@ func _do_sync() -> void:
 	if _syncing:
 		return
 	if NakamaManager.session == null:
-		return  # offline / não logado — tenta de novo na próxima request_sync()
+		# Convidado que começou offline tenta conectar (com intervalo mínimo).
+		await NakamaManager.tentar_reconectar()
+		if NakamaManager.session == null:
+			return  # continua offline — tenta de novo na próxima request_sync()
 
 	_syncing = true
-	var user_id: String = NakamaManager.session.user_id
+	# Chave LOCAL (SQLite). Pra convidado é o id derivado do personagem; pra
+	# conta cadastrada é o mesmo id do Nakama. Os dados vão pro storage do
+	# usuário da sessão atual de qualquer jeito.
+	var user_id: String = LocalDB.get_user_id_ativo()
 
+	await _tentar_vincular_turma(user_id)
 	await _sync_perfil(user_id)
 	await _sync_tabela("magias_desbloqueadas", user_id, "progresso_magias")
 	await _sync_tabela("partidas_match3", user_id, "progresso_partidas")
@@ -50,6 +57,19 @@ func _do_sync() -> void:
 	await _sync_loadout(user_id)
 
 	_syncing = false
+
+
+## Quem digitou o código da turma sem conexão entra de verdade na turma agora.
+func _tentar_vincular_turma(user_id: String) -> void:
+	if not LocalDB.turma_pendente(user_id):
+		return
+	var aluno = LocalDB.carregar_perfil(user_id)
+	if aluno == null or aluno.codigo_turma == "":
+		LocalDB.marcar_turma_pendente(user_id, false)
+		return
+	var ok: bool = await NakamaManager.entrar_turma(aluno.codigo_turma)
+	if ok:
+		LocalDB.marcar_turma_pendente(user_id, false)
 
 
 func _sync_perfil(user_id: String) -> void:

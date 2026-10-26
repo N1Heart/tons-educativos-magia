@@ -12,9 +12,101 @@ var turma_selecionada_nome: String = ""
 var aluno_selecionado_id: String = ""
 var aluno_selecionado_nome: String = ""
 
+## Endereço do servidor Nakama. No laboratório, o computador do professor
+## roda o docker compose e os alunos apontam pra o IP dele; sozinho em casa,
+## o padrão 127.0.0.1 continua valendo. Fica salvo em user://servidor.cfg.
+const PORTA_SERVIDOR := 7350
+const ARQUIVO_SERVIDOR := "user://servidor.cfg"
+const SERVIDOR_PADRAO := "127.0.0.1"
+
+
+## --- Convidado (funciona com ou sem servidor) ---
+## Cada personagem de convidado é identificado por: prefixo do computador +
+## nome do personagem. Vários alunos no mesmo PC = vários personagens. Esse id
+## também é o "device id" usado pra autenticar no Nakama quando há conexão.
+var convidado_id_ativo: String = ""
+var convidado_nome: String = ""
+
+const COOLDOWN_RECONEXAO_SEGUNDOS := 30.0
+var _ultima_reconexao_ms: int = -1000000
+var _reconectando := false
+
+
+## Prefixo comum a todos os personagens de convidado deste computador.
+func prefixo_convidado() -> String:
+	var dispositivo := OS.get_unique_id()
+	if dispositivo == "":
+		dispositivo = LocalDB.get_id_dispositivo()
+	return "g_" + dispositivo.sha256_text().substr(0, 12) + "_"
+
+
+## Nome -> trecho seguro pra id (minúsculo, sem acento, só letras/números).
+static func _slug(nome: String) -> String:
+	var mapa := {"á":"a","à":"a","â":"a","ã":"a","ä":"a","é":"e","è":"e","ê":"e","ë":"e","í":"i","ì":"i","î":"i","ï":"i",
+		"ó":"o","ò":"o","ô":"o","õ":"o","ö":"o","ú":"u","ù":"u","û":"u","ü":"u","ç":"c","ñ":"n"}
+	var saida := ""
+	for c in nome.strip_edges().to_lower():
+		if mapa.has(c):
+			saida += mapa[c]
+		elif (c >= "a" and c <= "z") or (c >= "0" and c <= "9"):
+			saida += c
+		else:
+			saida += "-"
+	saida = saida.substr(0, 40)
+	return saida if saida != "" else "x"
+
+
+func id_convidado_para(nome: String) -> String:
+	return prefixo_convidado() + _slug(nome)
+
+
+## Entra como convidado com o personagem 'nome'. NUNCA depende do servidor:
+## se a conexão falhar, o jogo segue offline (progresso salvo neste computador)
+## e o SyncManager tenta conectar de novo depois. Devolve true se conectou.
+func entrar_como_convidado(nome: String) -> bool:
+	session = null
+	convidado_nome = nome.strip_edges()
+	convidado_id_ativo = id_convidado_para(convidado_nome)
+	return await login_convidado(convidado_id_ativo)
+
+
+## Chamado pelo SyncManager: convidado que começou offline tenta autenticar
+## de novo (no máximo uma vez a cada 30 s).
+func tentar_reconectar() -> void:
+	if session != null or convidado_id_ativo == "" or _reconectando:
+		return
+	if Time.get_ticks_msec() - _ultima_reconexao_ms < COOLDOWN_RECONEXAO_SEGUNDOS * 1000.0:
+		return
+	_reconectando = true
+	_ultima_reconexao_ms = Time.get_ticks_msec()
+	await login_convidado(convidado_id_ativo)
+	_reconectando = false
+
+
+func carregar_servidor() -> String:
+	var cfg := ConfigFile.new()
+	if cfg.load(ARQUIVO_SERVIDOR) == OK:
+		var host := str(cfg.get_value("servidor", "host", SERVIDOR_PADRAO)).strip_edges()
+		if host != "":
+			return host
+	return SERVIDOR_PADRAO
+
+
+## Troca o servidor (só faz sentido antes do login). Recria o cliente.
+func definir_servidor(host: String) -> void:
+	host = host.strip_edges()
+	if host == "":
+		host = SERVIDOR_PADRAO
+	var cfg := ConfigFile.new()
+	cfg.set_value("servidor", "host", host)
+	cfg.save(ARQUIVO_SERVIDOR)
+	session = null
+	client = Nakama.create_client("defaultkey", host, PORTA_SERVIDOR, "http")
+
+
 func _ready() -> void:
 	# A variável global 'Nakama' agora existe graças ao Autoload oficial
-	client = Nakama.create_client("defaultkey", "127.0.0.1", 7350, "http")
+	client = Nakama.create_client("defaultkey", carregar_servidor(), PORTA_SERVIDOR, "http")
 
 func login_convidado(id_dispositivo: String) -> bool:
 	var result = await client.authenticate_device_async(id_dispositivo)
@@ -131,6 +223,8 @@ func entrar_turma(codigo_turma: String) -> bool:
 func fazer_logout():
 	# Limpa a sessão da memória do Godot
 	session = null
+	convidado_id_ativo = ""
+	convidado_nome = ""
 	print("Sessão encerrada.")
 	
 func listar_minhas_turmas() -> Array:

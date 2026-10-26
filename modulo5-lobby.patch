@@ -1,0 +1,639 @@
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo2-*.patch' -x out5.txt base/project.godot tons-educativos-magia/project.godot
+--- a/project.godot	2026-10-08 20:41:46.000000000 -0400
++++ b/project.godot	2026-10-08 21:17:05.589237879 -0400
+@@ -29,6 +29,7 @@
+ LocalDB="*uid://b88xfks1h47ii"
+ SyncManager="*uid://chv25kjav3818"
+ MenuPausa="*res://src/ui/MenuPausa.gd"
++LobbyManager="*res://src/services/LobbyManager.gd"
+ 
+ [display]
+ 
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo2-*.patch' -x out5.txt base/scenes/Login/TelaLobby.tscn tons-educativos-magia/scenes/Login/TelaLobby.tscn
+--- a/scenes/Login/TelaLobby.tscn	1969-12-31 20:00:00.000000000 -0400
++++ b/scenes/Login/TelaLobby.tscn	2026-10-08 21:17:05.568480584 -0400
+@@ -0,0 +1,12 @@
++[gd_scene format=3]
++
++[ext_resource type="Script" path="res://scripts/TelaLobby.gd" id="1_lobby"]
++
++[node name="TelaLobby" type="Control"]
++layout_mode = 3
++anchors_preset = 15
++anchor_right = 1.0
++anchor_bottom = 1.0
++grow_horizontal = 2
++grow_vertical = 2
++script = ExtResource("1_lobby")
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo2-*.patch' -x out5.txt base/scripts/TelaLobby.gd tons-educativos-magia/scripts/TelaLobby.gd
+--- a/scripts/TelaLobby.gd	1969-12-31 20:00:00.000000000 -0400
++++ b/scripts/TelaLobby.gd	2026-10-08 21:17:05.566508675 -0400
+@@ -0,0 +1,232 @@
++extends Control
++
++## Tela da sala em tempo real (Módulo 5). Serve para os dois lados:
++##   - professor: abre a sala da turma, mostra o CÓDIGO e a lista de alunos que
++##     entraram, e tem os botões de iniciar PvE / PvP;
++##   - aluno: digita o código, entra e espera o professor iniciar.
++## Quem chama define o modo antes de trocar de cena:
++##   Engine.set_meta("lobby_modo", "professor")  ou  "aluno"
++## A tela é montada por código (como o MenuPausa/CaixaDialogo).
++
++const CENA_PROFESSOR := "res://scenes/Login/TelaTurma.tscn"
++const CENA_ALUNO := "res://scenes/Login/TelaAluno.tscn"
++const MIN_ALUNOS_PVE := 1
++const MIN_ALUNOS_PVP := 2
++
++var _professor := false
++var _caixa: VBoxContainer
++var _status: Label
++var _lista: ItemList
++var _titulo: Label
++var _codigo_label: Label
++var _btn_pve: Button
++var _btn_pvp: Button
++var _campo_codigo: LineEdit
++var _btn_entrar: Button
++var _ocupado := false
++
++
++func _ready() -> void:
++	_professor = Engine.get_meta("lobby_modo", "aluno") == "professor"
++	set_anchors_preset(Control.PRESET_FULL_RECT)
++
++	var fundo := ColorRect.new()
++	fundo.color = Color(0.1, 0.1, 0.16)
++	fundo.set_anchors_preset(Control.PRESET_FULL_RECT)
++	add_child(fundo)
++
++	var margem := MarginContainer.new()
++	margem.set_anchors_preset(Control.PRESET_FULL_RECT)
++	for lado in ["left", "top", "right", "bottom"]:
++		margem.add_theme_constant_override("margin_" + lado, 14)
++	add_child(margem)
++
++	_caixa = VBoxContainer.new()
++	_caixa.add_theme_constant_override("separation", 6)
++	margem.add_child(_caixa)
++
++	LobbyManager.sala_atualizada.connect(_atualizar)
++	LobbyManager.atividade_iniciada.connect(_on_atividade_iniciada)
++	LobbyManager.sala_encerrada.connect(_on_sala_encerrada)
++
++	if _professor:
++		_montar_sala()
++		_status.text = "Abrindo a sala..."
++		_abrir_sala_professor()
++	elif LobbyManager.esta_em_sala():
++		_montar_sala()
++		_atualizar()
++	else:
++		_montar_entrada_aluno()
++
++
++# ---------------------------------------------------------------- construção
++
++func _rotulo(texto: String, tamanho: int = 14, cor: Color = Color.WHITE) -> Label:
++	var l := Label.new()
++	l.text = texto
++	l.add_theme_font_size_override("font_size", tamanho)
++	l.add_theme_color_override("font_color", cor)
++	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++	return l
++
++
++func _botao(texto: String, acao: Callable) -> Button:
++	var b := Button.new()
++	b.text = texto
++	b.add_theme_font_size_override("font_size", 14)
++	b.pressed.connect(acao)
++	return b
++
++
++func _limpar() -> void:
++	for c in _caixa.get_children():
++		c.queue_free()
++
++
++func _montar_entrada_aluno() -> void:
++	_limpar()
++	_caixa.add_child(_rotulo("Entrar em uma sala", 20, Color(1.0, 0.85, 0.4)))
++	_caixa.add_child(_rotulo("Digite o código que o professor mostrou na tela dele:"))
++
++	_campo_codigo = LineEdit.new()
++	_campo_codigo.max_length = LobbySalaClass.TAMANHO_CODIGO
++	_campo_codigo.placeholder_text = "CÓDIGO"
++	_campo_codigo.alignment = HORIZONTAL_ALIGNMENT_CENTER
++	_campo_codigo.custom_minimum_size = Vector2(160, 40)
++	_campo_codigo.add_theme_font_size_override("font_size", 24)
++	_campo_codigo.text_submitted.connect(func(_t): _entrar_como_aluno())
++	var centro := CenterContainer.new()
++	centro.add_child(_campo_codigo)
++	_caixa.add_child(centro)
++
++	_status = _rotulo("", 13, Color(1.0, 0.75, 0.4))
++	_caixa.add_child(_status)
++
++	var linha := HBoxContainer.new()
++	_btn_entrar = _botao("Entrar", _entrar_como_aluno)
++	linha.add_child(_btn_entrar)
++	linha.add_child(_botao("Voltar", _voltar))
++	_caixa.add_child(linha)
++	_campo_codigo.grab_focus()
++
++
++func _montar_sala() -> void:
++	_limpar()
++	_titulo = _rotulo("", 18, Color(1.0, 0.85, 0.4))
++	_caixa.add_child(_titulo)
++
++	_codigo_label = _rotulo("", 30, Color(0.6, 0.9, 1.0))
++	_caixa.add_child(_codigo_label)
++
++	_caixa.add_child(_rotulo("Na sala:", 13, Color(0.8, 0.8, 0.8)))
++	_lista = ItemList.new()
++	_lista.size_flags_vertical = Control.SIZE_EXPAND_FILL
++	_lista.select_mode = ItemList.SELECT_SINGLE
++	_lista.add_theme_font_size_override("font_size", 14)
++	_caixa.add_child(_lista)
++
++	_status = _rotulo("", 13, Color(1.0, 0.75, 0.4))
++	_caixa.add_child(_status)
++
++	var linha := HBoxContainer.new()
++	if _professor:
++		_btn_pve = _botao("Iniciar PvE (cooperativo)", func(): _iniciar("pve"))
++		_btn_pvp = _botao("Iniciar PvP (duelo)", func(): _iniciar("pvp"))
++		linha.add_child(_btn_pve)
++		linha.add_child(_btn_pvp)
++		linha.add_child(_botao("Encerrar sala", _voltar))
++	else:
++		linha.add_child(_botao("Sair da sala", _voltar))
++	_caixa.add_child(linha)
++
++
++# ------------------------------------------------------------------- ações
++
++func _abrir_sala_professor() -> void:
++	var erro: String = await LobbyManager.abrir_sala(NakamaManager.turma_selecionada_nome)
++	if not is_inside_tree():
++		return
++	if erro != "":
++		_status.text = erro
++		_btn_pve.disabled = true
++		_btn_pvp.disabled = true
++		return
++	_atualizar()
++
++
++func _entrar_como_aluno() -> void:
++	if _ocupado:
++		return
++	var cod := LobbySalaClass.normalizar_codigo(_campo_codigo.text)
++	if cod.length() != LobbySalaClass.TAMANHO_CODIGO:
++		_status.text = "O código tem %d caracteres." % LobbySalaClass.TAMANHO_CODIGO
++		return
++	_ocupado = true
++	_btn_entrar.disabled = true
++	_status.text = "Entrando na sala..."
++	var perfil := LocalDB.carregar_perfil(LocalDB.get_user_id_ativo())
++	var nome: String = perfil.nome if perfil != null and perfil.nome != "" else NakamaManager.convidado_nome
++	var erro: String = await LobbyManager.entrar_na_sala(cod, nome if nome != "" else "Aluno")
++	if not is_inside_tree():
++		return
++	_ocupado = false
++	if erro != "":
++		_status.text = erro
++		_btn_entrar.disabled = false
++		return
++	_montar_sala()
++	_atualizar()
++
++
++func _iniciar(modo: String) -> void:
++	await LobbyManager.iniciar_atividade(modo)
++
++
++func _voltar() -> void:
++	await LobbyManager.sair()
++	if is_inside_tree():
++		get_tree().change_scene_to_file(CENA_PROFESSOR if _professor else CENA_ALUNO)
++
++
++# ------------------------------------------------------------------ eventos
++
++func _atualizar() -> void:
++	if _lista == null or not is_instance_valid(_lista) or not LobbyManager.esta_em_sala():
++		return
++	_codigo_label.text = "CÓDIGO: " + LobbyManager.codigo
++	if _professor:
++		_titulo.text = "Sala da turma: " + LobbyManager.nome_turma
++	else:
++		_titulo.text = "Sala de %s (prof. %s)" % [LobbyManager.nome_turma, LobbyManager.nome_professor]
++
++	_lista.clear()
++	for a in LobbyManager.alunos:
++		var eu: bool = a["id"] == LobbyManager.meu_id
++		_lista.add_item(str(a["nome"]) + ("  (você)" if eu else ""))
++	if LobbyManager.alunos.is_empty():
++		_lista.add_item("Ninguém entrou ainda...")
++		_lista.set_item_disabled(0, true)
++
++	var n: int = LobbyManager.alunos.size()
++	if _professor:
++		_btn_pve.disabled = n < MIN_ALUNOS_PVE
++		_btn_pvp.disabled = n < MIN_ALUNOS_PVP
++		if LobbyManager.atividade == "":
++			_status.text = "%d aluno(s) na sala. Compartilhe o código com a turma." % n
++	elif LobbyManager.atividade == "":
++		_status.text = "Aguardando o professor iniciar a atividade..."
++
++
++func _on_atividade_iniciada(modo: String) -> void:
++	var nome := "PvE cooperativo" if modo == "pve" else "PvP (duelo)"
++	if _status != null and is_instance_valid(_status):
++		# As partidas multiplayer em si entram nos próximos patches deste módulo.
++		_status.text = "Atividade iniciada: %s. (a partida multiplayer chega na próxima atualização)" % nome
++
++
++func _on_sala_encerrada(motivo: String) -> void:
++	if _professor:
++		return
++	_montar_entrada_aluno()
++	_status.text = motivo
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo2-*.patch' -x out5.txt base/scripts/TelaTurma.gd tons-educativos-magia/scripts/TelaTurma.gd
+--- a/scripts/TelaTurma.gd	2026-10-06 21:34:06.000000000 -0400
++++ b/scripts/TelaTurma.gd	2026-10-08 21:17:05.589521754 -0400
+@@ -18,6 +18,13 @@
+ 	%btnRemoverAluno.pressed.connect(_on_btn_remover_aluno_pressed)
+ 	%listaAlunos.item_activated.connect(_on_aluno_ativado)
+ 
++	# Sala em tempo real (PvE/PvP): botão criado aqui pra não mexer na cena.
++	var btn_sala := Button.new()
++	btn_sala.text = "Abrir sala (PvE / PvP)"
++	btn_sala.pressed.connect(_on_btn_abrir_sala_pressed)
++	%btnRemoverAluno.get_parent().add_child(btn_sala)
++	%btnRemoverAluno.get_parent().move_child(btn_sala, 1)
++
+ 	_atualizar_lista_alunos()
+ 
+ 
+@@ -25,6 +32,11 @@
+ 	get_tree().change_scene_to_file("res://scenes/Login/TelaProfessor.tscn")
+ 
+ 
++func _on_btn_abrir_sala_pressed() -> void:
++	Engine.set_meta("lobby_modo", "professor")
++	get_tree().change_scene_to_file("res://scenes/Login/TelaLobby.tscn")
++
++
+ func _atualizar_lista_alunos() -> void:
+ 	%listaAlunos.clear()
+ 	%listaAlunos.add_item("Carregando alunos...")
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo2-*.patch' -x out5.txt base/scripts/tela_aluno.gd tons-educativos-magia/scripts/tela_aluno.gd
+--- a/scripts/tela_aluno.gd	2026-10-08 20:41:46.000000000 -0400
++++ b/scripts/tela_aluno.gd	2026-10-08 21:17:05.589691570 -0400
+@@ -9,6 +9,12 @@
+ 	%btnMagias.pressed.connect(_on_btn_magias_pressed)
+ 	%btnEntrarMundo.pressed.connect(_on_btn_entrar_mundo_pressed)
+ 
++	# Sala em tempo real: botão criado aqui pra não mexer na cena.
++	var btn_sala := Button.new()
++	btn_sala.text = "Entrar em sala (código do professor)"
++	btn_sala.pressed.connect(_on_btn_entrar_sala_pressed)
++	%btnEntrarMundo.get_parent().add_child(btn_sala)
++
+ 	var uid := LocalDB.get_user_id_ativo()
+ 
+ 	# Restaura o loadout salvo do jogador assim que ele chega no saguão —
+@@ -83,6 +89,11 @@
+ 	get_tree().change_scene_to_file("res://scenes/salas/academia.tscn")
+ 
+ 
++func _on_btn_entrar_sala_pressed():
++	Engine.set_meta("lobby_modo", "aluno")
++	get_tree().change_scene_to_file("res://scenes/Login/TelaLobby.tscn")
++
++
+ func _on_btn_magias_pressed():
+ 	get_tree().change_scene_to_file("res://scenes/Login/TelaLoadout.tscn")
+ 
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo2-*.patch' -x out5.txt base/src/services/LobbyManager.gd tons-educativos-magia/src/services/LobbyManager.gd
+--- a/src/services/LobbyManager.gd	1969-12-31 20:00:00.000000000 -0400
++++ b/src/services/LobbyManager.gd	2026-10-08 21:15:49.320276110 -0400
+@@ -0,0 +1,315 @@
++extends Node
++class_name LobbySalaClass
++
++## Autoload "LobbyManager" — sala em tempo real (Módulo 5).
++##
++## O professor abre uma sala para a turma e recebe um CÓDIGO de 4 letras; os
++## alunos digitam o código e entram. Por baixo é uma partida "relayed" do
++## Nakama com NOME fixo ("tons_<CÓDIGO>"): quem pede o mesmo nome cai na mesma
++## partida, então o código dispensa qualquer tabela no servidor. O servidor só
++## repassa mensagens; quem manda na sala é o professor (lista de participantes
++## e início de atividade).
++##
++## Mensagens (op codes, corpo em JSON):
++##   OP_HELLO   aluno -> sala   {nome}           "cheguei"
++##   OP_SALA    professor -> todos {turma, professor, alunos:[{id,nome}], atividade}
++##   OP_INICIAR professor -> todos {modo}        "pve" | "pvp"
++##   OP_ENCERRAR professor -> todos              sala fechada
++
++signal sala_atualizada                      # lista/estado mudou
++signal atividade_iniciada(modo: String)
++signal sala_encerrada(motivo: String)
++signal mensagem_recebida(op_code: int, remetente_id: String, dados: Dictionary)
++
++const OP_HELLO := 1
++const OP_SALA := 2
++const OP_INICIAR := 3
++const OP_ENCERRAR := 4
++## A partir daqui ficam as mensagens das atividades (PvE/PvP).
++const OP_ATIVIDADE_BASE := 100
++
++const PREFIXO_NOME_PARTIDA := "tons_"
++const ALFABETO_CODIGO := "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # sem I/O/0/1 (confundem)
++const TAMANHO_CODIGO := 4
++const TEMPO_ESPERA_PROFESSOR := 4.0
++
++## Só para testes: permite usar outro cliente/sessão que não os do NakamaManager.
++var cliente_alternativo: NakamaClient = null
++var sessao_alternativa: NakamaSession = null
++
++var socket: NakamaSocket = null
++var match_id: String = ""
++var codigo: String = ""
++var sou_professor: bool = false
++var meu_id: String = ""
++
++# Estado compartilhado (o professor mantém; os alunos recebem pelo OP_SALA)
++var nome_turma: String = ""
++var nome_professor: String = ""
++var atividade: String = ""        # "" = ainda no saguão; "pve" / "pvp" depois de iniciar
++var alunos: Array = []            # [{id, nome}]
++
++var _nomes_alunos := {}           # user_id -> nome (só o professor usa)
++var _presentes := {}              # user_id -> true (quem está conectado na partida)
++var _meu_nome: String = ""
++var _recebeu_sala := false
++
++
++# ------------------------------------------------------------------ utilidades
++
++func _cliente() -> NakamaClient:
++	return cliente_alternativo if cliente_alternativo != null else NakamaManager.client
++
++
++func _sessao() -> NakamaSession:
++	return sessao_alternativa if sessao_alternativa != null else NakamaManager.session
++
++
++func gerar_codigo() -> String:
++	var c := ""
++	for i in TAMANHO_CODIGO:
++		c += ALFABETO_CODIGO[randi() % ALFABETO_CODIGO.length()]
++	return c
++
++
++static func normalizar_codigo(texto: String) -> String:
++	return texto.strip_edges().to_upper()
++
++
++func esta_em_sala() -> bool:
++	return match_id != ""
++
++
++## Nome mostrado na sala para o usuário local.
++func _nome_local() -> String:
++	if _meu_nome != "":
++		return _meu_nome
++	var sessao := _sessao()
++	return sessao.username if sessao != null else "?"
++
++
++# --------------------------------------------------------------------- conexão
++
++## Garante sessão (convidado que começou offline tenta autenticar agora) e
++## socket aberto. Devolve "" se deu certo, senão a mensagem de erro.
++func _conectar() -> String:
++	if _sessao() == null and cliente_alternativo == null:
++		if NakamaManager.convidado_id_ativo != "":
++			await NakamaManager.login_convidado(NakamaManager.convidado_id_ativo)
++		if NakamaManager.session == null:
++			return "Sem conexão com o servidor. Confira o IP do professor na tela de login."
++
++	_descartar_socket()
++	socket = Nakama.create_socket_from(_cliente())
++	var r = await socket.connect_async(_sessao())
++	if r.is_exception():
++		socket = null
++		return "Não consegui conectar ao servidor (%s)." % r.get_exception().message
++	socket.received_match_presence.connect(_on_presenca)
++	socket.received_match_state.connect(_on_estado)
++	socket.closed.connect(_on_socket_fechado)
++	meu_id = _sessao().user_id
++	return ""
++
++
++func _descartar_socket() -> void:
++	if socket != null:
++		if socket.closed.is_connected(_on_socket_fechado):
++			socket.closed.disconnect(_on_socket_fechado)
++		socket.close()
++		socket = null
++
++
++func _zerar_estado() -> void:
++	match_id = ""
++	codigo = ""
++	nome_turma = ""
++	nome_professor = ""
++	atividade = ""
++	alunos = []
++	_nomes_alunos = {}
++	_presentes = {}
++	_recebeu_sala = false
++	sou_professor = false
++
++
++func _on_socket_fechado() -> void:
++	if esta_em_sala():
++		_zerar_estado()
++		sala_encerrada.emit("A conexão com o servidor caiu.")
++
++
++# ------------------------------------------------------------------- professor
++
++## Abre uma sala nova para a turma. Devolve "" se deu certo, senão o erro.
++func abrir_sala(p_turma: String, p_professor: String = "") -> String:
++	if esta_em_sala():
++		await sair()
++	var erro := await _conectar()
++	if erro != "":
++		return erro
++
++	var cod := gerar_codigo()
++	var m = await socket.create_match_async(PREFIXO_NOME_PARTIDA + cod)
++	if m.is_exception():
++		return "Não consegui abrir a sala (%s)." % m.get_exception().message
++
++	_zerar_estado()
++	sou_professor = true
++	codigo = cod
++	match_id = m.match_id
++	nome_turma = p_turma
++	_meu_nome = p_professor if p_professor != "" else (_sessao().username if _sessao() else "Professor")
++	nome_professor = _meu_nome
++	_presentes[meu_id] = true
++	sala_atualizada.emit()
++	return ""
++
++
++func iniciar_atividade(modo: String) -> void:
++	if not sou_professor or not esta_em_sala():
++		return
++	atividade = modo
++	await _enviar(OP_INICIAR, {"modo": modo})
++	atividade_iniciada.emit(modo)
++	sala_atualizada.emit()
++	_transmitir_sala()
++
++
++func _transmitir_sala() -> void:
++	if not sou_professor or not esta_em_sala():
++		return
++	alunos = []
++	for id in _nomes_alunos:
++		if _presentes.has(id):
++			alunos.append({"id": id, "nome": _nomes_alunos[id]})
++	alunos.sort_custom(func(a, b): return str(a["nome"]).naturalnocasecmp_to(str(b["nome"])) < 0)
++	await _enviar(OP_SALA, {"turma": nome_turma, "professor": nome_professor,
++		"alunos": alunos, "atividade": atividade})
++	sala_atualizada.emit()
++
++
++# ----------------------------------------------------------------------- aluno
++
++## Entra numa sala pelo código. Devolve "" se deu certo, senão o erro.
++func entrar_na_sala(p_codigo: String, p_nome: String) -> String:
++	if esta_em_sala():
++		await sair()
++	p_codigo = normalizar_codigo(p_codigo)
++	if p_codigo.length() != TAMANHO_CODIGO:
++		return "O código da sala tem %d caracteres." % TAMANHO_CODIGO
++	var erro := await _conectar()
++	if erro != "":
++		return erro
++
++	var m = await socket.create_match_async(PREFIXO_NOME_PARTIDA + p_codigo)
++	if m.is_exception():
++		return "Não consegui entrar na sala (%s)." % m.get_exception().message
++
++	_zerar_estado()
++	codigo = p_codigo
++	match_id = m.match_id
++	_meu_nome = p_nome
++	_presentes[meu_id] = true
++	for p in m.presences:
++		_presentes[p.user_id] = true
++
++	await _enviar(OP_HELLO, {"nome": p_nome})
++
++	# Se o código estiver errado, a "sala" está vazia: o professor nunca responde.
++	var limite := Time.get_ticks_msec() + int(TEMPO_ESPERA_PROFESSOR * 1000.0)
++	while not _recebeu_sala and Time.get_ticks_msec() < limite:
++		await get_tree().create_timer(0.1).timeout
++	if not _recebeu_sala:
++		await sair()
++		return "Sala não encontrada. Confira o código com o professor."
++	return ""
++
++
++# ------------------------------------------------------------------ comum/saída
++
++func sair() -> void:
++	var estava_em_sala := esta_em_sala()
++	if estava_em_sala and sou_professor:
++		await _enviar(OP_ENCERRAR, {})
++	if estava_em_sala and socket != null:
++		await socket.leave_match_async(match_id)
++	_descartar_socket()
++	_zerar_estado()
++
++
++## Mensagem de uma atividade (op_code >= OP_ATIVIDADE_BASE) para todos na sala.
++func enviar_atividade(op_code: int, dados: Dictionary) -> void:
++	await _enviar(op_code, dados)
++
++
++func _enviar(op_code: int, dados: Dictionary) -> void:
++	if socket == null or match_id == "":
++		return
++	await socket.send_match_state_async(match_id, op_code, JSON.stringify(dados))
++
++
++func _on_presenca(ev) -> void:
++	if ev.match_id != match_id:
++		return
++	for p in ev.joins:
++		_presentes[p.user_id] = true
++	for p in ev.leaves:
++		_presentes.erase(p.user_id)
++		if not sou_professor and p.user_id != meu_id and _professor_saiu(p.user_id):
++			_zerar_estado()
++			_descartar_socket()
++			sala_encerrada.emit("O professor saiu da sala.")
++			return
++	if sou_professor:
++		_transmitir_sala()  # novo aluno recebe o estado pela resposta ao OP_HELLO; saídas atualizam a lista
++	else:
++		sala_atualizada.emit()
++
++
++var _id_professor: String = ""
++
++func _professor_saiu(user_id: String) -> bool:
++	return _id_professor != "" and user_id == _id_professor
++
++
++func _on_estado(msg) -> void:
++	if msg.match_id != match_id:
++		return
++	var dados = JSON.parse_string(msg.data)
++	if typeof(dados) != TYPE_DICTIONARY:
++		dados = {}
++	var remetente: String = msg.presence.user_id if msg.presence != null else ""
++
++	match msg.op_code:
++		OP_HELLO:
++			if sou_professor:
++				_nomes_alunos[remetente] = str(dados.get("nome", "Aluno"))
++				_presentes[remetente] = true
++				_transmitir_sala()
++		OP_SALA:
++			if not sou_professor:
++				_id_professor = remetente
++				nome_turma = str(dados.get("turma", ""))
++				nome_professor = str(dados.get("professor", ""))
++				alunos = dados.get("alunos", [])
++				var nova: String = str(dados.get("atividade", ""))
++				_recebeu_sala = true
++				var mudou := nova != atividade
++				atividade = nova
++				sala_atualizada.emit()
++				if mudou and nova != "":
++					atividade_iniciada.emit(nova)
++		OP_INICIAR:
++			if not sou_professor:
++				atividade = str(dados.get("modo", ""))
++				atividade_iniciada.emit(atividade)
++				sala_atualizada.emit()
++		OP_ENCERRAR:
++			if not sou_professor:
++				_zerar_estado()
++				_descartar_socket()
++				sala_encerrada.emit("O professor encerrou a sala.")
++		_:
++			if msg.op_code >= OP_ATIVIDADE_BASE:
++				mensagem_recebida.emit(msg.op_code, remetente, dados)

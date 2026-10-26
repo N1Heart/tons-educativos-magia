@@ -1,0 +1,706 @@
+diff --git a/autoload/LocalDB.gd b/autoload/LocalDB.gd
+index 3130cd6..2eb329e 100644
+--- a/autoload/LocalDB.gd
++++ b/autoload/LocalDB.gd
+@@ -37,6 +37,15 @@ func _criar_tabelas() -> void:
+ 			synced INTEGER DEFAULT 0
+ 		)
+ 	""")
++	# Turma digitada sem conexão: o vínculo com o servidor fica pendente até
++	# o SyncManager conseguir entrar na turma (ver SyncManager._tentar_vincular_turma).
++	db.query("PRAGMA table_info(aluno_perfil)")
++	var colunas_perfil: Array[String] = []
++	for col in db.query_result:
++		colunas_perfil.append(col["name"])
++	if not colunas_perfil.has("turma_pendente"):
++		db.query("ALTER TABLE aluno_perfil ADD COLUMN turma_pendente INTEGER DEFAULT 0")
++
+ 	db.query("""
+ 		CREATE TABLE IF NOT EXISTS magias_desbloqueadas (
+ 			id INTEGER PRIMARY KEY AUTOINCREMENT,
+@@ -148,12 +157,43 @@ func _criar_tabelas() -> void:
+ 
+ # --- Identidade ativa (logado ou convidado offline) ---
+ 
++## Identidade usada como chave de TODO o banco local. Convidado: id derivado
++## do computador + nome do personagem (vale online e offline, então o
++## progresso não muda de dono quando a conexão vai e volta). Conta
++## cadastrada: o id do usuário no Nakama.
+ func get_user_id_ativo() -> String:
++	if NakamaManager.convidado_id_ativo != "":
++		return NakamaManager.convidado_id_ativo
+ 	if NakamaManager.session != null:
+ 		return NakamaManager.session.user_id
+ 	return _get_ou_criar_device_id()
+ 
+ 
++## Id estável deste computador (arquivo user://device_id.txt).
++func get_id_dispositivo() -> String:
++	return _get_ou_criar_device_id()
++
++
++## Personagens de convidado já criados neste computador (id começa com 'prefixo').
++func listar_personagens_convidado(prefixo: String) -> Array:
++	db.query_with_bindings(
++		"SELECT user_id, nome FROM aluno_perfil WHERE is_convidado = 1 AND substr(user_id, 1, ?) = ? ORDER BY updated_at DESC",
++		[prefixo.length(), prefixo])
++	var lista: Array = []
++	for row in db.query_result:
++		lista.append({"id": row["user_id"], "nome": row["nome"]})
++	return lista
++
++
++func marcar_turma_pendente(user_id: String, pendente: bool) -> void:
++	db.query_with_bindings("UPDATE aluno_perfil SET turma_pendente = ? WHERE user_id = ?", [1 if pendente else 0, user_id])
++
++
++func turma_pendente(user_id: String) -> bool:
++	db.query_with_bindings("SELECT turma_pendente FROM aluno_perfil WHERE user_id = ?", [user_id])
++	return not db.query_result.is_empty() and db.query_result[0]["turma_pendente"] == 1
++
++
+ func _get_ou_criar_device_id() -> String:
+ 	var path := "user://device_id.txt"
+ 	if FileAccess.file_exists(path):
+diff --git a/autoload/SyncManager.gd b/autoload/SyncManager.gd
+index 7df0cf7..a72aeb4 100644
+--- a/autoload/SyncManager.gd
++++ b/autoload/SyncManager.gd
+@@ -35,11 +35,18 @@ func _do_sync() -> void:
+ 	if _syncing:
+ 		return
+ 	if NakamaManager.session == null:
+-		return  # offline / não logado — tenta de novo na próxima request_sync()
++		# Convidado que começou offline tenta conectar (com intervalo mínimo).
++		await NakamaManager.tentar_reconectar()
++		if NakamaManager.session == null:
++			return  # continua offline — tenta de novo na próxima request_sync()
+ 
+ 	_syncing = true
+-	var user_id: String = NakamaManager.session.user_id
++	# Chave LOCAL (SQLite). Pra convidado é o id derivado do personagem; pra
++	# conta cadastrada é o mesmo id do Nakama. Os dados vão pro storage do
++	# usuário da sessão atual de qualquer jeito.
++	var user_id: String = LocalDB.get_user_id_ativo()
+ 
++	await _tentar_vincular_turma(user_id)
+ 	await _sync_perfil(user_id)
+ 	await _sync_tabela("magias_desbloqueadas", user_id, "progresso_magias")
+ 	await _sync_tabela("partidas_match3", user_id, "progresso_partidas")
+@@ -52,6 +59,19 @@ func _do_sync() -> void:
+ 	_syncing = false
+ 
+ 
++## Quem digitou o código da turma sem conexão entra de verdade na turma agora.
++func _tentar_vincular_turma(user_id: String) -> void:
++	if not LocalDB.turma_pendente(user_id):
++		return
++	var aluno = LocalDB.carregar_perfil(user_id)
++	if aluno == null or aluno.codigo_turma == "":
++		LocalDB.marcar_turma_pendente(user_id, false)
++		return
++	var ok: bool = await NakamaManager.entrar_turma(aluno.codigo_turma)
++	if ok:
++		LocalDB.marcar_turma_pendente(user_id, false)
++
++
+ func _sync_perfil(user_id: String) -> void:
+ 	var aluno = LocalDB.carregar_perfil(user_id)
+ 	if aluno == null:
+diff --git a/project.godot b/project.godot
+index cd556dc..d21aaf8 100644
+--- a/project.godot
++++ b/project.godot
+@@ -28,6 +28,7 @@ Audio="*uid://dnjrgvu2rssgg"
+ SpellLoadout="*uid://beiyoowdlomg3"
+ LocalDB="*uid://b88xfks1h47ii"
+ SyncManager="*uid://chv25kjav3818"
++MenuPausa="*res://src/ui/MenuPausa.gd"
+ 
+ [display]
+ 
+diff --git a/scripts/TelaLoadout.gd b/scripts/TelaLoadout.gd
+index dffb1b3..1e4d690 100644
+--- a/scripts/TelaLoadout.gd
++++ b/scripts/TelaLoadout.gd
+@@ -105,5 +105,19 @@ func _on_elemento_selecionado(indice: int, registro: _Linha) -> void:
+ 	_atualizar_icone(registro, elemento)
+ 
+ 
++func _unhandled_input(event: InputEvent) -> void:
++	if event.is_action_pressed("ui_cancel"):
++		_on_btn_voltar_pressed()
++
++
++## Volta pra onde o jogador estava (aberto pelo menu ESC / tecla I dentro do
++## jogo) ou, sem pedido nenhum, pro menu do aluno.
+ func _on_btn_voltar_pressed() -> void:
+-	get_tree().change_scene_to_file("res://scenes/Login/TelaAluno.tscn")
++	var destino := "res://scenes/Login/TelaAluno.tscn"
++	if Engine.has_meta("voltar_para"):
++		var pedido: Dictionary = Engine.get_meta("voltar_para")
++		Engine.remove_meta("voltar_para")
++		destino = pedido.get("cena", destino)
++		if pedido.has("posicao"):
++			Engine.set_meta("spawn_proxima_cena", {"cena": destino, "posicao": pedido["posicao"]})
++	get_tree().change_scene_to_file(destino)
+diff --git a/scripts/duelos.gd b/scripts/duelos.gd
+index 6c2899a..2ac190a 100644
+--- a/scripts/duelos.gd
++++ b/scripts/duelos.gd
+@@ -211,6 +211,30 @@ func _voltar_ao_quintal() -> void:
+ 	if _botao_voltar == null:
+ 		return
+ 	_botao_voltar = null  # evita voltar duas vezes (clique + tecla)
++	_ir_para_o_quintal()
++
++
++func _ir_para_o_quintal() -> void:
+ 	# O jogador (entities/teste.gd) lê isso ao nascer na cena de destino.
+ 	Engine.set_meta("spawn_proxima_cena", {"cena": CENA_RETORNO, "posicao": SPAWN_RETORNO})
+ 	get_tree().change_scene_to_file(CENA_RETORNO)
++
++
++## Encerra o combate em andamento sem vencedor: conta como derrota e fica nas
++## estatísticas. Usado pelo menu ESC (desistir / sair) e ao fechar a janela.
++func abandonar() -> void:
++	if _registrada or not Combat.combat_active:
++		return
++	Combat.combat_active = false
++	_registrar_partida(false)
++
++
++## "Desistir do combate" do menu ESC: grava a derrota e volta pro quintal.
++func desistir() -> void:
++	abandonar()
++	_ir_para_o_quintal()
++
++
++func _notification(what: int) -> void:
++	if what == NOTIFICATION_WM_CLOSE_REQUEST:
++		abandonar()
+diff --git a/scripts/tela_aluno.gd b/scripts/tela_aluno.gd
+index 90c0780..7034bc2 100644
+--- a/scripts/tela_aluno.gd
++++ b/scripts/tela_aluno.gd
+@@ -18,6 +18,10 @@ func _ready():
+ 
+ 	_verificar_perfil_existente(uid)
+ 
++	# Convidado: o nome do personagem já foi escolhido na tela de entrada.
++	if NakamaManager.convidado_nome != "" and %nomePersonagem.text == "":
++		%nomePersonagem.text = NakamaManager.convidado_nome
++
+ 
+ ## Se o jogador já tem personagem salvo localmente, pula direto pra tela de
+ ## "bem-vindo de volta" em vez de pedir nick+turma de novo. Sem isso, todo
+@@ -46,7 +50,12 @@ func _on_btn_entrar_turma_pressed():
+ 	%btnEntrarTurma.disabled = true
+ 	print("Procurando turma...")
+ 
+-	var sucesso = await NakamaManager.entrar_turma(codigo)
++	# Sem conexão (convidado offline): aceita o código agora e confirma na
++	# turma depois, quando o servidor aparecer (SyncManager).
++	var online: bool = NakamaManager.session != null
++	var sucesso: bool = true
++	if online:
++		sucesso = await NakamaManager.entrar_turma(codigo)
+ 
+ 	if sucesso:
+ 		print("Acesso liberado! Salvando personagem...")
+@@ -58,7 +67,10 @@ func _on_btn_entrar_turma_pressed():
+ 		aluno.codigo_turma = codigo
+ 		aluno.tipo_perfil = "Aluno"
+ 		aluno.nivel_atual = 1
++		aluno.is_convidado = NakamaManager.convidado_id_ativo != ""
+ 		LocalDB.salvar_perfil(aluno)  # também concede o kit inicial (forma+elemento) se for perfil novo
++		if not online:
++			LocalDB.marcar_turma_pendente(uid, true)
+ 
+ 		SpellLoadout.carregar_equipado(uid)
+ 		_verificar_perfil_existente(uid)
+diff --git a/src/services/NakamaManager.gd b/src/services/NakamaManager.gd
+index 7dad41b..dec7fa4 100644
+--- a/src/services/NakamaManager.gd
++++ b/src/services/NakamaManager.gd
+@@ -20,6 +20,69 @@ const ARQUIVO_SERVIDOR := "user://servidor.cfg"
+ const SERVIDOR_PADRAO := "127.0.0.1"
+ 
+ 
++## --- Convidado (funciona com ou sem servidor) ---
++## Cada personagem de convidado é identificado por: prefixo do computador +
++## nome do personagem. Vários alunos no mesmo PC = vários personagens. Esse id
++## também é o "device id" usado pra autenticar no Nakama quando há conexão.
++var convidado_id_ativo: String = ""
++var convidado_nome: String = ""
++
++const COOLDOWN_RECONEXAO_SEGUNDOS := 30.0
++var _ultima_reconexao_ms: int = -1000000
++var _reconectando := false
++
++
++## Prefixo comum a todos os personagens de convidado deste computador.
++func prefixo_convidado() -> String:
++	var dispositivo := OS.get_unique_id()
++	if dispositivo == "":
++		dispositivo = LocalDB.get_id_dispositivo()
++	return "g_" + dispositivo.sha256_text().substr(0, 12) + "_"
++
++
++## Nome -> trecho seguro pra id (minúsculo, sem acento, só letras/números).
++static func _slug(nome: String) -> String:
++	var mapa := {"á":"a","à":"a","â":"a","ã":"a","ä":"a","é":"e","è":"e","ê":"e","ë":"e","í":"i","ì":"i","î":"i","ï":"i",
++		"ó":"o","ò":"o","ô":"o","õ":"o","ö":"o","ú":"u","ù":"u","û":"u","ü":"u","ç":"c","ñ":"n"}
++	var saida := ""
++	for c in nome.strip_edges().to_lower():
++		if mapa.has(c):
++			saida += mapa[c]
++		elif (c >= "a" and c <= "z") or (c >= "0" and c <= "9"):
++			saida += c
++		else:
++			saida += "-"
++	saida = saida.substr(0, 40)
++	return saida if saida != "" else "x"
++
++
++func id_convidado_para(nome: String) -> String:
++	return prefixo_convidado() + _slug(nome)
++
++
++## Entra como convidado com o personagem 'nome'. NUNCA depende do servidor:
++## se a conexão falhar, o jogo segue offline (progresso salvo neste computador)
++## e o SyncManager tenta conectar de novo depois. Devolve true se conectou.
++func entrar_como_convidado(nome: String) -> bool:
++	session = null
++	convidado_nome = nome.strip_edges()
++	convidado_id_ativo = id_convidado_para(convidado_nome)
++	return await login_convidado(convidado_id_ativo)
++
++
++## Chamado pelo SyncManager: convidado que começou offline tenta autenticar
++## de novo (no máximo uma vez a cada 30 s).
++func tentar_reconectar() -> void:
++	if session != null or convidado_id_ativo == "" or _reconectando:
++		return
++	if Time.get_ticks_msec() - _ultima_reconexao_ms < COOLDOWN_RECONEXAO_SEGUNDOS * 1000.0:
++		return
++	_reconectando = true
++	_ultima_reconexao_ms = Time.get_ticks_msec()
++	await login_convidado(convidado_id_ativo)
++	_reconectando = false
++
++
+ func carregar_servidor() -> String:
+ 	var cfg := ConfigFile.new()
+ 	if cfg.load(ARQUIVO_SERVIDOR) == OK:
+@@ -160,6 +223,8 @@ func entrar_turma(codigo_turma: String) -> bool:
+ func fazer_logout():
+ 	# Limpa a sessão da memória do Godot
+ 	session = null
++	convidado_id_ativo = ""
++	convidado_nome = ""
+ 	print("Sessão encerrada.")
+ 	
+ func listar_minhas_turmas() -> Array:
+diff --git a/src/ui/MenuPausa.gd b/src/ui/MenuPausa.gd
+new file mode 100644
+index 0000000..b09e2f8
+--- /dev/null
++++ b/src/ui/MenuPausa.gd
+@@ -0,0 +1,288 @@
++extends CanvasLayer
++
++## Autoload "MenuPausa" — menu centralizado que abre com ESC dentro do jogo
++## (salas e combate) e o atalho [I] para o inventário de magias.
++##
++## Opções: Continuar, Magias (inventário), Desistir do combate (só em
++## combate), Configurações (volume, mudo, tela cheia), Sair para o menu e
++## Sair do jogo. Enquanto está aberto o jogo fica pausado.
++##
++## Qualquer cena com um método `abandonar()` (hoje o duelos.gd) é tratada como
++## combate: sair ou desistir grava a partida como derrota antes de ir embora.
++
++const PREFIXO_CENAS_JOGO := "res://scenes/salas/"
++const CENA_INVENTARIO := "res://scenes/Login/TelaLoadout.tscn"
++const CENA_MENU_ALUNO := "res://scenes/Login/TelaAluno.tscn"
++const ARQUIVO_CONFIG := "user://config.cfg"
++const FONTE := 14
++
++var _raiz: Control = null
++var _caixa: VBoxContainer = null
++
++
++func _ready() -> void:
++	layer = 100
++	process_mode = Node.PROCESS_MODE_ALWAYS
++	_garantir_acoes()
++	_aplicar_config(_ler_config())
++
++
++func _garantir_acoes() -> void:
++	if not InputMap.has_action("inventario"):
++		InputMap.add_action("inventario")
++		var tecla := InputEventKey.new()
++		tecla.physical_keycode = KEY_I
++		InputMap.action_add_event("inventario", tecla)
++
++
++func esta_aberto() -> bool:
++	return _raiz != null
++
++
++func _unhandled_input(event: InputEvent) -> void:
++	if event.is_action_pressed("ui_cancel"):
++		if esta_aberto():
++			fechar()
++			get_viewport().set_input_as_handled()
++		elif _pode_abrir():
++			abrir()
++			get_viewport().set_input_as_handled()
++	elif event.is_action_pressed("inventario") and not esta_aberto() and _pode_abrir() and not _em_combate():
++		_abrir_inventario()
++		get_viewport().set_input_as_handled()
++
++
++# ------------------------------------------------------------------ contexto
++
++func _cena() -> Node:
++	return get_tree().current_scene
++
++
++## O menu só existe dentro do jogo (salas/combate), não nas telas de login,
++## e não abre por cima de uma aula ou prova em andamento.
++func _pode_abrir() -> bool:
++	var cena := _cena()
++	if cena == null or not cena.scene_file_path.begins_with(PREFIXO_CENAS_JOGO):
++		return false
++	return not FluxoSala._em_andamento
++
++
++func _em_combate() -> bool:
++	var cena := _cena()
++	return cena != null and cena.has_method("abandonar") and Combat.combat_active
++
++
++# --------------------------------------------------------------- abrir/fechar
++
++func abrir() -> void:
++	if esta_aberto():
++		return
++	get_tree().paused = true
++	_montar_painel_principal()
++
++
++func fechar() -> void:
++	if _raiz != null:
++		_raiz.queue_free()
++		_raiz = null
++		_caixa = null
++	get_tree().paused = false
++
++
++func _nova_janela() -> void:
++	if _raiz != null:
++		_raiz.queue_free()
++
++	_raiz = ColorRect.new()
++	_raiz.color = Color(0, 0, 0, 0.55)
++	_raiz.set_anchors_preset(Control.PRESET_FULL_RECT)
++	_raiz.mouse_filter = Control.MOUSE_FILTER_STOP
++	add_child(_raiz)
++
++	var centro := CenterContainer.new()
++	centro.set_anchors_preset(Control.PRESET_FULL_RECT)
++	_raiz.add_child(centro)
++
++	var painel := PanelContainer.new()
++	centro.add_child(painel)
++
++	var margem := MarginContainer.new()
++	for lado in ["left", "top", "right", "bottom"]:
++		margem.add_theme_constant_override("margin_" + lado, 16)
++	painel.add_child(margem)
++
++	_caixa = VBoxContainer.new()
++	_caixa.custom_minimum_size = Vector2(250, 0)
++	_caixa.add_theme_constant_override("separation", 6)
++	margem.add_child(_caixa)
++
++
++func _rotulo(texto: String, tamanho: int = FONTE, cor: Color = Color.WHITE) -> Label:
++	var l := Label.new()
++	l.text = texto
++	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
++	l.add_theme_font_size_override("font_size", tamanho)
++	l.add_theme_color_override("font_color", cor)
++	_caixa.add_child(l)
++	return l
++
++
++func _botao(texto: String, acao: Callable) -> Button:
++	var b := Button.new()
++	b.text = texto
++	b.add_theme_font_size_override("font_size", FONTE)
++	b.pressed.connect(acao)
++	_caixa.add_child(b)
++	return b
++
++
++## Botão que pede confirmação: o primeiro clique troca o texto, o segundo executa.
++func _botao_com_confirmacao(texto: String, acao: Callable) -> Button:
++	var b := Button.new()
++	b.text = texto
++	b.add_theme_font_size_override("font_size", FONTE)
++	var armado := [false]
++	b.pressed.connect(func():
++		if armado[0]:
++			acao.call()
++		else:
++			armado[0] = true
++			b.text = "Tem certeza? (clique de novo)")
++	_caixa.add_child(b)
++	return b
++
++
++# ------------------------------------------------------------ painel principal
++
++func _montar_painel_principal() -> void:
++	_nova_janela()
++	var uid := LocalDB.get_user_id_ativo()
++	var perfil := LocalDB.carregar_perfil(uid)
++
++	_rotulo("Menu", 20, Color(1.0, 0.85, 0.4))
++	if perfil != null and perfil.nome != "":
++		_rotulo(perfil.nome, 12)
++	if NakamaManager.session != null:
++		_rotulo("Conectado ao servidor", 11, Color(0.5, 0.9, 0.5))
++	else:
++		_rotulo("Sem conexão — progresso salvo neste computador", 11, Color(1.0, 0.75, 0.4))
++
++	var continuar := _botao("Continuar", fechar)
++	var inventario := _botao("Magias / Inventário  [I]", _abrir_inventario)
++	if _em_combate():
++		inventario.disabled = true
++		inventario.text = "Magias (indisponível em combate)"
++		_botao_com_confirmacao("Desistir do combate", _desistir)
++	_botao("Configurações", _montar_painel_config)
++	_botao_com_confirmacao("Sair para o menu", _sair_para_menu)
++	_botao_com_confirmacao("Sair do jogo", _sair_do_jogo)
++	continuar.grab_focus()
++
++
++# ----------------------------------------------------------------- inventário
++
++func _abrir_inventario() -> void:
++	var cena := _cena()
++	if cena == null:
++		return
++	# TelaLoadout lê isso no botão Voltar pra reaparecer no mesmo lugar.
++	var pedido := {"cena": cena.scene_file_path}
++	var jogador := get_tree().get_first_node_in_group("jogador")
++	if jogador is Node2D:
++		pedido["posicao"] = (jogador as Node2D).global_position
++	Engine.set_meta("voltar_para", pedido)
++	fechar()
++	get_tree().change_scene_to_file(CENA_INVENTARIO)
++
++
++# ------------------------------------------------------------------- saídas
++
++func _abandonar_combate_se_houver() -> void:
++	var cena := _cena()
++	if cena != null and cena.has_method("abandonar"):
++		cena.abandonar()
++
++
++func _desistir() -> void:
++	var cena := _cena()
++	fechar()
++	if cena != null and cena.has_method("desistir"):
++		cena.desistir()
++
++
++func _sair_para_menu() -> void:
++	_abandonar_combate_se_houver()
++	fechar()
++	get_tree().change_scene_to_file(CENA_MENU_ALUNO)
++
++
++func _sair_do_jogo() -> void:
++	_abandonar_combate_se_houver()
++	fechar()
++	get_tree().quit()
++
++
++# ------------------------------------------------------------- configurações
++
++func _montar_painel_config() -> void:
++	var cfg := _ler_config()
++	_nova_janela()
++	_rotulo("Configurações", 20, Color(1.0, 0.85, 0.4))
++
++	_rotulo("Volume", 12)
++	var slider := HSlider.new()
++	slider.min_value = 0.0
++	slider.max_value = 1.0
++	slider.step = 0.05
++	slider.value = cfg["volume"]
++	_caixa.add_child(slider)
++
++	var mudo := CheckBox.new()
++	mudo.text = "Sem som"
++	mudo.button_pressed = cfg["mudo"]
++	_caixa.add_child(mudo)
++
++	var tela_cheia := CheckBox.new()
++	tela_cheia.text = "Tela cheia"
++	tela_cheia.button_pressed = cfg["tela_cheia"]
++	_caixa.add_child(tela_cheia)
++
++	var atualizar := func(_v = null):
++		var novo := {"volume": slider.value, "mudo": mudo.button_pressed, "tela_cheia": tela_cheia.button_pressed}
++		_aplicar_config(novo)
++		_salvar_config(novo)
++	slider.value_changed.connect(atualizar)
++	mudo.toggled.connect(atualizar)
++	tela_cheia.toggled.connect(atualizar)
++
++	var voltar := _botao("Voltar", _montar_painel_principal)
++	voltar.grab_focus()
++
++
++func _ler_config() -> Dictionary:
++	var cfg := ConfigFile.new()
++	cfg.load(ARQUIVO_CONFIG)  # arquivo ausente = valores padrão
++	return {
++		"volume": float(cfg.get_value("som", "volume", 1.0)),
++		"mudo": bool(cfg.get_value("som", "mudo", false)),
++		"tela_cheia": bool(cfg.get_value("video", "tela_cheia", false)),
++	}
++
++
++func _salvar_config(c: Dictionary) -> void:
++	var cfg := ConfigFile.new()
++	cfg.set_value("som", "volume", c["volume"])
++	cfg.set_value("som", "mudo", c["mudo"])
++	cfg.set_value("video", "tela_cheia", c["tela_cheia"])
++	cfg.save(ARQUIVO_CONFIG)
++
++
++func _aplicar_config(c: Dictionary) -> void:
++	var bus := AudioServer.get_bus_index("Master")
++	if bus >= 0:
++		AudioServer.set_bus_volume_db(bus, linear_to_db(maxf(c["volume"], 0.0001)))
++		AudioServer.set_bus_mute(bus, c["mudo"] or c["volume"] <= 0.0)
++	if DisplayServer.get_name() != "headless":
++		var modo := DisplayServer.WINDOW_MODE_FULLSCREEN if c["tela_cheia"] else DisplayServer.WINDOW_MODE_WINDOWED
++		if DisplayServer.window_get_mode() != modo:
++			DisplayServer.window_set_mode(modo)
+diff --git a/src/ui/TelaAutenticacao.gd b/src/ui/TelaAutenticacao.gd
+index 64f82df..a6ae501 100644
+--- a/src/ui/TelaAutenticacao.gd
++++ b/src/ui/TelaAutenticacao.gd
+@@ -58,20 +58,90 @@ func _on_btn_voltar_login_pressed():
+ # --- INTEGRAÇÃO COM NAKAMA ---
+ 
+ func _on_btn_convidado_pressed():
+-	# Bloqueia o botão para evitar cliques duplos
+-	%BtnConvidado.disabled = true 
++	_abrir_escolha_personagem()
++
++
++## Janela "Escolha seu personagem": quem já jogou neste computador retoma o
++## seu; quem é novo digita um nome. Funciona sem servidor — se não houver
++## conexão o jogo segue offline e sincroniza depois.
++func _abrir_escolha_personagem() -> void:
+ 	_aplicar_servidor()
+-	
+-	var device_id = OS.get_unique_id()
+-	# Chama a função que você já tem no NakamaManager
+-	var sucesso = await NakamaManager.login_convidado(device_id)
+-	
+-	if sucesso:
+-		print("Convidado logado! Carregando menu do aluno...")
+-		get_tree().change_scene_to_file("res://scenes/Login/TelaAluno.tscn")
+-	else:
+-		print("Falha ao entrar como convidado.")
+-		%BtnConvidado.disabled = false
++
++	var fundo := ColorRect.new()
++	fundo.color = Color(0, 0, 0, 0.6)
++	fundo.set_anchors_preset(Control.PRESET_FULL_RECT)
++	add_child(fundo)
++
++	var centro := CenterContainer.new()
++	centro.set_anchors_preset(Control.PRESET_FULL_RECT)
++	fundo.add_child(centro)
++
++	var painel := PanelContainer.new()
++	centro.add_child(painel)
++	var margem := MarginContainer.new()
++	for lado in ["left", "top", "right", "bottom"]:
++		margem.add_theme_constant_override("margin_" + lado, 14)
++	painel.add_child(margem)
++	var caixa := VBoxContainer.new()
++	caixa.custom_minimum_size = Vector2(260, 0)
++	caixa.add_theme_constant_override("separation", 6)
++	margem.add_child(caixa)
++
++	var titulo := Label.new()
++	titulo.text = "Escolha seu personagem"
++	titulo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
++	caixa.add_child(titulo)
++
++	var status := Label.new()
++	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
++	status.add_theme_font_size_override("font_size", 11)
++
++	var botoes: Array[Button] = []
++	var existentes := LocalDB.listar_personagens_convidado(NakamaManager.prefixo_convidado())
++	for p in existentes:
++		var b := Button.new()
++		b.text = str(p["nome"])
++		caixa.add_child(b)
++		botoes.append(b)
++		b.pressed.connect(_entrar_convidado.bind(str(p["nome"]), botoes, status))
++
++	if not existentes.is_empty():
++		caixa.add_child(HSeparator.new())
++
++	var campo := LineEdit.new()
++	campo.placeholder_text = "Nome do novo personagem"
++	campo.max_length = 20
++	caixa.add_child(campo)
++
++	var criar := Button.new()
++	criar.text = "Criar e jogar"
++	caixa.add_child(criar)
++	botoes.append(criar)
++	criar.pressed.connect(func():
++		var nome := campo.text.strip_edges()
++		if nome.length() < 2:
++			status.text = "Digite um nome com pelo menos 2 letras."
++			return
++		_entrar_convidado(nome, botoes, status))
++
++	var cancelar := Button.new()
++	cancelar.text = "Cancelar"
++	cancelar.pressed.connect(fundo.queue_free)
++	caixa.add_child(cancelar)
++
++	caixa.add_child(status)
++	campo.grab_focus()
++
++
++func _entrar_convidado(nome: String, botoes: Array[Button], status: Label) -> void:
++	for b in botoes:
++		b.disabled = true
++	status.text = "Conectando..."
++	var online: bool = await NakamaManager.entrar_como_convidado(nome)
++	if not online:
++		print("Sem conexão com o servidor: jogando offline (o progresso é salvo neste computador).")
++	get_tree().change_scene_to_file("res://scenes/Login/TelaAluno.tscn")
++
+ 
+ func _on_btn_entrar_pressed():
+ 	var email = %EmailLogin.text

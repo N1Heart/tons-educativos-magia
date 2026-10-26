@@ -28,6 +28,10 @@ Audio="*uid://dnjrgvu2rssgg"
 SpellLoadout="*uid://beiyoowdlomg3"
 LocalDB="*uid://b88xfks1h47ii"
 SyncManager="*uid://chv25kjav3818"
+MenuPausa="*res://src/ui/MenuPausa.gd"
+LobbyManager="*res://src/services/LobbyManager.gd"
+DueloRede="*res://src/services/DueloRede.gd"
+ArenaDuelos="*res://src/services/ArenaDuelos.gd"
 
 [display]
 
@@ -62,3 +66,4 @@ interacao={
 textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.07123137, 0.0712314, 0.07123134, 1)

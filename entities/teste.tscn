@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://64xn5eaionf1" path="res://sprites/Player/Casting_Spell_(32 x 32).png" id="2_l8ahk"]
 [ext_resource type="Texture2D" uid="uid://bijxxh6ba7tyn" path="res://sprites/Player/Hurt_(32 x 32).png" id="3_ryxwe"]
 [ext_resource type="Texture2D" uid="uid://duin3bmcn4ku0" path="res://sprites/Player/Jumping_(32 x 32).png" id="5_dl6ge"]
+[ext_resource type="Texture2D" uid="uid://clnb1o4i8aclk" path="res://sprites/Player/Ducking_(32 x 32).png" id="6_ryxwe"]
 [ext_resource type="Texture2D" uid="uid://3l8xgu80rudp" path="res://sprites/Player/Casting_Spell_Repeating_(32 x 32).png" id="6_tayyi"]
 [ext_resource type="Texture2D" uid="uid://nhaykeovds70" path="res://sprites/Player/Running_(32 x 32).png" id="7_1mpg2"]
 
@@ -56,6 +57,10 @@ region = Rect2(128, 0, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_a7ekn"]
 atlas = ExtResource("5_dl6ge")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dl6ge"]
+atlas = ExtResource("6_ryxwe")
 region = Rect2(0, 0, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_i7coi"]
@@ -158,6 +163,14 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
+"texture": SubResource("AtlasTexture_dl6ge")
+}],
+"loop": 1,
+"name": &"morte",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_i7coi")
 }, {
 "duration": 1.0,
@@ -208,7 +221,7 @@ shape = SubResource("CapsuleShape2D_e2ube")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="CollisionShape2D" unique_id=495534180]
 sprite_frames = SubResource("SpriteFrames_e2ube")
-animation = &"idle"
+animation = &"morte"
 autoplay = "idle"
 
 [node name="ZonaInteracao" type="Area2D" parent="." unique_id=540369691]

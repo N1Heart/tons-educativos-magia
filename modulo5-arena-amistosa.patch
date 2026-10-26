@@ -1,0 +1,967 @@
+
+--- a/project.godot	2026-10-13 15:16:31.000000000 -0400
++++ b/project.godot	2026-10-13 16:43:44.789826754 -0400
+@@ -31,6 +31,7 @@
+ MenuPausa="*res://src/ui/MenuPausa.gd"
+ LobbyManager="*res://src/services/LobbyManager.gd"
+ DueloRede="*res://src/services/DueloRede.gd"
++ArenaDuelos="*res://src/services/ArenaDuelos.gd"
+ 
+ [display]
+ 
+
+--- a/scenes/Login/TelaArena.tscn	1969-12-31 20:00:00.000000000 -0400
++++ b/scenes/Login/TelaArena.tscn	2026-10-13 16:44:18.547614785 -0400
+@@ -0,0 +1,12 @@
++[gd_scene format=3]
++
++[ext_resource type="Script" path="res://scripts/TelaArena.gd" id="1_arena"]
++
++[node name="TelaArena" type="Control"]
++layout_mode = 3
++anchors_preset = 15
++anchor_right = 1.0
++anchor_bottom = 1.0
++grow_horizontal = 2
++grow_vertical = 2
++script = ExtResource("1_arena")
+
+--- a/scripts/TelaArena.gd	1969-12-31 20:00:00.000000000 -0400
++++ b/scripts/TelaArena.gd	2026-10-13 16:44:18.549628934 -0400
+@@ -0,0 +1,206 @@
++extends Control
++
++## Arena de duelos amistosos (Módulo 5): lista dos colegas da turma que estão
++## na arena, com convite (desafiar / aceitar / recusar). O duelo em si é aberto
++## pelo ArenaDuelos + DueloRede. Montada por código, como a TelaLobby.
++## Quem chama (FluxoSala) guarda o ponto do jogo em Engine.meta "arena_retorno".
++
++const CENA_ALUNO := "res://scenes/Login/TelaAluno.tscn"
++
++var _caixa: VBoxContainer
++var _titulo: Label
++var _lista: ItemList
++var _status: Label
++var _btn_desafiar: Button
++var _btn_cancelar: Button
++var _painel_convite: PanelContainer
++var _texto_convite: Label
++var _ids: Array = []
++
++
++func _ready() -> void:
++	set_anchors_preset(Control.PRESET_FULL_RECT)
++	var fundo := ColorRect.new()
++	fundo.color = Color(0.1, 0.1, 0.16)
++	fundo.set_anchors_preset(Control.PRESET_FULL_RECT)
++	add_child(fundo)
++
++	var margem := MarginContainer.new()
++	margem.set_anchors_preset(Control.PRESET_FULL_RECT)
++	for lado in ["left", "top", "right", "bottom"]:
++		margem.add_theme_constant_override("margin_" + lado, 14)
++	add_child(margem)
++	_caixa = VBoxContainer.new()
++	_caixa.add_theme_constant_override("separation", 6)
++	margem.add_child(_caixa)
++
++	_titulo = _rotulo("Arena de duelos amistosos", 18, Color(1.0, 0.85, 0.4))
++	_caixa.add_child(_titulo)
++	_caixa.add_child(_rotulo("Colegas na arena (duelo amistoso: não vale nota nem muda a dificuldade):", 12, Color(0.8, 0.8, 0.8)))
++
++	_lista = ItemList.new()
++	_lista.size_flags_vertical = Control.SIZE_EXPAND_FILL
++	_lista.select_mode = ItemList.SELECT_SINGLE
++	_lista.add_theme_font_size_override("font_size", 14)
++	_lista.item_selected.connect(func(_i): _atualizar_botoes())
++	_lista.item_activated.connect(func(_i): _desafiar())
++	_caixa.add_child(_lista)
++
++	_status = _rotulo("", 13, Color(1.0, 0.75, 0.4))
++	_caixa.add_child(_status)
++
++	# Convite recebido
++	_painel_convite = PanelContainer.new()
++	var vb := VBoxContainer.new()
++	_texto_convite = _rotulo("", 15, Color(0.6, 0.9, 1.0))
++	vb.add_child(_texto_convite)
++	var l2 := HBoxContainer.new()
++	l2.add_child(_botao("Aceitar", func(): ArenaDuelos.responder(true)))
++	l2.add_child(_botao("Recusar", func(): ArenaDuelos.responder(false)))
++	vb.add_child(l2)
++	_painel_convite.add_child(vb)
++	_painel_convite.visible = false
++	_caixa.add_child(_painel_convite)
++
++	var linha := HBoxContainer.new()
++	_btn_desafiar = _botao("Desafiar", _desafiar)
++	_btn_cancelar = _botao("Cancelar desafio", func(): ArenaDuelos.cancelar_desafio())
++	_btn_cancelar.visible = false
++	linha.add_child(_btn_desafiar)
++	linha.add_child(_btn_cancelar)
++	linha.add_child(_botao("Sair da arena", _sair))
++	_caixa.add_child(linha)
++
++	ArenaDuelos.lista_mudou.connect(_atualizar)
++	ArenaDuelos.desafio_recebido.connect(_on_desafio_recebido)
++	ArenaDuelos.desafio_encerrado.connect(_on_desafio_encerrado)
++	ArenaDuelos.arena_perdida.connect(_on_arena_perdida)
++	ArenaDuelos.duelo_falhou.connect(_on_duelo_falhou)
++
++	if ArenaDuelos.esta_na_arena():
++		_atualizar()
++	else:
++		_entrar()
++
++
++func _rotulo(texto: String, tamanho: int = 14, cor: Color = Color.WHITE) -> Label:
++	var l := Label.new()
++	l.text = texto
++	l.add_theme_font_size_override("font_size", tamanho)
++	l.add_theme_color_override("font_color", cor)
++	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++	return l
++
++
++func _botao(texto: String, acao: Callable) -> Button:
++	var b := Button.new()
++	b.text = texto
++	b.add_theme_font_size_override("font_size", 14)
++	b.pressed.connect(acao)
++	return b
++
++
++func _entrar() -> void:
++	_status.text = "Entrando na arena..."
++	_btn_desafiar.disabled = true
++	var perfil := LocalDB.carregar_perfil(LocalDB.get_user_id_ativo())
++	var nome: String = perfil.nome if perfil != null and perfil.nome != "" else NakamaManager.convidado_nome
++	var erro: String = await ArenaDuelos.entrar(nome if nome != "" else "Aluno")
++	if not is_inside_tree():
++		return
++	if erro != "":
++		_status.text = erro
++		return
++	_atualizar()
++
++
++func _atualizar() -> void:
++	if _lista == null or not ArenaDuelos.esta_na_arena():
++		return
++	var turma: String = ArenaDuelos.nome_turma
++	_titulo.text = "Arena de duelos — turma %s" % turma if turma != "" else "Arena de duelos amistosos"
++	var selecionado := ""
++	var sel := _lista.get_selected_items()
++	if not sel.is_empty() and sel[0] < _ids.size():
++		selecionado = _ids[sel[0]]
++	_lista.clear()
++	_ids = []
++	for j in ArenaDuelos.lista_outros():
++		_ids.append(j["id"])
++		_lista.add_item("%s  —  %s" % [j["nome"], "em duelo" if j["ocupado"] else "livre"])
++		if j["id"] == selecionado:
++			_lista.select(_lista.item_count - 1)
++	if _ids.is_empty():
++		_lista.add_item("Nenhum colega na arena agora...")
++		_lista.set_item_disabled(0, true)
++		if not ArenaDuelos.convite_enviado() and not ArenaDuelos.convite_recebido():
++			_status.text = "Chame um colega para entrar na arena também."
++	elif _status.text.begins_with("Chame") or _status.text.begins_with("Entrando"):
++		_status.text = "Escolha um colega livre e clique em Desafiar."
++	_atualizar_botoes()
++
++
++func _atualizar_botoes() -> void:
++	var sel := _lista.get_selected_items()
++	var alvo_livre := false
++	if not sel.is_empty() and sel[0] < _ids.size():
++		var j: Dictionary = ArenaDuelos.jogadores.get(_ids[sel[0]], {})
++		alvo_livre = not j.is_empty() and not j["ocupado"]
++	var enviado := ArenaDuelos.convite_enviado()
++	_btn_desafiar.disabled = not alvo_livre or enviado or ArenaDuelos.convite_recebido() or ArenaDuelos.ocupado
++	_btn_desafiar.visible = not enviado
++	_btn_cancelar.visible = enviado
++
++
++func _desafiar() -> void:
++	var sel := _lista.get_selected_items()
++	if sel.is_empty() or sel[0] >= _ids.size() or _btn_desafiar.disabled:
++		return
++	var id: String = _ids[sel[0]]
++	var erro: String = await ArenaDuelos.desafiar(id)
++	if not is_inside_tree():
++		return
++	if erro != "":
++		_status.text = erro
++	else:
++		_status.text = "Desafio enviado. Aguardando %s responder..." % ArenaDuelos.jogadores.get(id, {}).get("nome", "o colega")
++	_atualizar_botoes()
++
++
++func _on_desafio_recebido(_id: String, nome: String) -> void:
++	_texto_convite.text = "%s desafiou você para um duelo amistoso!" % nome
++	_painel_convite.visible = true
++	_atualizar_botoes()
++
++
++func _on_desafio_encerrado(motivo: String) -> void:
++	_painel_convite.visible = false
++	_status.text = motivo
++	_atualizar_botoes()
++
++
++func _on_duelo_falhou(motivo: String) -> void:
++	_painel_convite.visible = false
++	_status.text = motivo
++	_atualizar_botoes()
++
++
++func _on_arena_perdida(motivo: String) -> void:
++	_painel_convite.visible = false
++	_lista.clear()
++	_status.text = motivo
++	_btn_desafiar.disabled = true
++
++
++func _sair() -> void:
++	await ArenaDuelos.sair()
++	if not is_inside_tree():
++		return
++	var destino := CENA_ALUNO
++	if Engine.has_meta("arena_retorno"):
++		var pedido: Dictionary = Engine.get_meta("arena_retorno")
++		Engine.remove_meta("arena_retorno")
++		destino = pedido.get("cena", destino)
++		if pedido.has("posicao"):
++			Engine.set_meta("spawn_proxima_cena", {"cena": destino, "posicao": pedido["posicao"]})
++	get_tree().change_scene_to_file(destino)
+
+--- a/scripts/duelos.gd	2026-10-13 15:51:35.000000000 -0400
++++ b/scripts/duelos.gd	2026-10-13 16:43:58.817281000 -0400
+@@ -49,6 +49,7 @@
+ ## partida em grupo não pode ficar esperando um aluno parado).
+ const TEMPO_MAX_TURNO := 90.0
+ const CENA_LOBBY := "res://scenes/Login/TelaLobby.tscn"
++const CENA_ARENA := "res://scenes/Login/TelaArena.tscn"
+ const CENA_MENU_ALUNO := "res://scenes/Login/TelaAluno.tscn"
+ 
+ var log_lines: Array[String] = []
+@@ -279,6 +280,12 @@
+ 
+ 
+ func _voltar_para_sala() -> void:
++	if DueloRede.amistoso:
++		# Duelo amistoso: volta para a lista da arena.
++		DueloRede.limpar_partida()
++		ArenaDuelos.duelo_terminado()
++		get_tree().change_scene_to_file(CENA_ARENA)
++		return
+ 	DueloRede.limpar_partida()
+ 	Engine.set_meta("lobby_modo", "aluno")
+ 	get_tree().change_scene_to_file(CENA_LOBBY)
+@@ -400,7 +407,7 @@
+ 	caixa.add_child(resumo)
+ 
+ 	_botao_voltar = Button.new()
+-	_botao_voltar.text = "Voltar à sala  [E]" if _em_rede else "Voltar ao quintal  [E]"
++	_botao_voltar.text = ("Voltar à arena  [E]" if DueloRede.amistoso else "Voltar à sala  [E]") if _em_rede else "Voltar ao quintal  [E]"
+ 	_botao_voltar.pressed.connect(_voltar_ao_quintal)
+ 	caixa.add_child(_botao_voltar)
+ 	_botao_voltar.grab_focus()
+
+--- a/src/services/ArenaDuelos.gd	1969-12-31 20:00:00.000000000 -0400
++++ b/src/services/ArenaDuelos.gd	2026-10-13 16:43:35.721174847 -0400
+@@ -0,0 +1,365 @@
++extends Node
++class_name ArenaDuelosClass
++
++## Autoload "ArenaDuelos" — arena de duelos amistosos entre alunos (Módulo 5).
++##
++## Espaço independente da sala do professor: os alunos da MESMA TURMA que
++## estão na arena aparecem numa lista e um pode desafiar o outro. Quem aceita
++## começa um duelo PvP simultâneo (o mesmo das atividades do professor,
++## ver DueloRede), mas amistoso: não conta nas estatísticas nem na dificuldade.
++##
++## Por baixo é uma partida "relayed" do Nakama com nome fixo "arena_<id da
++## turma>" (ou "arena_geral" para quem não tem turma): o servidor só repassa
++## mensagens, não existe fila nem pareamento automático.
++##
++## Mensagens (op codes < 100; a partir de 100 são as do duelo, via DueloRede):
++##   OP_PRESENCA  {nome, ocupado, eco}        "estou aqui" (eco = resposta a um recém-chegado)
++##   OP_DESAFIO   {para, nome, rid}           convite
++##   OP_RESPOSTA  {para, rid, aceito, motivo} aceitou/recusou
++##   OP_CANCELAR  {para, rid}                 desisti do convite
++
++signal lista_mudou
++signal desafio_recebido(de_id: String, de_nome: String)
++signal desafio_encerrado(motivo: String)        # o convite (enviado ou recebido) acabou
++signal arena_perdida(motivo: String)            # a conexão caiu
++signal duelo_falhou(motivo: String)             # aceito, mas o duelo não abriu
++signal mensagem_recebida(op_code: int, remetente_id: String, dados: Dictionary)
++signal jogador_saiu(user_id: String)
++
++const OP_PRESENCA := 10
++const OP_DESAFIO := 11
++const OP_RESPOSTA := 12
++const OP_CANCELAR := 13
++const OP_ATIVIDADE_BASE := 100
++
++const PREFIXO_NOME_PARTIDA := "arena_"
++const TEMPO_CONVITE := 20.0
++
++## Só para testes (bots): outro cliente/sessão e outra chave de arena.
++var cliente_alternativo: NakamaClient = null
++var sessao_alternativa: NakamaSession = null
++var chave_alternativa: String = ""
++
++var socket: NakamaSocket = null
++var match_id: String = ""
++var meu_id: String = ""
++var nome_turma: String = ""
++var jogadores := {}                 # user_id -> {nome, ocupado}
++var ocupado := false                # estou num duelo (ou preparando um)
++var atividade_dados: Dictionary = {}   # mesmo formato da sala do professor; DueloRede lê "rodada"
++
++var _meu_nome := ""
++var _enviado := {}                  # convite que eu mandei: {para, rid}
++var _recebido := {}                 # convite que me mandaram: {de, nome, rid}
++var _rid_esperado := 0              # duelo que está sendo combinado (para guardar mensagens adiantadas)
++var _pendentes: Array = []          # mensagens do duelo que chegaram antes de eu abrir o canal
++
++
++func esta_na_arena() -> bool:
++	return match_id != ""
++
++
++func _cliente() -> NakamaClient:
++	return cliente_alternativo if cliente_alternativo != null else NakamaManager.client
++
++
++func _sessao() -> NakamaSession:
++	return sessao_alternativa if sessao_alternativa != null else NakamaManager.session
++
++
++func convite_enviado() -> bool:
++	return not _enviado.is_empty()
++
++
++func convite_recebido() -> bool:
++	return not _recebido.is_empty()
++
++
++# --------------------------------------------------------------------- entrada
++
++## Entra na arena da turma do aluno. Devolve "" se deu certo, senão o erro.
++func entrar(p_nome: String) -> String:
++	if esta_na_arena():
++		return ""
++	if _sessao() == null and cliente_alternativo == null:
++		if NakamaManager.convidado_id_ativo != "":
++			await NakamaManager.login_convidado(NakamaManager.convidado_id_ativo)
++		if NakamaManager.session == null:
++			return "Servidor indisponível no momento."
++
++	var chave := chave_alternativa
++	nome_turma = ""
++	if chave == "":
++		chave = "geral"
++		if cliente_alternativo == null:
++			var turmas: Array = await NakamaManager.listar_minhas_turmas()
++			if not turmas.is_empty():
++				chave = str(turmas[0]["id"])
++				nome_turma = str(turmas[0]["nome"])
++
++	Nakama.process_mode = Node.PROCESS_MODE_ALWAYS
++	_descartar_socket()
++	socket = Nakama.create_socket_from(_cliente())
++	var r = await socket.connect_async(_sessao())
++	if r.is_exception():
++		socket = null
++		return "Servidor indisponível no momento."
++	socket.received_match_presence.connect(_on_presenca)
++	socket.received_match_state.connect(_on_estado)
++	socket.closed.connect(_on_socket_fechado)
++	meu_id = _sessao().user_id
++
++	var m = await socket.create_match_async(PREFIXO_NOME_PARTIDA + chave)
++	if m.is_exception():
++		_descartar_socket()
++		return "Servidor indisponível no momento."
++
++	_zerar()
++	match_id = m.match_id
++	_meu_nome = p_nome
++	jogadores[meu_id] = {"nome": p_nome, "ocupado": false}
++	await _enviar(OP_PRESENCA, {"nome": p_nome, "ocupado": false, "eco": false})
++	lista_mudou.emit()
++	return ""
++
++
++func sair() -> void:
++	if esta_na_arena():
++		if not _enviado.is_empty():
++			await _enviar(OP_CANCELAR, _enviado)
++		if socket != null:
++			await socket.leave_match_async(match_id)
++	_descartar_socket()
++	_zerar()
++
++
++func _zerar() -> void:
++	match_id = ""
++	jogadores = {}
++	ocupado = false
++	atividade_dados = {}
++	_enviado = {}
++	_recebido = {}
++	_rid_esperado = 0
++	_pendentes = []
++
++
++func _descartar_socket() -> void:
++	if socket != null:
++		if socket.closed.is_connected(_on_socket_fechado):
++			socket.closed.disconnect(_on_socket_fechado)
++		socket.close()
++		socket = null
++
++
++func _on_socket_fechado() -> void:
++	if esta_na_arena():
++		_zerar()
++		socket = null
++		arena_perdida.emit("A conexão com o servidor caiu.")
++
++
++func _enviar(op_code: int, dados: Dictionary) -> void:
++	if socket == null or match_id == "":
++		return
++	await socket.send_match_state_async(match_id, op_code, JSON.stringify(dados))
++
++
++## Mensagem do duelo (op_code >= 100), usada pelo DueloRede.
++func enviar_atividade(op_code: int, dados: Dictionary) -> void:
++	await _enviar(op_code, dados)
++
++
++func _transmitir_presenca(eco: bool = false) -> void:
++	if esta_na_arena():
++		jogadores[meu_id] = {"nome": _meu_nome, "ocupado": ocupado}
++		lista_mudou.emit()
++		await _enviar(OP_PRESENCA, {"nome": _meu_nome, "ocupado": ocupado, "eco": eco})
++
++
++## Os outros alunos da arena, ordenados por nome: [{id, nome, ocupado}].
++func lista_outros() -> Array:
++	var lista := []
++	for id in jogadores:
++		if id != meu_id:
++			lista.append({"id": id, "nome": jogadores[id]["nome"], "ocupado": jogadores[id]["ocupado"]})
++	lista.sort_custom(func(a, b): return str(a["nome"]).naturalnocasecmp_to(str(b["nome"])) < 0)
++	return lista
++
++
++## Mensagens do duelo que chegaram antes do canal ser aberto (DueloRede.preparar).
++func consumir_pendentes() -> Array:
++	var l := _pendentes
++	_pendentes = []
++	return l
++
++
++# --------------------------------------------------------------------- convites
++
++## Desafia um colega livre. Devolve "" ou o motivo de não ter enviado.
++func desafiar(id: String) -> String:
++	if not esta_na_arena():
++		return "Você não está na arena."
++	if ocupado or convite_enviado() or convite_recebido():
++		return "Termine o convite em andamento antes."
++	if not jogadores.has(id) or id == meu_id:
++		return "Esse aluno saiu da arena."
++	if jogadores[id]["ocupado"]:
++		return "%s está ocupado agora." % jogadores[id]["nome"]
++	_enviado = {"para": id, "rid": randi_range(1, 2000000000)}
++	_rid_esperado = _enviado["rid"]
++	await _enviar(OP_DESAFIO, {"para": id, "nome": _meu_nome, "rid": _enviado["rid"]})
++	_expirar_convite_enviado(_enviado["rid"])
++	return ""
++
++
++func _expirar_convite_enviado(rid: int) -> void:
++	await get_tree().create_timer(TEMPO_CONVITE).timeout
++	if convite_enviado() and int(_enviado["rid"]) == rid:
++		var alvo := str(_enviado["para"])
++		await _enviar(OP_CANCELAR, _enviado)
++		_enviado = {}
++		_rid_esperado = 0
++		desafio_encerrado.emit("%s não respondeu ao desafio." % _nome(alvo))
++
++
++func _expirar_convite_recebido(rid: int) -> void:
++	await get_tree().create_timer(TEMPO_CONVITE).timeout
++	if convite_recebido() and int(_recebido["rid"]) == rid:
++		await responder(false)
++
++
++## Desisto do convite que enviei.
++func cancelar_desafio() -> void:
++	if convite_enviado():
++		var c := _enviado
++		_enviado = {}
++		_rid_esperado = 0
++		await _enviar(OP_CANCELAR, c)
++		desafio_encerrado.emit("")
++
++
++## Respondo ao convite que recebi.
++func responder(aceitar: bool, motivo: String = "") -> void:
++	if not convite_recebido():
++		return
++	var c := _recebido
++	_recebido = {}
++	if aceitar:
++		_iniciar_duelo(str(c["de"]), str(c["nome"]), int(c["rid"]), false)
++	else:
++		_rid_esperado = 0
++		desafio_encerrado.emit("")
++	await _enviar(OP_RESPOSTA, {"para": c["de"], "rid": c["rid"], "aceito": aceitar, "motivo": motivo})
++
++
++func _nome(id: String) -> String:
++	return str(jogadores[id]["nome"]) if jogadores.has(id) else "O colega"
++
++
++## Quem desafiou é o anfitrião (membro 0) do PvP. A parte síncrona vem antes
++## de qualquer espera, para o canal já estar certo quando chegar o OP_PRONTO
++## do outro lado.
++func _iniciar_duelo(outro_id: String, outro_nome: String, rid: int, anfitriao: bool) -> void:
++	ocupado = true
++	_transmitir_presenca()
++	var eu := {"id": meu_id, "nome": _meu_nome}
++	var ele := {"id": outro_id, "nome": outro_nome}
++	atividade_dados = {"modo": "pvp", "rodada": rid, "grupos": [[eu, ele] if anfitriao else [ele, eu]]}
++	var resultado: String = await DueloRede.preparar(atividade_dados, self)
++	_rid_esperado = 0
++	if not esta_na_arena():
++		DueloRede.limpar_partida()
++		return
++	if resultado != "":
++		DueloRede.limpar_partida()
++		ocupado = false
++		atividade_dados = {}
++		_transmitir_presenca()
++		duelo_falhou.emit(resultado if resultado != "SEM_PAR" else "Não foi possível abrir o duelo.")
++		return
++	if MenuPausa.esta_aberto():
++		MenuPausa.fechar()
++	get_tree().change_scene_to_file(DueloRede.CENA_DUELO)
++
++
++## O duelo acabou e o jogador voltou para a lista.
++func duelo_terminado() -> void:
++	ocupado = false
++	atividade_dados = {}
++	_transmitir_presenca()
++
++
++# --------------------------------------------------------------------- recepção
++
++func _on_presenca(ev) -> void:
++	if ev.match_id != match_id:
++		return
++	for p in ev.leaves:
++		jogadores.erase(p.user_id)
++		jogador_saiu.emit(p.user_id)
++		if convite_enviado() and _enviado["para"] == p.user_id:
++			_enviado = {}
++			_rid_esperado = 0
++			desafio_encerrado.emit("O colega saiu da arena.")
++		if convite_recebido() and _recebido["de"] == p.user_id:
++			_recebido = {}
++			_rid_esperado = 0
++			desafio_encerrado.emit("Quem te desafiou saiu da arena.")
++	lista_mudou.emit()
++
++
++func _on_estado(msg) -> void:
++	if msg.match_id != match_id:
++		return
++	var dados = JSON.parse_string(msg.data)
++	if typeof(dados) != TYPE_DICTIONARY:
++		dados = {}
++	var remetente: String = msg.presence.user_id if msg.presence != null else ""
++	if remetente == meu_id:
++		return
++
++	if msg.op_code >= OP_ATIVIDADE_BASE:
++		# Duelo ainda sendo combinado: guarda o que chegou na frente.
++		if atividade_dados.is_empty() and _rid_esperado != 0 and int(dados.get("r", -2)) == _rid_esperado:
++			_pendentes.append([msg.op_code, remetente, dados])
++		mensagem_recebida.emit(msg.op_code, remetente, dados)
++		return
++
++	match msg.op_code:
++		OP_PRESENCA:
++			var novo := not jogadores.has(remetente)
++			jogadores[remetente] = {"nome": str(dados.get("nome", "Aluno")), "ocupado": bool(dados.get("ocupado", false))}
++			if novo and not bool(dados.get("eco", false)):
++				_transmitir_presenca(true)  # o recém-chegado fica sabendo de mim
++			lista_mudou.emit()
++		OP_DESAFIO:
++			if str(dados.get("para", "")) != meu_id:
++				return
++			var rid := int(dados.get("rid", 0))
++			if ocupado or convite_recebido() or convite_enviado():
++				await _enviar(OP_RESPOSTA, {"para": remetente, "rid": rid, "aceito": false, "motivo": "ocupado"})
++				return
++			_recebido = {"de": remetente, "nome": str(dados.get("nome", "Aluno")), "rid": rid}
++			_rid_esperado = rid
++			desafio_recebido.emit(remetente, _recebido["nome"])
++			_expirar_convite_recebido(rid)
++		OP_RESPOSTA:
++			if str(dados.get("para", "")) != meu_id or not convite_enviado() or int(dados.get("rid", 0)) != int(_enviado["rid"]):
++				return
++			var alvo := str(_enviado["para"])
++			var rid := int(_enviado["rid"])
++			_enviado = {}
++			if bool(dados.get("aceito", false)):
++				_iniciar_duelo(alvo, _nome(alvo), rid, true)
++			else:
++				_rid_esperado = 0
++				if str(dados.get("motivo", "")) == "ocupado":
++					desafio_encerrado.emit("%s está ocupado agora." % _nome(alvo))
++				else:
++					desafio_encerrado.emit("%s recusou o desafio." % _nome(alvo))
++		OP_CANCELAR:
++			if convite_recebido() and _recebido["de"] == remetente and int(dados.get("rid", 0)) == int(_recebido["rid"]):
++				_recebido = {}
++				_rid_esperado = 0
++				desafio_encerrado.emit("%s cancelou o desafio." % _nome(remetente))
+
+--- a/src/services/DueloRede.gd	2026-10-13 16:25:24.000000000 -0400
++++ b/src/services/DueloRede.gd	2026-10-13 16:43:44.785175041 -0400
+@@ -59,19 +59,34 @@
+ var _lista_oponente_n := -1           # ...e de qual rodada
+ var _meu_envio_n := -1                # rodada em que eu já mandei os meus
+ var _prontos := {}                    # user_id -> roster (OP_PRONTO) da rodada atual
++## Duelo amistoso (arena): as mensagens trafegam pela ArenaDuelos, não pela
++## sala do professor, e nada é enviado ao professor nem registrado.
++var amistoso := false
++var _canal_amistoso: Node = null
+ var estados := {}                     # user_id -> último OP_ESTADO (o professor lê)
+ 
+ 
+ func _ready() -> void:
+-	LobbyManager.mensagem_recebida.connect(_on_mensagem)
++	LobbyManager.mensagem_recebida.connect(_on_mensagem.bind(LobbyManager))
+ 	LobbyManager.atividade_iniciada.connect(_on_atividade)
+-	LobbyManager.jogador_saiu.connect(_on_jogador_saiu)
+-	LobbyManager.sala_encerrada.connect(_on_sala_encerrada)
++	LobbyManager.jogador_saiu.connect(_on_jogador_saiu.bind(LobbyManager))
++	LobbyManager.sala_encerrada.connect(_on_sala_encerrada.bind(LobbyManager))
++	ArenaDuelos.mensagem_recebida.connect(_on_mensagem.bind(ArenaDuelos))
++	ArenaDuelos.jogador_saiu.connect(_on_jogador_saiu.bind(ArenaDuelos))
++	ArenaDuelos.arena_perdida.connect(func(m): _on_sala_encerrada(m, ArenaDuelos))
++
++
++## Canal por onde passam as mensagens da partida atual: a sala do professor
++## ou a arena de duelos amistosos.
++func _c() -> Node:
++	return _canal_amistoso if _canal_amistoso != null else LobbyManager
+ 
+ 
+ # --------------------------------------------------------------- preparação
+ 
+ func _on_atividade(novo_modo: String) -> void:
++	if amistoso:
++		return
+ 	# Começou (ou terminou) uma atividade: o que sobrou da anterior vale nada.
+ 	_prontos.clear()
+ 	estados.clear()
+@@ -148,6 +163,8 @@
+ 	_meu_envio_n = -1
+ 	formas_equipe = []
+ 	tipos_adversario = []
++	amistoso = false
++	_canal_amistoso = null
+ 	Combat.modo_rede = ""
+ 
+ 
+@@ -156,7 +173,7 @@
+ 	var grupos: Array = dados.get("grupos", [])
+ 	for i in grupos.size():
+ 		for m in grupos[i]:
+-			if str(m.get("id", "")) == LobbyManager.meu_id:
++			if str(m.get("id", "")) == _c().meu_id:
+ 				return i
+ 	return -1
+ 
+@@ -164,8 +181,10 @@
+ ## Chamado pela TelaLobby do aluno quando o professor inicia uma atividade.
+ ## Devolve "" se a partida está pronta (a cena pode abrir), "SEM_PAR" se o
+ ## aluno não tem grupo/adversário nesta rodada, ou a mensagem de erro.
+-func preparar(dados: Dictionary) -> String:
++func preparar(dados: Dictionary, canal_amistoso: Node = null) -> String:
+ 	limpar_partida()
++	_canal_amistoso = canal_amistoso
++	amistoso = canal_amistoso != null
+ 	var modo_sala := str(dados.get("modo", ""))
+ 	rodada = int(dados.get("rodada", -1))
+ 	grupo = _meu_grupo(dados)
+@@ -176,6 +195,11 @@
+ 		grupo = -1
+ 		return "SEM_PAR"
+ 
++	# Duelo amistoso: aproveita o que o outro jogador já mandou antes do canal abrir.
++	if canal_amistoso != null:
++		for m in canal_amistoso.consumir_pendentes():
++			_on_mensagem(int(m[0]), str(m[1]), m[2], canal_amistoso)
++
+ 	# Anuncia o que eu posso usar na partida.
+ 	var uid := LocalDB.get_user_id_ativo()
+ 	var motivo := SpellLoadout.motivo_bloqueio_combate(uid)
+@@ -184,14 +208,14 @@
+ 		for f in SpellLoadout.formas_disponiveis(uid):
+ 			formas_info.append({"f": f, "e": SpellLoadout.get_equipped_type(f).element_name})
+ 	var roster := {
+-		"id": LobbyManager.meu_id,
++		"id": _c().meu_id,
+ 		"nome": _meu_nome(),
+ 		"pode": motivo == "",
+ 		"formas": formas_info,
+ 		"nivel": LocalDB.proximo_nivel_dificuldade(uid) if motivo == "" else 1,
+ 	}
+-	_prontos[LobbyManager.meu_id] = roster
+-	await LobbyManager.enviar_atividade(OP_PRONTO, _com_ids(roster))
++	_prontos[_c().meu_id] = roster
++	await _c().enviar_atividade(OP_PRONTO, _com_ids(roster))
+ 	if motivo != "":
+ 		grupo = -1
+ 		return motivo
+@@ -215,7 +239,7 @@
+ 	membros = validos
+ 	meu_indice = 0
+ 	for i in membros.size():
+-		if membros[i]["id"] == LobbyManager.meu_id:
++		if membros[i]["id"] == _c().meu_id:
+ 			meu_indice = i
+ 	turno_idx = 0
+ 	turnos_jogados = 0
+@@ -298,7 +322,7 @@
+ ## PvP: mando os feitiços que conjurei nesta rodada.
+ func enviar_feiticos(lista: Array) -> void:
+ 	_meu_envio_n = rodada_pvp
+-	LobbyManager.enviar_atividade(OP_FEITICOS, _com_ids({"n": rodada_pvp, "lista": lista}))
++	_c().enviar_atividade(OP_FEITICOS, _com_ids({"n": rodada_pvp, "lista": lista}))
+ 
+ 
+ ## Anfitrião: tenho os meus e os do outro jogador desta rodada?
+@@ -320,7 +344,7 @@
+ 	snapshot["t"] = turnos_jogados
+ 	snapshot["prox"] = meu_indice
+ 	snapshot["nome"] = _meu_nome()
+-	LobbyManager.enviar_atividade(OP_TURNO, _com_ids(snapshot))
++	_c().enviar_atividade(OP_TURNO, _com_ids(snapshot))
+ 
+ 
+ func sou_ultimo() -> bool:
+@@ -348,17 +372,17 @@
+ 	snapshot["prox"] = turno_idx
+ 	snapshot["t"] = turnos_jogados
+ 	snapshot["nome"] = _meu_nome()
+-	LobbyManager.enviar_atividade(OP_TURNO, _com_ids(snapshot))
++	_c().enviar_atividade(OP_TURNO, _com_ids(snapshot))
+ 	return turno_idx == meu_indice
+ 
+ 
+ ## Resumo pro painel do professor (hp = soma do meu lado).
+ func enviar_estado(hp: int, hp_max: int, fim: String) -> void:
+-	if not ativo:
++	if not ativo or amistoso:
+ 		return
+ 	var contra := nome_do_adversario()
+ 	var d := {
+-		"id": LobbyManager.meu_id,
++		"id": _c().meu_id,
+ 		"nome": _meu_nome(),
+ 		"modo": modo,
+ 		"hp": hp,
+@@ -367,21 +391,23 @@
+ 		"contra": contra,
+ 		"vez": nome_de_quem_joga(),
+ 	}
+-	estados[LobbyManager.meu_id] = d
+-	LobbyManager.enviar_atividade(OP_ESTADO, _com_ids(d))
++	estados[_c().meu_id] = d
++	_c().enviar_atividade(OP_ESTADO, _com_ids(d))
+ 
+ 
+ ## Aviso de que estou saindo da partida (desistência ou fechamento).
+ func avisar_saida() -> void:
+ 	if grupo < 0:
+ 		return
+-	LobbyManager.enviar_atividade(OP_SAIDA, _com_ids({"id": LobbyManager.meu_id}))
++	_c().enviar_atividade(OP_SAIDA, _com_ids({"id": _c().meu_id}))
+ 
+ 
+ # -------------------------------------------------------------- recebimento
+ 
+-func _on_mensagem(op_code: int, remetente: String, dados: Dictionary) -> void:
+-	if int(dados.get("r", -2)) != LobbyManager.atividade_dados.get("rodada", -1):
++func _on_mensagem(op_code: int, remetente: String, dados: Dictionary, origem: Node) -> void:
++	if origem != _c():
++		return
++	if int(dados.get("r", -2)) != _c().atividade_dados.get("rodada", -1):
+ 		return
+ 	match op_code:
+ 		OP_ESTADO:
+@@ -408,7 +434,9 @@
+ 				_remover_membro(remetente)
+ 
+ 
+-func _on_jogador_saiu(user_id: String) -> void:
++func _on_jogador_saiu(user_id: String, origem: Node) -> void:
++	if origem != _c():
++		return
+ 	if ativo:
+ 		_remover_membro(user_id)
+ 
+@@ -420,7 +448,7 @@
+ 	for i in membros.size():
+ 		if membros[i]["id"] == user_id:
+ 			idx = i
+-	if idx < 0 or user_id == LobbyManager.meu_id:
++	if idx < 0 or user_id == _c().meu_id:
+ 		return
+ 	membros.remove_at(idx)
+ 	if idx < meu_indice:
+@@ -436,7 +464,9 @@
+ 		Combat.start_player_turn()
+ 
+ 
+-func _on_sala_encerrada(motivo: String) -> void:
++func _on_sala_encerrada(motivo: String, origem: Node) -> void:
++	if origem != _c():
++		return
+ 	if ativo:
+ 		limpar_partida()
+ 		sala_perdida.emit(motivo)
+
+--- a/src/ui/FluxoSala.gd	2026-10-13 16:24:49.000000000 -0400
++++ b/src/ui/FluxoSala.gd	2026-10-13 16:43:58.818065540 -0400
+@@ -15,6 +15,7 @@
+ static var _em_andamento := false
+ 
+ const CENA_LOBBY := "res://scenes/Login/TelaLobby.tscn"
++const CENA_ARENA := "res://scenes/Login/TelaArena.tscn"
+ 
+ var _dialogo: CaixaDialogo
+ var _jogador: Node
+@@ -45,7 +46,7 @@
+ 	add_child(_dialogo)
+ 	_dialogo.abrir(str(professor.get("nome", "Professor")), professor.get("retrato", null))
+ 
+-	var abrir_lobby := false
++	var destino := ""
+ 	match modo:
+ 		"aula", "prova":
+ 			await _menu_temas(tipo_sala, modo)
+@@ -53,13 +54,15 @@
+ 			for fala in falas:
+ 				await _dialogo.falar(str(fala))
+ 		"duelo":
+-			abrir_lobby = await _menu_duelo()
++			destino = await _menu_duelo()
+ 
+ 	_dialogo.fechar()
+ 	_definir_controle(true)
+ 	_em_andamento = false
+-	if abrir_lobby:
++	if destino == "sala":
+ 		_ir_para_a_sala_de_espera()
++	elif destino == "arena":
++		_ir_para_a_arena()
+ 	queue_free()
+ 
+ 
+@@ -72,36 +75,37 @@
+ 
+ ## Menu do Mestre dos Duelos: entrar na sala que o professor abriu (PvE em
+ ## equipe / PvP), voltar à sala de espera ou sair dela. Devolve true se o
+-## jogador escolheu ir para a sala de espera (a troca de cena acontece depois
+-## que o diálogo fecha).
+-func _menu_duelo() -> bool:
++## jogador escolheu ir para a sala de espera ("sala") ou para a arena de duelos
++## amistosos ("arena"); a troca de cena acontece depois que o diálogo fecha.
++func _menu_duelo() -> String:
+ 	while true:
+ 		if LobbyManager.esta_em_sala():
+ 			var pergunta := "Você está na sala %s. O que quer fazer?" % LobbyManager.codigo
+ 			var opcoes: Array[String] = ["Ver a sala de espera", "Sair da sala", "Cancelar"]
+ 			var i: int = await _dialogo.escolher(pergunta, opcoes)
+ 			if i == 0:
+-				return true
++				return "sala"
+ 			if i == 1:
+ 				LobbyManager.sair()
+ 				await _dialogo.falar("Você saiu da sala. Volte quando o professor abrir outra!")
+ 				continue
+-			return false
++			return ""
+ 		else:
+-			var opcoes: Array[String] = ["Entrar na sala do professor", "Como funciona?", "Cancelar"]
+-			var i: int = await _dialogo.escolher("Quer enfrentar seus colegas? Peça ao professor o código da sala.", opcoes)
+-			if i == 0:
++			var opcoes: Array[String] = ["Entrar na sala do professor", "Arena de duelos amistosos", "Como funciona?", "Cancelar"]
++			var i: int = await _dialogo.escolher("Quer enfrentar seus colegas?", opcoes)
++			if i == 0 or i == 1:
+ 				var motivo := SpellLoadout.motivo_bloqueio_combate(_uid)
+ 				if motivo != "":
+ 					await _dialogo.falar(motivo)
+ 					continue
+-				return true
+-			if i == 1:
+-				await _dialogo.falar("O professor abre uma sala e mostra um código de 4 letras. Você digita o código e espera na sala. Quando ele iniciar, você joga com a sua equipe contra um monstro (PvE) ou duela com um colega (PvP).")
+-				await _dialogo.falar("No duelo os dois jogam ao mesmo tempo, cada um no seu ritmo, e os feitiços são resolvidos juntos, por ordem de prioridade. Treine bastante antes!")
++				return "sala" if i == 0 else "arena"
++			if i == 2:
++				await _dialogo.falar("Sala do professor: ele abre uma sala e mostra um código de 4 letras. Você digita o código e espera. Quando ele iniciar, você joga com a sua equipe contra um monstro (PvE) ou duela com um colega (PvP).")
++				await _dialogo.falar("Arena de duelos amistosos: você vê os colegas da sua turma que estão lá e pode desafiar um deles, ou aceitar um desafio. É só pela diversão: não vale nota nem muda a dificuldade das suas aulas.")
++				await _dialogo.falar("Nos duelos os dois jogam ao mesmo tempo, cada um no seu ritmo, e os feitiços são resolvidos juntos, por ordem de prioridade. Treine bastante antes!")
+ 				continue
+-			return false
+-	return false
++			return ""
++	return ""
+ 
+ 
+ ## Guarda o ponto do mundo pra voltar depois e abre a sala de espera.
+@@ -115,6 +119,16 @@
+ 	get_tree().change_scene_to_file(CENA_LOBBY)
+ 
+ 
++## Guarda o ponto do mundo pra voltar depois e abre a arena de duelos.
++func _ir_para_a_arena() -> void:
++	var cena := get_tree().current_scene
++	var retorno := {"cena": cena.scene_file_path}
++	if is_instance_valid(_jogador) and _jogador is Node2D:
++		retorno["posicao"] = (_jogador as Node2D).global_position
++	Engine.set_meta("arena_retorno", retorno)
++	get_tree().change_scene_to_file(CENA_ARENA)
++
++
+ # --------------------------------------------------------------------- menu
+ 
+ func _menu_temas(tipo_sala: String, modo: String) -> void:
+
+--- a/src/ui/MenuPausa.gd	2026-10-13 16:24:49.000000000 -0400
++++ b/src/ui/MenuPausa.gd	2026-10-13 16:43:58.818880745 -0400
+@@ -247,6 +247,8 @@
+ 	_abandonar_combate_se_houver()
+ 	if LobbyManager.esta_em_sala():
+ 		LobbyManager.sair()  # sai da sala do professor também
++	if ArenaDuelos.esta_na_arena():
++		ArenaDuelos.sair()
+ 	fechar()
+ 	get_tree().change_scene_to_file(CENA_MENU_ALUNO)
+ 

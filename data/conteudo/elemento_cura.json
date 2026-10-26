@@ -1,0 +1,107 @@
+{
+  "versao": 1,
+  "tipo": "elemento",
+  "alvo": "Cura",
+  "nome_menu": "Verde (Cura)",
+  "aula": {
+    "id": "aula_elemento_cura",
+    "tipo": "elemento",
+    "alvo": "Cura",
+    "titulo": "Verde — Cura",
+    "falas": [
+      "Hoje vamos estudar o Verde, a cor da Cura! É a cor das folhas, das florestas e da vida: transmite equilíbrio, saúde e esperança. No Círculo Mágico, é o elemento da restauração e do crescimento.",
+      "A ciência da cor: verde = azul + amarelo, uma cor secundária. Mais amarelo dá um verde-limão; mais azul, um verde-água. Está entre as cores frias, junto com o azul e o roxo, e passa sensação de tranquilidade.",
+      "Na luz, o verde ocupa a faixa de cerca de 495 a 570 nm, no meio do espectro. O olho humano é mais sensível ao verde do que a qualquer outra cor: conseguimos diferenciar muitos tons dele. A cor oposta ao verde é o vermelho.",
+      "Por que o verde combina com a Cura? As plantas são verdes por causa da clorofila, a substância que captura a luz do Sol para produzir alimento. Ela absorve o vermelho e o azul e reflete o verde, por isso vemos as folhas dessa cor.",
+      "Muitos remédios vêm das plantas, e em vários países a cruz verde é o símbolo das farmácias. Nos hospitais, roupas cirúrgicas costumam ser verdes ou azuis: olhar para essas cores descansa a visão dos médicos depois de muito tempo olhando o vermelho do sangue.",
+      "Grimório, ficha do elemento Cura. A Cura é um elemento combinado: nasce da Água + Eletricidade, como o verde nasce do azul + amarelo. A água sustenta a vida, e a energia elétrica a reanima: no mundo real, o desfibrilador usa um choque elétrico para fazer o coração voltar a bater no ritmo certo.",
+      "Essência: restauração, crescimento e equilíbrio. Feitiços de exemplo: Toque Restaurador (fecha ferimentos), Semente da Vida (faz plantas crescerem) e Brisa Verde (afasta o cansaço). O oposto é o Fogo (vermelho): o Fogo consome; a Cura reconstrói.",
+      "Você sabia? Aparelhos de visão noturna mostram imagens em verde porque nossos olhos distinguem mais detalhes nessa cor. E nos semáforos o verde significa “siga”, o oposto exato do vermelho, que significa “pare”.",
+      "As folhas verdes da babosa (aloe vera) têm um gel usado há séculos para aliviar pequenas queimaduras do sol."
+    ]
+  },
+  "prova": {
+    "id": "prova_elemento_cura",
+    "tipo": "elemento",
+    "alvo": "Cura",
+    "notaDeCorte": 0.7,
+    "perguntas": [
+      {
+        "tipo": "vf",
+        "pergunta": "O verde é obtido misturando azul e amarelo.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "Verde = azul + amarelo."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "As plantas são verdes porque absorvem a luz verde.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "Elas refletem o verde e absorvem principalmente o vermelho e o azul."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "O olho humano é especialmente sensível à cor verde.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "Distinguimos mais tons de verde do que de qualquer outra cor."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "O verde é uma cor primária.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "É secundária."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Qual é a cor complementar (oposta) do verde?",
+        "alternativas": [
+          "Azul",
+          "Amarelo",
+          "Vermelho",
+          "Laranja"
+        ],
+        "respostaCorreta": "Vermelho",
+        "explicacao": "Verde e vermelho ficam em lados opostos do círculo."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Qual substância dá a cor verde às plantas?",
+        "alternativas": [
+          "Clorofila",
+          "Ferro",
+          "Água",
+          "Melanina"
+        ],
+        "respostaCorreta": "Clorofila",
+        "explicacao": "A clorofila reflete a luz verde."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Por que roupas cirúrgicas costumam ser verdes ou azuis?",
+        "alternativas": [
+          "Porque são mais baratas",
+          "Porque a sujeira não aparece",
+          "Porque descansam a visão de quem olha muito tempo para o vermelho do sangue",
+          "Por causa de uma lei"
+        ],
+        "respostaCorreta": "Porque descansam a visão de quem olha muito tempo para o vermelho do sangue",
+        "explicacao": "Verde e azul aliviam a visão cansada pelo vermelho."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "No Círculo Mágico, qual elemento é o oposto da Cura?",
+        "alternativas": [
+          "Água",
+          "Tempo",
+          "Terra",
+          "Fogo"
+        ],
+        "respostaCorreta": "Fogo",
+        "explicacao": "O Fogo, cujo vermelho é a complementar do verde."
+      }
+    ]
+  }
+}

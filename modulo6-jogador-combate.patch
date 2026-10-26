@@ -1,0 +1,305 @@
+--- a/entities/monsters/monster_template.gd	2026-10-17 17:49:24.000000000 -0400
++++ b/entities/monsters/monster_template.gd	2026-10-17 18:01:34.801182761 -0400
+@@ -12,25 +12,6 @@
+ @export var escala_combate: float = 0.0
+ 
+ 
+-## Área ocupada pelo desenho (sem a margem transparente) no primeiro quadro de
+-## "idle", em coordenadas locais do monstro (já considera o flip_h). Rect2()
+-## vazio se não for possível medir.
++## Área ocupada pelo desenho (ver CombatSprite.area_visivel).
+ func area_visivel() -> Rect2:
+-	var spr := get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+-	if spr == null or spr.sprite_frames == null or not spr.sprite_frames.has_animation(&"idle"):
+-		return Rect2()
+-	var tex := spr.sprite_frames.get_frame_texture(&"idle", 0)
+-	if tex == null:
+-		return Rect2()
+-	var img := tex.get_image()
+-	if img == null:
+-		return Rect2()
+-	var usado := img.get_used_rect()
+-	if usado.size == Vector2i.ZERO:
+-		return Rect2()
+-	var centro := Vector2(img.get_size()) / 2.0
+-	var r := Rect2(Vector2(usado.position) - centro, Vector2(usado.size))
+-	if spr.flip_h:
+-		r.position.x = -(r.position.x + r.size.x)
+-	return Rect2(r.position + spr.position, r.size)
+-
++	return CombatSprite.area_visivel(get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D)
+--- a/scripts/combat_sprite.gd	1969-12-31 20:00:00.000000000 -0400
++++ b/scripts/combat_sprite.gd	2026-10-17 18:02:32.552143515 -0400
+@@ -0,0 +1,96 @@
++class_name CombatSprite
++extends RefCounted
++
++## Sprite animado de um lutador (criatura ou personagem) no retrato do combate.
++## Cuida de: tocar as animações padrão (idle / ataque / dano / morte) com
++## velocidades próprias, voltar ao idle depois de ataque e dano, ficar na
++## última pose depois da morte, e encaixar o desenho no retrato.
++
++const ESCALA_ANIM := {&"idle": 1.0, &"dano": 2.0, &"ataque": 2.0, &"morte": 1.5}
++## Quanto do retrato o desenho pode ocupar e onde ficam os pés (fração da altura).
++const ALTURA_MAX := 0.78
++const LARGURA_MAX := 0.7
++const BASE := 0.92
++
++var no: Node2D            # nó que é posicionado/escalado (a criatura, ou o próprio sprite)
++var spr: AnimatedSprite2D
++var morto := false
++
++
++func _init(p_no: Node2D, p_spr: AnimatedSprite2D) -> void:
++	no = p_no
++	spr = p_spr
++	if spr == null or spr.sprite_frames == null:
++		return
++	for anim in [&"ataque", &"dano", &"morte"]:
++		if spr.sprite_frames.has_animation(anim):
++			spr.sprite_frames.set_animation_loop(anim, false)  # volta ao idle (ou fica na última pose)
++	spr.animation_finished.connect(_on_fim)
++	tocar(&"idle")
++
++
++func tocar(anim: StringName) -> void:
++	if spr == null or spr.sprite_frames == null or morto:
++		return
++	if not spr.sprite_frames.has_animation(anim):
++		return
++	if anim == &"morte":
++		morto = true
++	spr.speed_scale = ESCALA_ANIM.get(anim, 1.0)
++	spr.play(anim)
++
++
++func tocando(anim: StringName) -> bool:
++	return spr != null and spr.is_playing() and spr.animation == anim
++
++
++func _on_fim() -> void:
++	if not morto:
++		tocar(&"idle")
++
++
++## Área ocupada pelo desenho (sem a margem transparente) no primeiro quadro de
++## "idle", em coordenadas locais do sprite (considera flip_h e a posição do
++## sprite). Rect2() vazio se não for possível medir.
++static func area_visivel(spr: AnimatedSprite2D) -> Rect2:
++	if spr == null or spr.sprite_frames == null or not spr.sprite_frames.has_animation(&"idle"):
++		return Rect2()
++	var tex := spr.sprite_frames.get_frame_texture(&"idle", 0)
++	if tex == null:
++		return Rect2()
++	var img := tex.get_image()
++	if img == null:
++		return Rect2()
++	var usado := img.get_used_rect()
++	if usado.size == Vector2i.ZERO:
++		return Rect2()
++	var centro := Vector2(img.get_size()) / 2.0
++	var r := Rect2(Vector2(usado.position) - centro, Vector2(usado.size))
++	if spr.flip_h:
++		r.position.x = -(r.position.x + r.size.x)
++	return Rect2(r.position + spr.position, r.size)
++
++
++## Ajusta tamanho e posição ao retrato: escala para caber (em passos inteiros
++## quando ≥ 2, para manter os pixels nítidos), centraliza na horizontal e apoia
++## os pés na base. 'escala_fixa' > 0 força um tamanho.
++func encaixar(retrato: Control, escala_fixa: float = 0.0) -> void:
++	if no == null or not is_instance_valid(no):
++		return
++	var area := area_visivel(spr)
++	if no == spr:
++		area.position -= spr.position  # a posição do próprio sprite é o que estamos calculando
++	var escala := escala_fixa
++	if area.size.x <= 0.0 or area.size.y <= 0.0:
++		no.scale = Vector2.ONE * (escala if escala > 0.0 else 1.5)
++		no.position = retrato.size * Vector2(0.5, 0.5)
++		return
++	if escala <= 0.0:
++		escala = minf(retrato.size.y * ALTURA_MAX / area.size.y, retrato.size.x * LARGURA_MAX / area.size.x)
++		escala = clampf(escala, 0.5, 4.0)
++		if escala >= 2.0:
++			escala = floorf(escala)
++	no.scale = Vector2.ONE * escala
++	var centro_x := (area.position.x + area.size.x * 0.5) * escala
++	var base_y := (area.position.y + area.size.y) * escala
++	no.position = Vector2(retrato.size.x * 0.5 - centro_x, retrato.size.y * BASE - base_y)
+--- a/scripts/duelos.gd	2026-10-17 17:49:24.000000000 -0400
++++ b/scripts/duelos.gd	2026-10-17 18:01:34.801703032 -0400
+@@ -65,15 +65,10 @@
+ var _pontuacao: int = 0
+ var _registrada := false
+ 
+-# --- Criatura do PvE (sprite no retrato do inimigo) ---
+-## Quanto do retrato a criatura pode ocupar e onde ficam seus pés (fração da altura).
+-const MONSTRO_ALTURA_MAX := 0.78
+-const MONSTRO_LARGURA_MAX := 0.7
+-const MONSTRO_BASE := 0.92
+-const ESCALA_ANIM := {&"idle": 1.0, &"dano": 2.0, &"ataque": 2.0, &"morte": 1.5}
++# --- Lutadores no retrato (criatura do PvE e personagem do jogador) ---
+ var _monstro: Monster = null
+-var _spr_monstro: AnimatedSprite2D = null
+-var _monstro_morto := false
++var _vis_monstro: CombatSprite = null
++var _vis_jogador: CombatSprite = null
+ var _hp_inimigo_antes := -1
+ var _hp_time_antes := -1
+ 
+@@ -136,6 +131,7 @@
+ 		_preparar_rede()
+ 	if not (_em_rede and DueloRede.modo_combate == "pvp"):
+ 		_montar_monstro()
++	_montar_jogador()
+ 
+ 	Combat.start_combat(player_types, hp_time, enemy_types, hp_inimigo, tics_por_turno)
+ 	if _em_rede:
+@@ -308,10 +304,10 @@
+ func _on_units_changed(player_units: Array, enemy_units: Array) -> void:
+ 	player_units_row.set_units(player_units)
+ 	enemy_units_row.set_units(enemy_units)
+-	_animar_monstro(player_units, enemy_units)
++	_animar_lutadores(player_units, enemy_units)
+ 
+ 
+-# ---------------------------------------------------------- criatura (PvE)
++# ------------------------------------------------- lutadores (criatura e jogador)
+ 
+ ## Escolhe a criatura pelo nível (no PvE em equipe, pela rodada, para todos da
+ ## equipe verem a mesma) e coloca o sprite no retrato do inimigo.
+@@ -325,67 +321,48 @@
+ 	_monstro = (escolhida["cena"] as PackedScene).instantiate() as Monster
+ 	var retrato := $HUD/EnemyPanel/Portrait as Control
+ 	retrato.add_child(_monstro)
+-	var encaixar := func(): _encaixar_monstro(retrato)
++	_vis_monstro = CombatSprite.new(_monstro, _monstro.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D)
++	var encaixar := func(): _vis_monstro.encaixar(retrato, _monstro.escala_combate)
+ 	retrato.resized.connect(encaixar)
+ 	encaixar.call()
+-	_spr_monstro = _monstro.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+-	if _spr_monstro != null and _spr_monstro.sprite_frames != null:
+-		var frames := _spr_monstro.sprite_frames
+-		for anim in [&"ataque", &"dano", &"morte"]:
+-			if frames.has_animation(anim):
+-				frames.set_animation_loop(anim, false)  # volta ao idle (ou fica na última pose)
+-		_spr_monstro.animation_finished.connect(_on_anim_monstro_fim)
+-		_tocar_monstro(&"idle")
+ 	($HUD/EnemyPanel/NameLabel as Label).text = _monstro.nome_exibicao.capitalize()
+ 
+ 
+-## Ajusta tamanho e posição da criatura ao retrato: mede o desenho (sem a
+-## margem transparente), escala para caber (em passos inteiros quando ≥ 2, para
+-## manter os pixels nítidos), centraliza na horizontal e apoia os pés na base.
+-func _encaixar_monstro(retrato: Control) -> void:
+-	if _monstro == null:
+-		return
+-	var area := _monstro.area_visivel()
+-	var escala := _monstro.escala_combate
+-	if area.size.x <= 0.0 or area.size.y <= 0.0:
+-		if escala <= 0.0:
+-			escala = 1.5
+-		_monstro.scale = Vector2.ONE * escala
+-		_monstro.position = retrato.size * Vector2(0.5, 0.5)
+-		return
+-	if escala <= 0.0:
+-		escala = minf(retrato.size.y * MONSTRO_ALTURA_MAX / area.size.y, retrato.size.x * MONSTRO_LARGURA_MAX / area.size.x)
+-		escala = clampf(escala, 0.5, 4.0)
+-		if escala >= 2.0:
+-			escala = floorf(escala)
+-	_monstro.scale = Vector2.ONE * escala
+-	var centro_x := (area.position.x + area.size.x * 0.5) * escala
+-	var base_y := (area.position.y + area.size.y) * escala
+-	_monstro.position = Vector2(retrato.size.x * 0.5 - centro_x, retrato.size.y * MONSTRO_BASE - base_y)
+-
+-
+-func _tocar_monstro(anim: StringName) -> void:
+-	if _spr_monstro == null or _spr_monstro.sprite_frames == null or _monstro_morto:
+-		return
+-	if not _spr_monstro.sprite_frames.has_animation(anim):
+-		return
+-	if anim == &"morte":
+-		_monstro_morto = true
+-	_spr_monstro.speed_scale = ESCALA_ANIM.get(anim, 1.0)
+-	_spr_monstro.play(anim)
+-
+-
+-func _on_anim_monstro_fim() -> void:
+-	if not _monstro_morto:
+-		_tocar_monstro(&"idle")
+-
+-
+-## Reage às mudanças de HP: o monstro leva dano, ataca quando o time perde vida
+-## e morre quando a vida acaba. Vale para todos os jogadores da equipe, já que
+-## todos recebem as mesmas atualizações de HP.
+-func _animar_monstro(player_units: Array, enemy_units: Array) -> void:
+-	if _spr_monstro == null:
+-		return
++## Coloca o personagem do jogador (mesmas animações do personagem do mapa) no
++## retrato do time. Usa só os quadros do personagem, não a cena de movimento.
++func _montar_jogador() -> void:
++	var cena := load("res://entities/teste.tscn") as PackedScene
++	if cena == null:
++		return
++	var modelo := cena.instantiate()
++	var origem := modelo.find_children("*", "AnimatedSprite2D", true, false)
++	var frames: SpriteFrames = null
++	if not origem.is_empty():
++		frames = (origem[0] as AnimatedSprite2D).sprite_frames
++	modelo.free()
++	if frames == null:
++		return
++	var spr := AnimatedSprite2D.new()
++	spr.sprite_frames = frames.duplicate()  # cópia: o combate muda o "loop" das animações
++	var retrato := $HUD/PlayerPanel/Portrait as Control
++	retrato.add_child(spr)
++	_vis_jogador = CombatSprite.new(spr, spr)
++	var encaixar := func(): _vis_jogador.encaixar(retrato)
++	retrato.resized.connect(encaixar)
++	encaixar.call()
++	Combat.spell_resolving.connect(_on_feitico_resolvido)
++
++
++## O personagem faz a animação de ataque quando uma magia dele é resolvida.
++func _on_feitico_resolvido(feitico: SpellCast) -> void:
++	if _vis_jogador != null and feitico.caster == "player":
++		_vis_jogador.tocar(&"ataque")
++
++
++## Reage às mudanças de HP: quem perde vida leva dano (ou morre, se zerar) e o
++## outro lado ataca. Vale para todos os jogadores da equipe, já que todos
++## recebem as mesmas atualizações de HP.
++func _animar_lutadores(player_units: Array, enemy_units: Array) -> void:
+ 	var hp_inimigo := 0
+ 	for u in enemy_units:
+ 		hp_inimigo += u.current_hp
+@@ -393,12 +370,22 @@
+ 	for u in player_units:
+ 		hp_time += u.current_hp
+ 	if _hp_inimigo_antes >= 0:
+-		if hp_inimigo <= 0 and _hp_inimigo_antes > 0:
+-			_tocar_monstro(&"morte")
+-		elif hp_inimigo < _hp_inimigo_antes:
+-			_tocar_monstro(&"dano")
+-		elif hp_time < _hp_time_antes:
+-			_tocar_monstro(&"ataque")
++		var inimigo_perdeu := hp_inimigo < _hp_inimigo_antes
++		var time_perdeu := hp_time < _hp_time_antes
++		if _vis_monstro != null:
++			if hp_inimigo <= 0 and _hp_inimigo_antes > 0:
++				_vis_monstro.tocar(&"morte")
++			elif inimigo_perdeu:
++				_vis_monstro.tocar(&"dano")
++			elif time_perdeu:
++				_vis_monstro.tocar(&"ataque")
++		if _vis_jogador != null:
++			if hp_time <= 0 and _hp_time_antes > 0:
++				_vis_jogador.tocar(&"morte")
++			elif time_perdeu:
++				_vis_jogador.tocar(&"dano")
++			elif inimigo_perdeu and not _vis_jogador.tocando(&"ataque"):
++				_vis_jogador.tocar(&"ataque")
+ 	_hp_inimigo_antes = hp_inimigo
+ 	_hp_time_antes = hp_time
+ 

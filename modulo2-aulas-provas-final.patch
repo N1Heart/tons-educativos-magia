@@ -1,0 +1,2091 @@
+diff --git a/data/conteudo/elemento_agua.json b/data/conteudo/elemento_agua.json
+new file mode 100644
+index 0000000..febb279
+--- /dev/null
++++ b/data/conteudo/elemento_agua.json
+@@ -0,0 +1,107 @@
++{
++  "versao": 1,
++  "tipo": "elemento",
++  "alvo": "Agua",
++  "nome_menu": "Azul (Água)",
++  "aula": {
++    "id": "aula_elemento_agua",
++    "tipo": "elemento",
++    "alvo": "Agua",
++    "titulo": "Azul — Água",
++    "falas": [
++      "Hoje o assunto é o Azul, a cor da Água! É a cor do céu limpo e do oceano: transmite calma, profundidade e confiança. No Círculo Mágico, é o elemento da adaptação, da fluidez e da serenidade.",
++      "A ciência da cor: o azul é uma das três primárias das tintas. Misturado ao amarelo forma o verde; misturado ao vermelho forma o roxo. A Água é um elemento primordial, assim como sua cor é primária.",
++      "O azul é a cor fria mais típica, junto com o verde e o roxo. Cores frias passam sensação de calma, frescor e distância. Na luz, o azul tem comprimento de onda curto (cerca de 450 a 495 nm), e ondas curtas se espalham mais quando batem nas partículas do ar. A cor oposta ao azul é o laranja.",
++      "Por que o céu é azul? A luz do Sol contém todas as cores. Ao atravessar a atmosfera, a parte azul é espalhada em todas as direções pelas moléculas do ar muito mais que a vermelha, e o céu inteiro parece azul. Não tem nada a ver com reflexo do mar!",
++      "Por que o mar é azul? A água absorve um pouco da luz vermelha. Em grandes volumes, sobra principalmente o azul. Um copo d’água parece transparente porque a camada é fina demais para notar.",
++      "Grimório, ficha do elemento Água. Essência: calma, adaptação e fluidez. Feitiços de exemplo: Onda Serena (acalma pessoas e animais), Escudo de Névoa (esconde o mago numa nuvem) e Correnteza (move objetos com jatos de água).",
++      "Combinações: Água + Eletricidade = Cura (azul + amarelo = verde). Água + Fogo = Tempo (azul + vermelho = roxo). O oposto da Água é a Terra (laranja): a água desgasta a rocha; a terra represa e absorve a água.",
++      "Você sabia? O pigmento azul ultramarino era feito moendo a pedra semipreciosa lápis-lazúli e, na época dos grandes pintores europeus, chegou a valer mais que o ouro.",
++      "Cerca de 71% da superfície da Terra é coberta de água, por isso, vista do espaço, ela é azul. E o azul é raro na natureza: quase nenhum animal ou planta produz pigmento azul de verdade. As asas azuis da borboleta-morfo, por exemplo, brilham por causa de estruturas microscópicas que refletem a luz."
++    ]
++  },
++  "prova": {
++    "id": "prova_elemento_agua",
++    "tipo": "elemento",
++    "alvo": "Agua",
++    "notaDeCorte": 0.7,
++    "perguntas": [
++      {
++        "tipo": "vf",
++        "pergunta": "O azul é uma cor primária.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "É uma das três primárias, com o vermelho e o amarelo."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "O céu é azul porque reflete a cor do mar.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "É porque a luz azul do Sol é espalhada pelas moléculas do ar."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "A água absorve parte da luz vermelha; por isso grandes volumes de água parecem azulados.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "Em grandes volumes, sobra principalmente a luz azul."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "A cor complementar do azul é o verde.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "É o laranja."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Qual é a cor complementar (oposta) do azul?",
++        "alternativas": [
++          "Vermelho",
++          "Roxo",
++          "Laranja",
++          "Verde"
++        ],
++        "respostaCorreta": "Laranja",
++        "explicacao": "Azul e laranja ficam em lados opostos do círculo."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Misturando tinta azul com tinta amarela, obtemos:",
++        "alternativas": [
++          "Verde",
++          "Roxo",
++          "Laranja",
++          "Marrom"
++        ],
++        "respostaCorreta": "Verde",
++        "explicacao": "Azul + amarelo = verde (e, na magia, Água + Eletricidade = Cura)."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "No Círculo Mágico, qual elemento é o oposto da Água?",
++        "alternativas": [
++          "Fogo",
++          "Tempo",
++          "Cura",
++          "Terra"
++        ],
++        "respostaCorreta": "Terra",
++        "explicacao": "A Terra, cuja cor (laranja) é a complementar do azul."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "O antigo pigmento azul ultramarino era feito a partir de:",
++        "alternativas": [
++          "Flores azuis",
++          "Pedra lápis-lazúli moída",
++          "Água do mar",
++          "Penas de aves"
++        ],
++        "respostaCorreta": "Pedra lápis-lazúli moída",
++        "explicacao": "Moía-se a pedra semipreciosa lápis-lazúli."
++      }
++    ]
++  }
++}
+diff --git a/data/conteudo/elemento_cura.json b/data/conteudo/elemento_cura.json
+new file mode 100644
+index 0000000..b83b746
+--- /dev/null
++++ b/data/conteudo/elemento_cura.json
+@@ -0,0 +1,107 @@
++{
++  "versao": 1,
++  "tipo": "elemento",
++  "alvo": "Cura",
++  "nome_menu": "Verde (Cura)",
++  "aula": {
++    "id": "aula_elemento_cura",
++    "tipo": "elemento",
++    "alvo": "Cura",
++    "titulo": "Verde — Cura",
++    "falas": [
++      "Hoje vamos estudar o Verde, a cor da Cura! É a cor das folhas, das florestas e da vida: transmite equilíbrio, saúde e esperança. No Círculo Mágico, é o elemento da restauração e do crescimento.",
++      "A ciência da cor: verde = azul + amarelo, uma cor secundária. Mais amarelo dá um verde-limão; mais azul, um verde-água. Está entre as cores frias, junto com o azul e o roxo, e passa sensação de tranquilidade.",
++      "Na luz, o verde ocupa a faixa de cerca de 495 a 570 nm, no meio do espectro. O olho humano é mais sensível ao verde do que a qualquer outra cor: conseguimos diferenciar muitos tons dele. A cor oposta ao verde é o vermelho.",
++      "Por que o verde combina com a Cura? As plantas são verdes por causa da clorofila, a substância que captura a luz do Sol para produzir alimento. Ela absorve o vermelho e o azul e reflete o verde, por isso vemos as folhas dessa cor.",
++      "Muitos remédios vêm das plantas, e em vários países a cruz verde é o símbolo das farmácias. Nos hospitais, roupas cirúrgicas costumam ser verdes ou azuis: olhar para essas cores descansa a visão dos médicos depois de muito tempo olhando o vermelho do sangue.",
++      "Grimório, ficha do elemento Cura. A Cura é um elemento combinado: nasce da Água + Eletricidade, como o verde nasce do azul + amarelo. A água sustenta a vida, e a energia elétrica a reanima: no mundo real, o desfibrilador usa um choque elétrico para fazer o coração voltar a bater no ritmo certo.",
++      "Essência: restauração, crescimento e equilíbrio. Feitiços de exemplo: Toque Restaurador (fecha ferimentos), Semente da Vida (faz plantas crescerem) e Brisa Verde (afasta o cansaço). O oposto é o Fogo (vermelho): o Fogo consome; a Cura reconstrói.",
++      "Você sabia? Aparelhos de visão noturna mostram imagens em verde porque nossos olhos distinguem mais detalhes nessa cor. E nos semáforos o verde significa “siga”, o oposto exato do vermelho, que significa “pare”.",
++      "As folhas verdes da babosa (aloe vera) têm um gel usado há séculos para aliviar pequenas queimaduras do sol."
++    ]
++  },
++  "prova": {
++    "id": "prova_elemento_cura",
++    "tipo": "elemento",
++    "alvo": "Cura",
++    "notaDeCorte": 0.7,
++    "perguntas": [
++      {
++        "tipo": "vf",
++        "pergunta": "O verde é obtido misturando azul e amarelo.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "Verde = azul + amarelo."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "As plantas são verdes porque absorvem a luz verde.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "Elas refletem o verde e absorvem principalmente o vermelho e o azul."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "O olho humano é especialmente sensível à cor verde.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "Distinguimos mais tons de verde do que de qualquer outra cor."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "O verde é uma cor primária.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "É secundária."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Qual é a cor complementar (oposta) do verde?",
++        "alternativas": [
++          "Azul",
++          "Amarelo",
++          "Vermelho",
++          "Laranja"
++        ],
++        "respostaCorreta": "Vermelho",
++        "explicacao": "Verde e vermelho ficam em lados opostos do círculo."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Qual substância dá a cor verde às plantas?",
++        "alternativas": [
++          "Clorofila",
++          "Ferro",
++          "Água",
++          "Melanina"
++        ],
++        "respostaCorreta": "Clorofila",
++        "explicacao": "A clorofila reflete a luz verde."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Por que roupas cirúrgicas costumam ser verdes ou azuis?",
++        "alternativas": [
++          "Porque são mais baratas",
++          "Porque a sujeira não aparece",
++          "Porque descansam a visão de quem olha muito tempo para o vermelho do sangue",
++          "Por causa de uma lei"
++        ],
++        "respostaCorreta": "Porque descansam a visão de quem olha muito tempo para o vermelho do sangue",
++        "explicacao": "Verde e azul aliviam a visão cansada pelo vermelho."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "No Círculo Mágico, qual elemento é o oposto da Cura?",
++        "alternativas": [
++          "Água",
++          "Tempo",
++          "Terra",
++          "Fogo"
++        ],
++        "respostaCorreta": "Fogo",
++        "explicacao": "O Fogo, cujo vermelho é a complementar do verde."
++      }
++    ]
++  }
++}
+diff --git a/data/conteudo/elemento_eletricidade.json b/data/conteudo/elemento_eletricidade.json
+new file mode 100644
+index 0000000..6f14a42
+--- /dev/null
++++ b/data/conteudo/elemento_eletricidade.json
+@@ -0,0 +1,107 @@
++{
++  "versao": 1,
++  "tipo": "elemento",
++  "alvo": "Eletricidade",
++  "nome_menu": "Amarelo (Eletricidade)",
++  "aula": {
++    "id": "aula_elemento_eletricidade",
++    "tipo": "elemento",
++    "alvo": "Eletricidade",
++    "titulo": "Amarelo — Eletricidade",
++    "falas": [
++      "Hoje estudamos o Amarelo, a cor da Eletricidade! É a cor mais luminosa do círculo cromático: lembra o sol, a alegria e também o alerta. No Círculo Mágico, é o elemento da velocidade, da energia e do instante.",
++      "A ciência da cor: o amarelo é a terceira primária das tintas. Com o vermelho forma o laranja; com o azul forma o verde. A Eletricidade é um elemento primordial, assim como sua cor é primária.",
++      "É uma cor quente e a mais “clara” de todas: nossos olhos a percebem com muita facilidade, até pela visão periférica (o canto do olho). Na luz, ocupa uma faixa estreita do espectro, por volta de 570 a 590 nm, entre o verde e o laranja. A cor oposta ao amarelo é o roxo (violeta).",
++      "Por que o amarelo combina com a Eletricidade? As placas de perigo elétrico geralmente são triângulos amarelos com um raio preto. O amarelo com preto é uma das combinações mais fáceis de enxergar, por isso é usado para avisar “cuidado!”.",
++      "Os relâmpagos aparecem brancos, amarelados ou azulados, mas, nos desenhos e símbolos, o raio quase sempre é amarelo: a cor da luz e da energia.",
++      "Grimório, ficha do elemento Eletricidade. Essência: velocidade, energia e o instante. Feitiços de exemplo: Relâmpago Veloz (lança um raio), Passo do Trovão (move o mago num piscar de olhos) e Pulso Elétrico (acende luzes e máquinas).",
++      "Combinações: Eletricidade + Fogo = Terra (amarelo + vermelho = laranja). Eletricidade + Água = Cura (amarelo + azul = verde). O oposto é o Tempo (roxo): a Eletricidade age num instante; o Tempo controla a duração das coisas.",
++      "Você sabia? Um raio pode chegar a cerca de 30.000 °C, aproximadamente 5 vezes a temperatura da superfície do Sol! E o Brasil está entre os países com mais incidência de raios no mundo, com dezenas de milhões por ano.",
++      "O Sol não é amarelo: a luz do Sol é praticamente branca. Ele parece amarelado porque nossa atmosfera espalha um pouco do azul."
++    ]
++  },
++  "prova": {
++    "id": "prova_elemento_eletricidade",
++    "tipo": "elemento",
++    "alvo": "Eletricidade",
++    "notaDeCorte": 0.7,
++    "perguntas": [
++      {
++        "tipo": "vf",
++        "pergunta": "O amarelo é uma cor primária.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "Amarelo, vermelho e azul são as primárias das tintas."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "Placas de perigo elétrico costumam usar amarelo por ser uma cor muito fácil de enxergar.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "Amarelo com preto é uma das combinações mais visíveis."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "Um raio é mais frio do que a superfície do Sol.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "Pode chegar a ~30.000 °C, cerca de 5 vezes mais quente."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "O amarelo é uma cor fria.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "É uma cor quente."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Qual é a cor complementar (oposta) do amarelo?",
++        "alternativas": [
++          "Roxo",
++          "Verde",
++          "Azul",
++          "Laranja"
++        ],
++        "respostaCorreta": "Roxo",
++        "explicacao": "Amarelo e roxo ficam em lados opostos do círculo."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Misturando tinta amarela com tinta vermelha, obtemos:",
++        "alternativas": [
++          "Verde",
++          "Marrom",
++          "Roxo",
++          "Laranja"
++        ],
++        "respostaCorreta": "Laranja",
++        "explicacao": "Amarelo + vermelho = laranja (na magia, Eletricidade + Fogo = Terra)."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Qual é a temperatura aproximada que um raio pode atingir?",
++        "alternativas": [
++          "100 °C",
++          "1.000 °C",
++          "30.000 °C",
++          "5 °C"
++        ],
++        "respostaCorreta": "30.000 °C",
++        "explicacao": "Cerca de 30.000 °C."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "No Círculo Mágico, qual elemento é o oposto da Eletricidade?",
++        "alternativas": [
++          "Água",
++          "Tempo",
++          "Fogo",
++          "Terra"
++        ],
++        "respostaCorreta": "Tempo",
++        "explicacao": "O Tempo, de cor roxa, complementar do amarelo."
++      }
++    ]
++  }
++}
+diff --git a/data/conteudo/elemento_fogo.json b/data/conteudo/elemento_fogo.json
+new file mode 100644
+index 0000000..8921129
+--- /dev/null
++++ b/data/conteudo/elemento_fogo.json
+@@ -0,0 +1,109 @@
++{
++  "versao": 1,
++  "tipo": "elemento",
++  "alvo": "Fogo",
++  "nome_menu": "Vermelho (Fogo)",
++  "aula": {
++    "id": "aula_elemento_fogo",
++    "tipo": "elemento",
++    "alvo": "Fogo",
++    "titulo": "Vermelho — Fogo",
++    "falas": [
++      "Hoje vamos estudar o Vermelho, a cor do Fogo! É uma das cores mais intensas que existem: chama a atenção imediatamente, transmite energia e urgência. No nosso Círculo Mágico, é o elemento da força, da coragem e da transformação.",
++      "Lembre como funciona o Círculo Mágico: cada cor está ligada a um elemento. As cores primárias são os elementos primordiais (Fogo, Água e Eletricidade); as secundárias são os elementos combinados (Terra, Cura e Tempo); e as complementares indicam os elementos opostos. A magia é fantasia, mas para dominá-la é preciso saber a ciência de verdade!",
++      "A ciência da cor: nas tintas, o vermelho é uma das três cores primárias (com o azul e o amarelo). Ele não pode ser obtido misturando outras cores, mas ajuda a formar outras: com o amarelo vira laranja e com o azul vira roxo.",
++      "O vermelho é uma cor quente, assim como o laranja e o amarelo. Cores quentes lembram o sol e o fogo e parecem “saltar” em direção a quem olha.",
++      "Na luz, entre as cores do arco-íris, o vermelho tem o maior comprimento de onda (cerca de 620 a 750 nanômetros). Logo depois dele vem o infravermelho, que não enxergamos, mas sentimos como calor. A cor oposta ao vermelho é o verde: lado a lado, cores complementares criam o maior contraste possível.",
++      "Por que o vermelho combina com o Fogo? Brasas e chamas mais “fracas” brilham em tons de vermelho. Curiosamente, quanto mais quente o fogo, mais ele muda de cor: vai para o laranja, o amarelo, o branco e até o azul. Por isso a parte azul da chama do fogão é mais quente que a ponta vermelha de uma fogueira.",
++      "O vermelho também é a cor do alerta: extintores, hidrantes e caminhões de bombeiro são vermelhos para serem encontrados rapidamente, justamente quando há fogo.",
++      "Grimório, ficha do elemento Fogo. Essência: força, coragem, paixão e transformação. É um elemento primordial, assim como sua cor é primária. Feitiços de exemplo: Faísca Inicial (acende uma chama na palma da mão), Muralha Ardente (cria uma barreira de calor) e Chama Guardiã (aquece e protege aliados).",
++      "Combinações: Fogo + Eletricidade = Terra (vermelho + amarelo = laranja). Fogo + Água = Tempo (vermelho + azul = roxo). O oposto do Fogo é a Cura (verde): o Fogo consome e transforma; a Cura restaura e reconstrói.",
++      "Você sabia? Marte, o planeta vermelho, tem essa cor por causa do óxido de ferro, a mesma “ferrugem” que aparece em pregos velhos, espalhado pelo solo. E touros não distinguem bem o vermelho: o que os provoca é o movimento da capa, não a cor.",
++      "Por que “pare” é vermelho? Por ter o maior comprimento de onda, a luz vermelha se espalha menos no ar e atravessa melhor a neblina, ótima para sinais de parada e luzes de freio."
++    ]
++  },
++  "prova": {
++    "id": "prova_elemento_fogo",
++    "tipo": "elemento",
++    "alvo": "Fogo",
++    "notaDeCorte": 0.7,
++    "perguntas": [
++      {
++        "tipo": "vf",
++        "pergunta": "O vermelho é uma cor primária: não pode ser obtido misturando outras cores.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "Vermelho, azul e amarelo são as primárias das tintas."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "O vermelho é classificado como uma cor fria.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "É uma cor quente, como o laranja e o amarelo."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "Em uma chama, a parte azul costuma ser mais quente que a parte vermelha.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "Quanto mais quente o fogo, mais sua cor caminha para o branco e o azul."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "No Círculo Mágico, o elemento oposto ao Fogo é a Água.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "O oposto é a Cura, pois o verde é a complementar do vermelho."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Qual é a cor complementar (oposta) do vermelho?",
++        "alternativas": [
++          "Azul",
++          "Verde",
++          "Amarelo",
++          "Roxo"
++        ],
++        "respostaCorreta": "Verde",
++        "explicacao": "Vermelho e verde estão em lados opostos do círculo cromático."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Entre as cores do arco-íris, o vermelho é a que possui:",
++        "alternativas": [
++          "O menor comprimento de onda",
++          "Nenhum comprimento de onda",
++          "O maior comprimento de onda",
++          "A luz ultravioleta"
++        ],
++        "respostaCorreta": "O maior comprimento de onda",
++        "explicacao": "O vermelho vai de ~620 a 750 nm, o maior do espectro visível."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Por que o planeta Marte parece vermelho?",
++        "alternativas": [
++          "Por causa do óxido de ferro (ferrugem) no solo",
++          "Porque é muito quente",
++          "Porque reflete o Sol nascente",
++          "Porque tem lava na superfície"
++        ],
++        "respostaCorreta": "Por causa do óxido de ferro (ferrugem) no solo",
++        "explicacao": "O óxido de ferro espalhado pelo solo dá a cor avermelhada."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "No Círculo Mágico, Fogo + Água resultam em qual elemento?",
++        "alternativas": [
++          "Terra",
++          "Cura",
++          "Eletricidade",
++          "Tempo"
++        ],
++        "respostaCorreta": "Tempo",
++        "explicacao": "Vermelho + azul = roxo, a cor do Tempo."
++      }
++    ]
++  }
++}
+diff --git a/data/conteudo/elemento_tempo.json b/data/conteudo/elemento_tempo.json
+new file mode 100644
+index 0000000..6f7852b
+--- /dev/null
++++ b/data/conteudo/elemento_tempo.json
+@@ -0,0 +1,107 @@
++{
++  "versao": 1,
++  "tipo": "elemento",
++  "alvo": "Tempo",
++  "nome_menu": "Roxo (Tempo)",
++  "aula": {
++    "id": "aula_elemento_tempo",
++    "tipo": "elemento",
++    "alvo": "Tempo",
++    "titulo": "Roxo — Tempo",
++    "falas": [
++      "Agora o Roxo, a cor do Tempo! É uma cor misteriosa, ligada à realeza, à sabedoria e à imaginação. No Círculo Mágico, é o elemento mais raro: controla o passado, o presente e o futuro.",
++      "A ciência da cor: roxo = vermelho + azul, uma cor secundária. Mais azul dá o violeta; mais vermelho, o púrpura. Costuma ser classificada como cor fria, embora os tons mais avermelhados pareçam mais quentes.",
++      "Na luz, o violeta tem o menor comprimento de onda que enxergamos (cerca de 380 a 450 nm). Logo depois dele vem o ultravioleta, invisível para nós: é ele que causa queimaduras de sol. A cor oposta ao roxo é o amarelo.",
++      "Por que o roxo combina com o Tempo? O céu fica roxo no crepúsculo, os minutos de passagem entre o dia e a noite. É a cor que marca a transição do tempo.",
++      "Na natureza, árvores com flores roxas funcionam como “relógios”: a quaresmeira floresce na época da Quaresma (e daí vem seu nome), e o ipê-roxo enche as cidades de flores no inverno.",
++      "Grimório, ficha do elemento Tempo. O Tempo é um elemento combinado: nasce do Fogo + Água, como o roxo nasce do vermelho + azul, duas forças opostas que, juntas, lembram o ciclo do dia e da noite. Essência: memória, paciência e sabedoria.",
++      "Feitiços de exemplo: Pausa do Instante (congela tudo por um segundo), Eco do Passado (mostra o que aconteceu num lugar) e Ampulheta Lenta (deixa um inimigo mais lento). O oposto do Tempo é a Eletricidade (amarelo): a Eletricidade é o instante; o Tempo é a duração.",
++      "Você sabia? Na Antiguidade, a púrpura de Tiro era feita de milhares de caramujos marinhos para produzir só um pouco de corante. Era tão cara que ficou reservada a reis e imperadores.",
++      "Algumas abelhas e pássaros enxergam o ultravioleta, que fica além do violeta: veem nas flores desenhos que para nós são invisíveis. E o violeta é sempre a última faixa do arco-íris, do lado de dentro do arco."
++    ]
++  },
++  "prova": {
++    "id": "prova_elemento_tempo",
++    "tipo": "elemento",
++    "alvo": "Tempo",
++    "notaDeCorte": 0.7,
++    "perguntas": [
++      {
++        "tipo": "vf",
++        "pergunta": "O roxo é obtido misturando vermelho e azul.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "Roxo = vermelho + azul."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "O roxo é uma cor primária.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "É secundária."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "A púrpura de Tiro era um corante barato e comum na Antiguidade.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "Era caríssima, feita de milhares de caramujos, e reservada à realeza."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "Depois do violeta existe a luz ultravioleta, que os olhos humanos não enxergam.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "O ultravioleta tem comprimento de onda ainda menor que o violeta."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Qual é a cor complementar (oposta) do roxo?",
++        "alternativas": [
++          "Verde",
++          "Laranja",
++          "Azul",
++          "Amarelo"
++        ],
++        "respostaCorreta": "Amarelo",
++        "explicacao": "Roxo e amarelo ficam em lados opostos do círculo."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "A antiga púrpura de Tiro era produzida a partir de:",
++        "alternativas": [
++          "Uvas",
++          "Caramujos marinhos",
++          "Flores de ipê",
++          "Pedras preciosas"
++        ],
++        "respostaCorreta": "Caramujos marinhos",
++        "explicacao": "Usavam-se milhares de caramujos marinhos."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "A quaresmeira recebe esse nome porque:",
++        "alternativas": [
++          "Floresce na época da Quaresma",
++          "Tem quarenta pétalas",
++          "Só cresce em quaresmas",
++          "Foi plantada por Quaresma"
++        ],
++        "respostaCorreta": "Floresce na época da Quaresma",
++        "explicacao": "Suas flores roxas aparecem nessa época do ano."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "No Círculo Mágico, o Tempo nasce da combinação de:",
++        "alternativas": [
++          "Fogo + Eletricidade",
++          "Água + Eletricidade",
++          "Fogo + Água",
++          "Terra + Cura"
++        ],
++        "respostaCorreta": "Fogo + Água",
++        "explicacao": "Assim como vermelho + azul = roxo."
++      }
++    ]
++  }
++}
+diff --git a/data/conteudo/elemento_terra.json b/data/conteudo/elemento_terra.json
+new file mode 100644
+index 0000000..ceeaa4a
+--- /dev/null
++++ b/data/conteudo/elemento_terra.json
+@@ -0,0 +1,107 @@
++{
++  "versao": 1,
++  "tipo": "elemento",
++  "alvo": "Terra",
++  "nome_menu": "Laranja (Terra)",
++  "aula": {
++    "id": "aula_elemento_terra",
++    "tipo": "elemento",
++    "alvo": "Terra",
++    "titulo": "Laranja — Terra",
++    "falas": [
++      "Vamos ao Laranja, a cor da Terra! É a primeira das cores secundárias: nasce da mistura de duas primárias. É uma cor quente, acolhedora e cheia de energia. No Círculo Mágico, é o elemento da firmeza, da resistência e da proteção.",
++      "A ciência da cor: laranja = vermelho + amarelo. Mais vermelho deixa o tom mais escuro (como o tijolo); mais amarelo deixa mais claro (como a manga). É uma cor quente e fica entre o vermelho e o amarelo, as outras duas cores quentes.",
++      "Na luz, o laranja ocupa a faixa de cerca de 590 a 620 nm, entre o amarelo e o vermelho. A cor oposta ao laranja é o azul.",
++      "Por que o laranja combina com a Terra? Grande parte dos solos brasileiros tem cor alaranjada ou avermelhada, por causa da presença de óxidos de ferro, os mesmos que deixam Marte vermelho. Tijolos, telhas e vasos de barro ficam laranja depois de cozidos no forno porque o ferro presente na argila muda de cor com o calor.",
++      "Grimório, ficha do elemento Terra. A Terra é um elemento combinado: nasce do Fogo + Eletricidade, assim como o laranja nasce do vermelho + amarelo. Na natureza há um bom exemplo disso: o calor dos vulcões forma rochas, e o raio, ao cair na areia, derrete e cria uma rocha de vidro chamada fulgurito.",
++      "Essência: firmeza, resistência e proteção. Feitiços de exemplo: Pele de Pedra (endurece a pele), Raízes Firmes (impede que o mago seja derrubado) e Tremor (faz o chão tremer). O oposto da Terra é a Água (azul, a complementar do laranja).",
++      "Você sabia? A palavra laranja vem da fruta. Antes disso, muitas línguas chamavam esse tom de “amarelo-avermelhado”.",
++      "O solo fértil de partes do Paraná, de São Paulo e do Mato Grosso do Sul é chamado de “terra roxa”, mas é avermelhado! O nome vem dos imigrantes italianos, que o chamavam de terra rossa: “terra vermelha”.",
++      "E por segurança, coletes, cones e boias são laranja porque essa cor contrasta fortemente com o céu e a água (azuis) e com a vegetação."
++    ]
++  },
++  "prova": {
++    "id": "prova_elemento_terra",
++    "tipo": "elemento",
++    "alvo": "Terra",
++    "notaDeCorte": 0.7,
++    "perguntas": [
++      {
++        "tipo": "vf",
++        "pergunta": "O laranja é uma cor primária.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "É secundária: vermelho + amarelo."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "Misturando vermelho e amarelo obtemos laranja.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "Laranja = vermelho + amarelo."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "A cor alaranjada de muitos solos brasileiros vem da presença de óxidos de ferro.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "Os óxidos de ferro dão o tom avermelhado/alaranjado."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "A cor complementar do laranja é o verde.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "É o azul."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Qual é a cor complementar (oposta) do laranja?",
++        "alternativas": [
++          "Roxo",
++          "Azul",
++          "Vermelho",
++          "Amarelo"
++        ],
++        "respostaCorreta": "Azul",
++        "explicacao": "Laranja e azul ficam em lados opostos do círculo."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "No Círculo Mágico, a Terra nasce da combinação de:",
++        "alternativas": [
++          "Fogo + Eletricidade",
++          "Água + Fogo",
++          "Água + Eletricidade",
++          "Cura + Tempo"
++        ],
++        "respostaCorreta": "Fogo + Eletricidade",
++        "explicacao": "Assim como vermelho + amarelo = laranja."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "A \"terra roxa\" tem esse nome porque:",
++        "alternativas": [
++          "Ela é roxa de verdade",
++          "Nasce em plantações de uva",
++          "Veio do italiano \"rossa\", que significa vermelha",
++          "Fica roxa à noite"
++        ],
++        "respostaCorreta": "Veio do italiano \"rossa\", que significa vermelha",
++        "explicacao": "Os imigrantes italianos a chamavam de terra rossa."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Por que coletes e boias de segurança costumam ser laranja?",
++        "alternativas": [
++          "Porque é a cor mais barata",
++          "Porque contrasta fortemente com o céu, a água e a vegetação",
++          "Porque espanta insetos",
++          "Porque é uma cor fria"
++        ],
++        "respostaCorreta": "Porque contrasta fortemente com o céu, a água e a vegetação",
++        "explicacao": "O laranja se destaca contra fundos azuis e verdes."
++      }
++    ]
++  }
++}
+diff --git a/data/conteudo/forma_circulo.json b/data/conteudo/forma_circulo.json
+new file mode 100644
+index 0000000..b76dea1
+--- /dev/null
++++ b/data/conteudo/forma_circulo.json
+@@ -0,0 +1,109 @@
++{
++  "versao": 1,
++  "tipo": "forma",
++  "alvo": "Circulo",
++  "nome_menu": "Círculo",
++  "aula": {
++    "id": "aula_forma_circulo",
++    "tipo": "forma",
++    "alvo": "Circulo",
++    "titulo": "Círculos",
++    "falas": [
++      "Hoje o assunto é o Círculo! Diferente do triângulo, do quadrado, do pentágono e do hexágono, o círculo não é um polígono: não tem lados retos nem vértices, sua borda é uma única linha curva.",
++      "A circunferência é o conjunto de todos os pontos de um plano que estão à mesma distância de um ponto central.",
++      "Circunferência ou círculo? A circunferência é só a linha da borda, como um bambolê ou um anel. O círculo é a região completa: a borda mais tudo o que está dentro, como uma pizza ou uma moeda. Medimos o comprimento da circunferência e a área do círculo.",
++      "O centro (O) é o ponto do meio, à mesma distância de todos os pontos da borda. O raio (r) liga o centro a um ponto da circunferência. A corda liga dois pontos quaisquer da circunferência.",
++      "O diâmetro (d) é a corda que passa pelo centro. É a maior corda possível e mede o dobro do raio: d = 2 × r. Um círculo de raio 5 cm tem diâmetro 10 cm.",
++      "Agora o famoso π (pi)! Se você dividir o comprimento de qualquer circunferência pelo seu diâmetro, o resultado é sempre o mesmo número: π ≈ 3,14159... Ele é irracional: tem infinitas casas decimais que nunca se repetem em padrão. Por isso 3,14 é apenas uma aproximação: π não é exatamente 3,14.",
++      "O comprimento da circunferência é C = 2 × π × r. Com r = 10 cm e π = 3,14: C = 62,8 cm. A área do círculo é A = π × r². Com r = 3 cm: A = 3,14 × 9 = 28,26 cm².",
++      "Ângulos no círculo: uma volta completa ao redor do centro mede 360°, meia volta mede 180° e um quarto de volta, 90°. Uma pizza cortada em 8 fatias iguais tem setores de 360 ÷ 8 = 45° cada.",
++      "Você sabia? As tampas de bueiro são redondas porque o círculo tem a mesma largura em qualquer direção: a tampa nunca consegue cair dentro do buraco, não importa como seja girada.",
++      "O Dia do Pi é comemorado em 14 de março, pois em inglês a data é escrita 3/14. E Arquimedes, há mais de 2.200 anos, calculou π desenhando polígonos de até 96 lados dentro e fora de um círculo: concluiu que ele fica entre 3,1408 e 3,1429.",
++      "Mais uma: entre todas as figuras com o mesmo perímetro, o círculo é a que tem a maior área. Por isso bolhas de sabão e gotas tendem a ficar redondas."
++    ]
++  },
++  "prova": {
++    "id": "prova_forma_circulo",
++    "tipo": "forma",
++    "alvo": "Circulo",
++    "notaDeCorte": 0.7,
++    "perguntas": [
++      {
++        "tipo": "vf",
++        "pergunta": "O diâmetro de um círculo mede o dobro do raio.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "d = 2 × r."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "Circunferência e círculo são exatamente a mesma coisa.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "A circunferência é só a borda; o círculo é a borda mais a região interior."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "O número π vale exatamente 3,14.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "π é irracional (3,14159...); 3,14 é só uma aproximação."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "A corda que passa pelo centro do círculo é chamada de diâmetro.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "O diâmetro é a maior corda e sempre passa pelo centro."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Se o raio de um círculo mede 5 cm, quanto mede o seu diâmetro?",
++        "alternativas": [
++          "2,5 cm",
++          "5 cm",
++          "10 cm",
++          "25 cm"
++        ],
++        "respostaCorreta": "10 cm",
++        "explicacao": "d = 2 × 5 = 10 cm."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Usando π = 3,14, qual é o comprimento de uma circunferência de raio 10 cm?",
++        "alternativas": [
++          "31,4 cm",
++          "62,8 cm",
++          "314 cm",
++          "20 cm"
++        ],
++        "respostaCorreta": "62,8 cm",
++        "explicacao": "C = 2 × 3,14 × 10 = 62,8 cm."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Usando π = 3,14, qual é a área de um círculo de raio 3 cm?",
++        "alternativas": [
++          "9,42 cm²",
++          "18,84 cm²",
++          "28,26 cm²",
++          "6 cm²"
++        ],
++        "respostaCorreta": "28,26 cm²",
++        "explicacao": "A = 3,14 × 3² = 3,14 × 9 = 28,26 cm²."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Por que as tampas de bueiro costumam ser redondas?",
++        "alternativas": [
++          "Porque são mais baratas de pintar",
++          "Porque o círculo tem a mesma largura em todas as direções e a tampa não cai no buraco",
++          "Porque é uma lei internacional",
++          "Porque o círculo é um polígono de muitos lados"
++        ],
++        "respostaCorreta": "Porque o círculo tem a mesma largura em todas as direções e a tampa não cai no buraco",
++        "explicacao": "A largura constante do círculo impede que a tampa passe pela abertura."
++      }
++    ]
++  }
++}
+diff --git a/data/conteudo/forma_hexagono.json b/data/conteudo/forma_hexagono.json
+new file mode 100644
+index 0000000..48c1045
+--- /dev/null
++++ b/data/conteudo/forma_hexagono.json
+@@ -0,0 +1,107 @@
++{
++  "versao": 1,
++  "tipo": "forma",
++  "alvo": "Hexagono",
++  "nome_menu": "Hexágono",
++  "aula": {
++    "id": "aula_forma_hexagono",
++    "tipo": "forma",
++    "alvo": "Hexagono",
++    "titulo": "Hexágonos",
++    "falas": [
++      "Chegou a vez do Hexágono! É o polígono de 6 lados, 6 vértices e 6 ângulos (hexa = seis, em grego). O hexágono regular, com todos os lados e ângulos iguais, é uma das formas mais eficientes e presentes na natureza.",
++      "Pela regra S = (n − 2) × 180°: (6 − 2) × 180° = 720°. No hexágono regular, cada ângulo mede 720° ÷ 6 = 120°.",
++      "Tem seis triângulos escondidos nele! Ligando o centro de um hexágono regular aos seus 6 vértices, ele fica dividido em 6 triângulos equiláteros iguais. Por isso o lado do hexágono regular tem a mesma medida que o raio da circunferência que passa pelos seus vértices.",
++      "Com um compasso aberto na medida do raio dá para marcar 6 pontos na circunferência e desenhar um hexágono perfeito! Já as diagonais: D = n × (n − 3) ÷ 2 = 6 × 3 ÷ 2 = 9 diagonais.",
++      "O hexágono é o campeão da pavimentação. Só três polígonos regulares conseguem, sozinhos, cobrir uma superfície sem buracos: o triângulo equilátero, o quadrado e o hexágono. No hexágono, 3 ângulos de 120° somam exatamente 360° em cada ponto de encontro. Entre os três, é o que cerca a maior área usando o menor perímetro.",
++      "Perímetro: P = 6 × ℓ. Com lado 5 cm → P = 30 cm. Área: como são 6 triângulos equiláteros, A é aproximadamente 2,6 × ℓ².",
++      "Você sabia? As abelhas constroem alvéolos hexagonais porque essa forma armazena o máximo de mel usando o mínimo de cera. Em 1999, o matemático Thomas Hales provou que o hexágono é mesmo a forma mais econômica para dividir uma superfície em partes iguais.",
++      "No polo norte de Saturno existe uma gigantesca nuvem em forma de hexágono, maior que o diâmetro da Terra, fotografada por sondas espaciais. E na Calçada dos Gigantes, na Irlanda do Norte, há milhares de colunas de rocha vulcânica, muitas hexagonais, criadas pelo resfriamento lento da lava.",
++      "Os flocos de neve têm simetria de 6 pontas, e as porcas e parafusos sextavados são hexagonais para que a chave tenha bastante apoio ao girá-los."
++    ]
++  },
++  "prova": {
++    "id": "prova_forma_hexagono",
++    "tipo": "forma",
++    "alvo": "Hexagono",
++    "notaDeCorte": 0.7,
++    "perguntas": [
++      {
++        "tipo": "vf",
++        "pergunta": "Um hexágono regular pode ser dividido em 6 triângulos equiláteros.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "Ligando o centro aos 6 vértices, surgem 6 triângulos equiláteros."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "A soma dos ângulos internos de um hexágono é 540°.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "É 720°: (6 − 2) × 180°. 540° é a soma do pentágono."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "Hexágonos regulares conseguem cobrir uma superfície sem deixar buracos.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "3 × 120° = 360°."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "Um hexágono possui 6 diagonais.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "Possui 9: 6 × (6 − 3) ÷ 2 = 9."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Quanto mede cada ângulo interno de um hexágono regular?",
++        "alternativas": [
++          "108°",
++          "120°",
++          "135°",
++          "60°"
++        ],
++        "respostaCorreta": "120°",
++        "explicacao": "720° ÷ 6 = 120°."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Qual é o perímetro de um hexágono regular com lados de 5 cm?",
++        "alternativas": [
++          "25 cm",
++          "11 cm",
++          "30 cm",
++          "60 cm"
++        ],
++        "respostaCorreta": "30 cm",
++        "explicacao": "P = 6 × 5 = 30 cm."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Por que as abelhas constroem favos hexagonais?",
++        "alternativas": [
++          "Porque o hexágono armazena mais mel gastando menos cera",
++          "Porque é a única forma que elas enxergam",
++          "Porque o hexágono é um círculo",
++          "Porque gastam mais cera e o favo fica mais pesado"
++        ],
++        "respostaCorreta": "Porque o hexágono armazena mais mel gastando menos cera",
++        "explicacao": "O hexágono cobre o espaço sem buracos e com o menor perímetro."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Em qual planeta foi observada uma tempestade em forma de hexágono?",
++        "alternativas": [
++          "Marte",
++          "Júpiter",
++          "Vênus",
++          "Saturno"
++        ],
++        "respostaCorreta": "Saturno",
++        "explicacao": "Ela fica no polo norte de Saturno."
++      }
++    ]
++  }
++}
+diff --git a/data/conteudo/forma_pentagono.json b/data/conteudo/forma_pentagono.json
+new file mode 100644
+index 0000000..d87b641
+--- /dev/null
++++ b/data/conteudo/forma_pentagono.json
+@@ -0,0 +1,107 @@
++{
++  "versao": 1,
++  "tipo": "forma",
++  "alvo": "Pentagono",
++  "nome_menu": "Pentágono",
++  "aula": {
++    "id": "aula_forma_pentagono",
++    "tipo": "forma",
++    "alvo": "Pentagono",
++    "titulo": "Pentágonos",
++    "falas": [
++      "Hoje é dia de Pentágono! É o polígono de 5 lados, 5 vértices e 5 ângulos. O nome vem do grego: penta = cinco e gonos = ângulo. Quando todos os lados e ângulos são iguais, ele se chama pentágono regular.",
++      "Soma dos ângulos internos: escolhendo um vértice e traçando segmentos até os vértices não vizinhos, o pentágono fica dividido em 3 triângulos. Como cada triângulo soma 180°: 3 × 180° = 540°.",
++      "Isso segue uma regra geral para qualquer polígono de n lados: S = (n − 2) × 180°. Para o pentágono: (5 − 2) × 180° = 540°.",
++      "No pentágono regular, os 540° são divididos igualmente entre os 5 ângulos: 540° ÷ 5 = 108° cada um. O perímetro é 5 × ℓ; com lado 6 cm, por exemplo, P = 30 cm.",
++      "A quantidade de diagonais de um polígono é D = n × (n − 3) ÷ 2. No pentágono: 5 × 2 ÷ 2 = 5 diagonais.",
++      "Ao traçar as 5 diagonais de um pentágono regular, aparece uma estrela de cinco pontas, o pentagrama. No centro dela surge um novo pentágono, menor e de cabeça para baixo! A razão entre a diagonal e o lado é o famoso número de ouro (≈ 1,618).",
++      "Pavimentar é cobrir uma superfície com peças, sem buracos nem sobreposição. Para isso, os ângulos que se encontram em um ponto precisam somar exatamente 360°. Com pentágonos regulares é impossível: 3 × 108° = 324° (sobra um buraco) e 4 × 108° = 432° (passa de 360°). Curiosamente, alguns pentágonos irregulares conseguem: hoje se conhecem 15 tipos!",
++      "Você sabia? A bola de futebol clássica, em preto e branco, é costurada com 12 pentágonos (pretos) e 20 hexágonos (brancos). Na natureza, muitas flores têm 5 pétalas, a estrela-do-mar tem 5 braços, e a carambola e o quiabo, cortados ao meio, mostram formas pentagonais.",
++      "A sede do Departamento de Defesa dos Estados Unidos é um enorme prédio em forma de pentágono, daí o apelido “O Pentágono”. E a proporção 1,618 do pentagrama também aparece em espirais de conchas e girassóis, e foi usada por artistas e arquitetos."
++    ]
++  },
++  "prova": {
++    "id": "prova_forma_pentagono",
++    "tipo": "forma",
++    "alvo": "Pentagono",
++    "notaDeCorte": 0.7,
++    "perguntas": [
++      {
++        "tipo": "vf",
++        "pergunta": "A soma dos ângulos internos de um pentágono é 540°.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "(5 − 2) × 180° = 540°."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "É possível cobrir um piso inteiro apenas com pentágonos regulares iguais, sem deixar buracos.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "Os ângulos de 108° não completam 360° em um ponto."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "Um pentágono possui 5 diagonais.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "D = 5 × (5 − 3) ÷ 2 = 5."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "Cada ângulo interno de um pentágono regular mede 90°.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "Mede 108° (540° ÷ 5). 90° é o ângulo do quadrado."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Quanto mede cada ângulo interno de um pentágono regular?",
++        "alternativas": [
++          "72°",
++          "90°",
++          "108°",
++          "120°"
++        ],
++        "respostaCorreta": "108°",
++        "explicacao": "540° ÷ 5 = 108°."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Qual é o perímetro de um pentágono regular com lados de 6 cm?",
++        "alternativas": [
++          "11 cm",
++          "30 cm",
++          "36 cm",
++          "24 cm"
++        ],
++        "respostaCorreta": "30 cm",
++        "explicacao": "P = 5 × 6 = 30 cm."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Que figura aparece ao traçarmos todas as diagonais de um pentágono regular?",
++        "alternativas": [
++          "Um hexágono",
++          "Um quadrado",
++          "Um círculo",
++          "Uma estrela de cinco pontas (pentagrama)"
++        ],
++        "respostaCorreta": "Uma estrela de cinco pontas (pentagrama)",
++        "explicacao": "As 5 diagonais se cruzam formando o pentagrama."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Quantos pentágonos tem a bola de futebol clássica (preta e branca)?",
++        "alternativas": [
++          "12",
++          "5",
++          "20",
++          "32"
++        ],
++        "respostaCorreta": "12",
++        "explicacao": "São 12 pentágonos e 20 hexágonos, 32 peças no total."
++      }
++    ]
++  }
++}
+diff --git a/data/conteudo/forma_quadrado.json b/data/conteudo/forma_quadrado.json
+new file mode 100644
+index 0000000..179ce30
+--- /dev/null
++++ b/data/conteudo/forma_quadrado.json
+@@ -0,0 +1,107 @@
++{
++  "versao": 1,
++  "tipo": "forma",
++  "alvo": "Quadrado",
++  "nome_menu": "Quadrado",
++  "aula": {
++    "id": "aula_forma_quadrado",
++    "tipo": "forma",
++    "alvo": "Quadrado",
++    "titulo": "Quadrados",
++    "falas": [
++      "Vamos ao Quadrado! É um quadrilátero (polígono de 4 lados) muito especial: tem os 4 lados com a mesma medida e os 4 ângulos retos (90°). É um polígono regular: todos os seus lados e todos os seus ângulos são iguais.",
++      "Cada ângulo interno mede 90°. Somando os quatro: 4 × 90° = 360°. Essa soma vale para qualquer quadrilátero, pois todo quadrilátero pode ser dividido em 2 triângulos (2 × 180° = 360°).",
++      "O quadrado faz parte de uma família. O retângulo tem 4 ângulos retos; o quadrado também, então todo quadrado é um retângulo. O losango tem 4 lados iguais; o quadrado também, então todo quadrado é um losango.",
++      "Mas o contrário não vale: um retângulo de 2 cm × 5 cm não é quadrado, porque seus lados não são todos iguais. Nem todo retângulo é quadrado!",
++      "O quadrado tem 2 diagonais (segmentos que ligam cantos opostos). Elas têm a mesma medida, cortam-se exatamente no meio e são perpendiculares (formam um ângulo de 90° entre si). A medida da diagonal é ℓ × √2, ou seja, cerca de ℓ × 1,41.",
++      "Simetria: um eixo de simetria divide a figura em duas metades que se encaixam perfeitamente ao dobrar. O quadrado tem 4 eixos de simetria: um vertical, um horizontal e as duas diagonais.",
++      "Perímetro: P = 4 × ℓ. Quadrado de lado 7 cm → P = 28 cm. Área: A = ℓ × ℓ = ℓ². Quadrado de lado 9 cm → A = 81 cm². E o caminho inverso também funciona: se a área é 49 cm², o lado é a raiz quadrada de 49, ou seja, 7 cm.",
++      "Você sabia? A expressão 5² se lê “cinco ao quadrado” justamente porque 5 × 5 é a área de um quadrado de lado 5. E o metro quadrado (m²) é a área de um quadrado de 1 m de lado.",
++      "Uma lenda chinesa antiga (Lo Shu) fala de um quadro 3 × 3 com os números de 1 a 9, em que cada linha, coluna e diagonal soma 15: o quadrado mágico! As imagens digitais também são feitas de quadradinhos, os pixels, e o tabuleiro de xadrez tem 8 × 8 = 64 casas."
++    ]
++  },
++  "prova": {
++    "id": "prova_forma_quadrado",
++    "tipo": "forma",
++    "alvo": "Quadrado",
++    "notaDeCorte": 0.7,
++    "perguntas": [
++      {
++        "tipo": "vf",
++        "pergunta": "Todo quadrado é também um retângulo.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "O quadrado tem 4 ângulos retos, que é a exigência para ser retângulo."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "Todo retângulo é também um quadrado.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "Um retângulo pode ter lados diferentes (ex.: 2 cm × 5 cm)."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "As diagonais de um quadrado são perpendiculares entre si.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "Elas se cruzam formando ângulos de 90°."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "O quadrado possui apenas 2 eixos de simetria.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "São 4: vertical, horizontal e as duas diagonais."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Qual é o perímetro de um quadrado de lado 7 cm?",
++        "alternativas": [
++          "14 cm",
++          "21 cm",
++          "28 cm",
++          "49 cm"
++        ],
++        "respostaCorreta": "28 cm",
++        "explicacao": "P = 4 × 7 = 28 cm."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Qual é a área de um quadrado de lado 9 cm?",
++        "alternativas": [
++          "81 cm²",
++          "36 cm²",
++          "18 cm²",
++          "72 cm²"
++        ],
++        "respostaCorreta": "81 cm²",
++        "explicacao": "A = 9 × 9 = 81 cm²."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Quanto vale a soma dos ângulos internos de um quadrado?",
++        "alternativas": [
++          "180°",
++          "270°",
++          "540°",
++          "360°"
++        ],
++        "respostaCorreta": "360°",
++        "explicacao": "4 × 90° = 360°."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Um quadrado tem área de 49 cm². Quanto mede o seu lado?",
++        "alternativas": [
++          "7 cm",
++          "12,25 cm",
++          "24,5 cm",
++          "49 cm"
++        ],
++        "respostaCorreta": "7 cm",
++        "explicacao": "7 × 7 = 49, então o lado mede 7 cm."
++      }
++    ]
++  }
++}
+diff --git a/data/conteudo/forma_triangulo.json b/data/conteudo/forma_triangulo.json
+new file mode 100644
+index 0000000..7b2ec6b
+--- /dev/null
++++ b/data/conteudo/forma_triangulo.json
+@@ -0,0 +1,109 @@
++{
++  "versao": 1,
++  "tipo": "forma",
++  "alvo": "Triangulo",
++  "nome_menu": "Triângulo",
++  "aula": {
++    "id": "aula_forma_triangulo",
++    "tipo": "forma",
++    "alvo": "Triangulo",
++    "titulo": "Triângulos",
++    "falas": [
++      "Hoje vamos estudar o Triângulo! É o polígono mais simples que existe: 3 lados, 3 vértices (os “cantos”) e 3 ângulos internos.",
++      "Não dá para fechar uma figura com menos de três segmentos de reta. Por isso o triângulo é a “peça básica” da geometria: qualquer polígono pode ser dividido em triângulos.",
++      "Primeira regra: em qualquer triângulo, grande ou pequeno, a soma dos três ângulos internos é sempre 180°. Quer provar? Recorte um triângulo de papel, rasgue as três pontas e junte-as lado a lado: elas formam uma linha reta, que mede 180°.",
++      "Uma consequência importante: um triângulo só pode ter um ângulo reto (90°) ou um ângulo obtuso (maior que 90°). Dois ângulos de 90° já somariam 180°, e não sobraria nada para o terceiro!",
++      "Quanto aos lados, o triângulo pode ser equilátero (os três lados iguais e os três ângulos de 60°), isósceles (pelo menos dois lados iguais) ou escaleno (os três lados diferentes).",
++      "Quanto aos ângulos: acutângulo (os três ângulos agudos, menores que 90°), retângulo (tem um ângulo reto; o lado oposto a ele é a hipotenusa e os outros dois são os catetos) e obtusângulo (tem um ângulo maior que 90°).",
++      "Atenção: nem todo trio de medidas forma um triângulo. Cada lado precisa ser menor que a soma dos outros dois. Varetas de 2 cm, 3 cm e 10 cm não servem, porque 2 + 3 = 5, que é menor que 10. Já 3, 4 e 5 funciona, pois 3 + 4 = 7, que é maior que 5.",
++      "Nos triângulos retângulos vale o Teorema de Pitágoras: a² = b² + c². Com catetos 3 e 4: 9 + 16 = 25, logo a hipotenusa mede 5.",
++      "Fórmulas para lembrar: perímetro P = a + b + c (soma dos três lados); área A = (base × altura) ÷ 2; soma dos ângulos internos = 180°.",
++      "Você sabia? O triângulo é a forma mais rígida: se você empurrar um quadrado feito de palitos, ele se deforma; um triângulo, não. Por isso pontes, torres de energia, guindastes e telhados usam estruturas triangulares.",
++      "Conta-se que construtores antigos usavam uma corda com 12 intervalos iguais, esticada em 3-4-5, para obter cantos perfeitamente retos. E no Triângulo de Sierpinski, retirando o triângulo do meio repetidas vezes, surge uma figura infinita em que cada parte se parece com o todo: um fractal!"
++    ]
++  },
++  "prova": {
++    "id": "prova_forma_triangulo",
++    "tipo": "forma",
++    "alvo": "Triangulo",
++    "notaDeCorte": 0.7,
++    "perguntas": [
++      {
++        "tipo": "vf",
++        "pergunta": "A soma dos ângulos internos de qualquer triângulo é 180°.",
++        "alternativas": [],
++        "respostaCorreta": "Verdadeiro",
++        "explicacao": "Vale para todo triângulo, independentemente do tamanho ou da forma."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "O triângulo equilátero tem dois lados iguais e um lado diferente.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "Esse é o isósceles. No equilátero, os três lados são iguais."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "É possível desenhar um triângulo com dois ângulos retos.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "Dois ângulos de 90° já somam 180°, sem sobrar nada para o terceiro ângulo."
++      },
++      {
++        "tipo": "vf",
++        "pergunta": "Com varetas de 2 cm, 3 cm e 10 cm é possível montar um triângulo.",
++        "alternativas": [],
++        "respostaCorreta": "Falso",
++        "explicacao": "2 + 3 = 5, que é menor que 10. A desigualdade triangular não é respeitada."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Qual é a área de um triângulo com base 10 cm e altura 6 cm?",
++        "alternativas": [
++          "16 cm²",
++          "30 cm²",
++          "60 cm²",
++          "36 cm²"
++        ],
++        "respostaCorreta": "30 cm²",
++        "explicacao": "A = (10 × 6) ÷ 2 = 30 cm²."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Como se chama o triângulo que possui um ângulo de 90°?",
++        "alternativas": [
++          "Acutângulo",
++          "Obtusângulo",
++          "Equilátero",
++          "Retângulo"
++        ],
++        "respostaCorreta": "Retângulo",
++        "explicacao": "Triângulo retângulo é o que possui um ângulo reto (90°)."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Em um triângulo retângulo, os catetos medem 3 cm e 4 cm. Quanto mede a hipotenusa?",
++        "alternativas": [
++          "5 cm",
++          "7 cm",
++          "12 cm",
++          "25 cm"
++        ],
++        "respostaCorreta": "5 cm",
++        "explicacao": "Pelo Teorema de Pitágoras: 3² + 4² = 25, e a raiz quadrada de 25 é 5."
++      },
++      {
++        "tipo": "objetiva",
++        "pergunta": "Por que engenheiros usam muitos triângulos em pontes e torres?",
++        "alternativas": [
++          "Porque são mais bonitos",
++          "Porque gastam menos tinta",
++          "Porque o triângulo é uma forma rígida, que não se deforma facilmente",
++          "Porque são mais leves que o ferro"
++        ],
++        "respostaCorreta": "Porque o triângulo é uma forma rígida, que não se deforma facilmente",
++        "explicacao": "Um triângulo não muda de forma se as medidas dos lados não mudarem — isso dá estabilidade."
++      }
++    ]
++  }
++}
+diff --git a/entities/Cadeira.gd b/entities/Cadeira.gd
+new file mode 100644
+index 0000000..d370dd9
+--- /dev/null
++++ b/entities/Cadeira.gd
+@@ -0,0 +1,13 @@
++extends Node2D
++
++## Cadeira da sala de aula: interagir (E) abre o menu de AULAS (repetível,
++## não vale nota). A prova é feita falando com o professor.
++## O ColorRect + Label são só marcadores visuais até existir o sprite.
++
++@export var tipo: String = "formas"  # "formas" ou "cores"
++@export var nome_exibicao: String = "Professor"
++@export var retrato: Texture2D
++
++
++func interagir() -> void:
++	FluxoSala.iniciar(self, "aula", tipo, {"nome": nome_exibicao, "retrato": retrato})
+diff --git a/entities/Cadeira.tscn b/entities/Cadeira.tscn
+new file mode 100644
+index 0000000..c0e30dc
+--- /dev/null
++++ b/entities/Cadeira.tscn
+@@ -0,0 +1,30 @@
++[gd_scene format=3]
++
++[ext_resource type="Script" path="res://entities/Cadeira.gd" id="1_cad"]
++
++[sub_resource type="CircleShape2D" id="CircleShape2D_cad"]
++radius = 28.0
++
++[node name="Cadeira" type="Node2D"]
++script = ExtResource("1_cad")
++
++[node name="Visual" type="ColorRect" parent="."]
++offset_left = -10.0
++offset_top = -20.0
++offset_right = 10.0
++offset_bottom = 0.0
++color = Color(0.9, 0.7, 0.2, 0.6)
++mouse_filter = 2
++
++[node name="Label" type="Label" parent="."]
++offset_left = -40.0
++offset_top = -38.0
++offset_right = 40.0
++offset_bottom = -22.0
++text = "CADEIRA (aula)"
++horizontal_alignment = 1
++
++[node name="ZonaInteracao" type="Area2D" parent="." groups=["interagivel"]]
++
++[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaInteracao"]
++shape = SubResource("CircleShape2D_cad")
+diff --git a/entities/npc_professor.gd b/entities/npc_professor.gd
+index 1fa946a..1196641 100644
+--- a/entities/npc_professor.gd
++++ b/entities/npc_professor.gd
+@@ -2,15 +2,20 @@ extends CharacterBody2D
+ 
+ ## NPC "professor" de uma sala (formas, cores ou duelos).
+ ##
+-## Por enquanto `interagir()` só mostra uma mensagem de placeholder no
+-## console — na próxima etapa (quizzes) isso vira a tela de aula
+-## (AulaModel) ou a prova (QuizModel), de acordo com `tipo`. O ponto de
+-## entrada já está pronto: quando a UI existir, troca-se só o corpo desta
+-## função.
++## Nas salas de formas/cores, conversar abre o menu de PROVAS (a aula fica na
++## cadeira da sala). Na sala de duelos só mostra a fala de `mensagem`.
+ 
+ @export var tipo: String = ""  # "formas", "cores" ou "duelo"
++@export var nome_exibicao: String = "Professor"
++## Placeholder: deixe vazio e a caixa de diálogo mostra um quadrado colorido
++## com a inicial. Arraste a imagem do retrato aqui quando existir.
++@export var retrato: Texture2D
+ @export_multiline var mensagem: String = "Olá! Em breve terei uma aula para você."
+ 
+ 
+ func interagir() -> void:
+-	print("[Professor:%s] %s" % [tipo, mensagem])
++	var dados := {"nome": nome_exibicao, "retrato": retrato}
++	if tipo == "formas" or tipo == "cores":
++		FluxoSala.iniciar(self, "prova", tipo, dados)
++	else:
++		FluxoSala.iniciar(self, "falas", tipo, dados, [mensagem])
+diff --git a/entities/professorCores.tscn b/entities/professorCores.tscn
+index a127c50..6f45ce0 100644
+--- a/entities/professorCores.tscn
++++ b/entities/professorCores.tscn
+@@ -63,6 +63,7 @@ animations = [{
+ [node name="Professor2" type="CharacterBody2D" unique_id=1475615145]
+ scale = Vector2(0.7, 0.7)
+ script = ExtResource("2_npc")
++nome_exibicao = "Mestre das Cores"
+ tipo = "cores"
+ mensagem = "Quer assistir uma aula sobre os elementos (cores) das peças?"
+ 
+diff --git a/entities/professorDuelo.tscn b/entities/professorDuelo.tscn
+index b4d9949..c2ff613 100644
+--- a/entities/professorDuelo.tscn
++++ b/entities/professorDuelo.tscn
+@@ -89,6 +89,7 @@ animations = [{
+ 
+ [node name="Professor1" type="CharacterBody2D" unique_id=1475615145]
+ script = ExtResource("2_npc")
++nome_exibicao = "Mestre dos Duelos"
+ tipo = "duelo"
+ mensagem = "Duelos entre alunos chegam em breve — por enquanto, treine no quintal dos fundos!"
+ 
+diff --git a/entities/professorFormas.tscn b/entities/professorFormas.tscn
+index f7600fc..dae8669 100644
+--- a/entities/professorFormas.tscn
++++ b/entities/professorFormas.tscn
+@@ -28,6 +28,7 @@ animations = [{
+ [node name="Professor1" type="CharacterBody2D" unique_id=1475615145]
+ scale = Vector2(0.7, 0.7)
+ script = ExtResource("2_npc")
++nome_exibicao = "Mestre das Formas"
+ tipo = "formas"
+ mensagem = "Quer assistir uma aula sobre as formas das peças?"
+ 
+diff --git a/entities/teste.gd b/entities/teste.gd
+index f4b3732..b91176a 100644
+--- a/entities/teste.gd
++++ b/entities/teste.gd
+@@ -11,6 +11,10 @@ const JUMP_VELOCITY = -400.0
+ ## guardado o mais recente que entrou, é suficiente pro tamanho das salas.
+ var _interagivel_proximo: Node = null
+ 
++## false enquanto uma caixa de diálogo está aberta (aula/prova): o jogador
++## não anda, não pula e não dispara outra interação por baixo do diálogo.
++var controle_ativo: bool = true
++
+ 
+ func _ready() -> void:
+ 	# A ação "interagir" não existe por padrão no InputMap do projeto —
+@@ -26,6 +30,8 @@ func _ready() -> void:
+ 
+ 
+ func _unhandled_input(event: InputEvent) -> void:
++	if not controle_ativo:
++		return
+ 	if event.is_action_pressed("interagir") and _interagivel_proximo != null:
+ 		_interagivel_proximo.interagir()
+ 
+@@ -46,12 +52,12 @@ func _physics_process(delta: float) -> void:
+ 		velocity += get_gravity() * delta
+ 
+ 	# Handle jump.
+-	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
++	if controle_ativo and Input.is_action_just_pressed("ui_accept") and is_on_floor():
+ 		velocity.y = JUMP_VELOCITY
+ 
+ 	# Get the input direction and handle the movement/deceleration.
+ 	# As good practice, you should replace UI actions with custom gameplay actions.
+-	var direction := Input.get_axis("ui_left", "ui_right")
++	var direction := Input.get_axis("ui_left", "ui_right") if controle_ativo else 0.0
+ 	if direction:
+ 		velocity.x = direction * SPEED
+ 	else:
+diff --git a/scenes/salas/salaDeArte.tscn b/scenes/salas/salaDeArte.tscn
+index 5253154..050129f 100644
+--- a/scenes/salas/salaDeArte.tscn
++++ b/scenes/salas/salaDeArte.tscn
+@@ -9,6 +9,7 @@
+ [ext_resource type="PackedScene" uid="uid://ci55navu03wg3" path="res://entities/professorCores.tscn" id="7_qyu4q"]
+ [ext_resource type="PackedScene" uid="uid://dporta0001xy0" path="res://entities/Porta.tscn" id="8_porta"]
+ [ext_resource type="PackedScene" uid="uid://cxi6l52qlb8q0" path="res://entities/camera_2d.tscn" id="9_k3cnd"]
++[ext_resource type="PackedScene" path="res://entities/Cadeira.tscn" id="11_cad"]
+ 
+ [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_k3cnd"]
+ texture = ExtResource("3_qyu4q")
+@@ -60,3 +61,8 @@ cena_destino = "res://scenes/salas/Saguao.tscn"
+ 
+ [node name="Camera2d" parent="." unique_id=1480513400 instance=ExtResource("9_k3cnd")]
+ position = Vector2(100, 287)
++
++[node name="Cadeira" parent="." instance=ExtResource("11_cad")]
++position = Vector2(460, 310)
++tipo = "cores"
++nome_exibicao = "Mestre das Cores"
+diff --git a/scenes/salas/salaDeaula.tscn b/scenes/salas/salaDeaula.tscn
+index abbea35..1de0a83 100644
+--- a/scenes/salas/salaDeaula.tscn
++++ b/scenes/salas/salaDeaula.tscn
+@@ -8,6 +8,7 @@
+ [ext_resource type="PackedScene" uid="uid://qmbnhewmx82v" path="res://entities/professorFormas.tscn" id="5_s8qbq"]
+ [ext_resource type="PackedScene" uid="uid://dporta0001xy0" path="res://entities/Porta.tscn" id="6_porta"]
+ [ext_resource type="PackedScene" uid="uid://cxi6l52qlb8q0" path="res://entities/camera_2d.tscn" id="8_r5tb0"]
++[ext_resource type="PackedScene" path="res://entities/Cadeira.tscn" id="10_cad"]
+ 
+ [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_keg0p"]
+ texture = ExtResource("4_h1nim")
+@@ -52,3 +53,8 @@ cena_destino = "res://scenes/salas/Saguao.tscn"
+ 
+ [node name="Camera2d" parent="." unique_id=1480513400 instance=ExtResource("8_r5tb0")]
+ position = Vector2(22, 300)
++
++[node name="Cadeira" parent="." instance=ExtResource("10_cad")]
++position = Vector2(440, 310)
++tipo = "formas"
++nome_exibicao = "Mestre das Formas"
+diff --git a/src/models/AulaModel.gd b/src/models/AulaModel.gd
+index 3138cd9..7b22a33 100644
+--- a/src/models/AulaModel.gd
++++ b/src/models/AulaModel.gd
+@@ -9,7 +9,10 @@ var id: String = ""          # ex: "aula_forma_pentagono", "aula_elemento_fogo"
+ var tipo: String = "forma"   # "forma" ou "elemento"
+ var alvo: String = ""        # ex: "Pentagono" ou "Fogo"
+ var titulo: String = ""
+-var conteudo: String = ""    # texto da aula; pode virar Array[String] (páginas) depois se precisar
++var conteudo: String = ""    # texto corrido (legado); a UI nova usa 'falas'
++## A aula como sequência de falas do professor (uma caixa de diálogo cada).
++## Falas muito longas são divididas em páginas pela própria CaixaDialogo.
++var falas: Array[String] = []
+ 
+ func exportar_para_dicionario() -> Dictionary:
+ 	return {
+@@ -18,6 +21,7 @@ func exportar_para_dicionario() -> Dictionary:
+ 		"alvo": alvo,
+ 		"titulo": titulo,
+ 		"conteudo": conteudo,
++		"falas": falas,
+ 	}
+ 
+ 
+@@ -28,4 +32,8 @@ static func importar_de_dicionario(d: Dictionary) -> AulaModel:
+ 	a.alvo = d.get("alvo", "")
+ 	a.titulo = d.get("titulo", "")
+ 	a.conteudo = d.get("conteudo", "")
++	var falas_lidas: Array[String] = []
++	for f in d.get("falas", []):
++		falas_lidas.append(str(f))
++	a.falas = falas_lidas
+ 	return a
+diff --git a/src/models/DesafioQuizModel.gd b/src/models/DesafioQuizModel.gd
+index d3c8fe1..c7bcf31 100644
+--- a/src/models/DesafioQuizModel.gd
++++ b/src/models/DesafioQuizModel.gd
+@@ -10,6 +10,8 @@ var tipo: String = "objetiva"
+ var pergunta: String = ""
+ var alternativas: Array[String] = []   # só usado quando tipo == "objetiva"
+ var resposta_correta: String = ""
++## "Por quê?" mostrado pelo professor depois da resposta (gabarito comentado).
++var explicacao: String = ""
+ 
+ ## Recompensa de UMA pergunta avulsa (fluxo antigo/teste, ver LocalDB.registrar_resposta_desafio).
+ ## Perguntas dentro de uma QuizModel NÃO usam isso — a recompensa da prova
+@@ -23,5 +25,6 @@ func exportar_para_dicionario() -> Dictionary:
+ 		"pergunta": pergunta,
+ 		"alternativas": alternativas,
+ 		"respostaCorreta": resposta_correta,
++		"explicacao": explicacao,
+ 		"recompensaMagia": recompensa_magia
+ 	}
+diff --git a/src/models/QuizModel.gd b/src/models/QuizModel.gd
+index 3bf8759..563fb9b 100644
+--- a/src/models/QuizModel.gd
++++ b/src/models/QuizModel.gd
+@@ -66,6 +66,7 @@ static func importar_de_dicionario(d: Dictionary) -> QuizModel:
+ 			alternativas.append(alt)
+ 		p.alternativas = alternativas
+ 		p.resposta_correta = pd.get("respostaCorreta", "")
++		p.explicacao = pd.get("explicacao", "")
+ 		q.perguntas.append(p)
+ 
+ 	return q
+diff --git a/src/services/ConteudoLoader.gd b/src/services/ConteudoLoader.gd
+new file mode 100644
+index 0000000..eb294de
+--- /dev/null
++++ b/src/services/ConteudoLoader.gd
+@@ -0,0 +1,88 @@
++class_name ConteudoLoader
++extends RefCounted
++
++## Carrega o conteúdo pedagógico (aula + prova) de cada forma/elemento a
++## partir de res://data/conteudo/<tipo>_<alvo>.json — um arquivo por tema.
++##
++## Para editar uma aula ou uma pergunta basta mexer no JSON, sem tocar em
++## código. ATENÇÃO ao exportar o jogo: em Project > Export > Resources, inclua
++## "data/*" em "Filters to export non-resource files", senão os JSONs não vão
++## pro executável.
++
++const PASTA := "res://data/conteudo/"
++
++## Qual tipo de conteúdo cada sala ensina (e em que ordem aparece no menu).
++const ALVOS_POR_SALA := {
++	"formas": ["Triangulo", "Circulo", "Quadrado", "Pentagono", "Hexagono"],
++	"cores": ["Fogo", "Agua", "Eletricidade", "Terra", "Cura", "Tempo"],
++}
++const TIPO_POR_SALA := {
++	"formas": "forma",
++	"cores": "elemento",
++}
++
++
++static func caminho(tipo: String, alvo: String) -> String:
++	return "%s%s_%s.json" % [PASTA, tipo, alvo.to_lower()]
++
++
++## Dicionário cru do JSON ({} se não existir ou estiver quebrado).
++static func carregar(tipo: String, alvo: String) -> Dictionary:
++	var path := caminho(tipo, alvo)
++	if not FileAccess.file_exists(path):
++		push_error("ConteudoLoader: arquivo não encontrado: %s" % path)
++		return {}
++
++	var dados = JSON.parse_string(FileAccess.get_file_as_string(path))
++	if typeof(dados) != TYPE_DICTIONARY:
++		push_error("ConteudoLoader: JSON inválido em %s" % path)
++		return {}
++	return dados
++
++
++static func aula(dados: Dictionary) -> AulaModel:
++	return AulaModel.importar_de_dicionario(dados.get("aula", {}))
++
++
++static func prova(dados: Dictionary) -> QuizModel:
++	return QuizModel.importar_de_dicionario(dados.get("prova", {}))
++
++
++## Nome que aparece nos menus (ex: "Vermelho (Fogo)"); cai no alvo se faltar.
++static func nome_menu(dados: Dictionary, alvo: String) -> String:
++	return str(dados.get("nome_menu", alvo))
++
++
++## Confere a estrutura de um conteúdo; devolve a lista de problemas (vazia = ok).
++static func validar(dados: Dictionary) -> Array[String]:
++	var problemas: Array[String] = []
++	if dados.is_empty():
++		problemas.append("conteúdo vazio")
++		return problemas
++
++	var a := aula(dados)
++	if a.falas.is_empty():
++		problemas.append("aula sem falas")
++
++	var q := prova(dados)
++	if q.perguntas.is_empty():
++		problemas.append("prova sem perguntas")
++	if q.alvo == "" or q.tipo == "":
++		problemas.append("prova sem tipo/alvo")
++
++	for i in q.perguntas.size():
++		var p := q.perguntas[i]
++		var n := i + 1
++		if p.pergunta == "":
++			problemas.append("pergunta %d sem texto" % n)
++		if p.tipo == "vf":
++			if p.resposta_correta != "Verdadeiro" and p.resposta_correta != "Falso":
++				problemas.append("pergunta %d (V/F): resposta deve ser Verdadeiro ou Falso" % n)
++		elif p.tipo == "objetiva":
++			if p.alternativas.size() < 2:
++				problemas.append("pergunta %d: menos de 2 alternativas" % n)
++			if not p.alternativas.has(p.resposta_correta):
++				problemas.append("pergunta %d: resposta correta não está nas alternativas" % n)
++		else:
++			problemas.append("pergunta %d: tipo desconhecido '%s'" % [n, p.tipo])
++	return problemas
+diff --git a/src/ui/CaixaDialogo.gd b/src/ui/CaixaDialogo.gd
+new file mode 100644
+index 0000000..ebeb9a3
+--- /dev/null
++++ b/src/ui/CaixaDialogo.gd
+@@ -0,0 +1,298 @@
++class_name CaixaDialogo
++extends CanvasLayer
++
++## Caixa de diálogo reutilizável (estilo RPG) para aulas e provas: retrato +
++## nome do professor + texto com efeito de digitação, e uma lista de botões
++## de escolha para menus e perguntas.
++##
++## Toda a interface é montada por código (sem .tscn) e a API é assíncrona:
++##
++##   var d := CaixaDialogo.new()
++##   add_child(d)
++##   d.abrir("Mestre das Formas", retrato_ou_null)
++##   await d.falar("Olá, aprendiz!")                      # espera o jogador avançar
++##   var i: int = await d.escolher("Qual forma?", ["Triângulo", "Círculo"])
++##   d.fechar()
++##
++## Fala longa é dividida automaticamente em páginas (o jogo roda em 640x360,
++## a caixa é pequena). Avançar: tecla E, Enter/Espaço ou clique do mouse;
++## avançar durante a digitação completa o texto na hora.
++
++## Máximo de caracteres por página de fala (~3 linhas na caixa).
++const MAX_CHARS_PAGINA := 240
++const SEGUNDOS_POR_CARACTERE := 0.015
++const FONTE := 14
++
++signal _avancou
++signal _escolheu(indice: int)
++
++var _painel: PanelContainer
++var _retrato_fundo: ColorRect
++var _retrato_textura: TextureRect
++var _retrato_inicial: Label
++var _nome: Label
++var _texto: RichTextLabel
++var _opcoes: VBoxContainer
++var _dica: Label
++
++var _tween: Tween
++var _digitando := false
++var _aguardando_avanco := false
++
++
++## A ação "interagir" (tecla E) é registrada em código, igual no jogador e na porta.
++static func garantir_acao_interagir() -> void:
++	if not InputMap.has_action("interagir"):
++		InputMap.add_action("interagir")
++		var tecla := InputEventKey.new()
++		tecla.physical_keycode = KEY_E
++		InputMap.action_add_event("interagir", tecla)
++
++
++func _init() -> void:
++	layer = 50
++	garantir_acao_interagir()
++	_montar()
++
++
++func _montar() -> void:
++	# Escurece o jogo e bloqueia cliques que cairiam no que está atrás.
++	var fundo := ColorRect.new()
++	fundo.color = Color(0, 0, 0, 0.35)
++	fundo.set_anchors_preset(Control.PRESET_FULL_RECT)
++	fundo.mouse_filter = Control.MOUSE_FILTER_STOP
++	add_child(fundo)
++
++	# Painel colado embaixo; altura = conteúdo (cresce pra cima).
++	_painel = PanelContainer.new()
++	_painel.anchor_left = 0.0
++	_painel.anchor_right = 1.0
++	_painel.anchor_top = 1.0
++	_painel.anchor_bottom = 1.0
++	_painel.offset_left = 10
++	_painel.offset_right = -10
++	_painel.offset_top = -8
++	_painel.offset_bottom = -8
++	_painel.grow_vertical = Control.GROW_DIRECTION_BEGIN
++	add_child(_painel)
++
++	var margem := MarginContainer.new()
++	for lado in ["left", "top", "right", "bottom"]:
++		margem.add_theme_constant_override("margin_" + lado, 8)
++	_painel.add_child(margem)
++
++	var linha := HBoxContainer.new()
++	linha.add_theme_constant_override("separation", 10)
++	margem.add_child(linha)
++
++	# --- Retrato (textura real, ou um placeholder colorido com a inicial) ---
++	var moldura := Control.new()
++	moldura.custom_minimum_size = Vector2(72, 72)
++	moldura.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
++	linha.add_child(moldura)
++
++	_retrato_fundo = ColorRect.new()
++	_retrato_fundo.set_anchors_preset(Control.PRESET_FULL_RECT)
++	moldura.add_child(_retrato_fundo)
++
++	_retrato_inicial = Label.new()
++	_retrato_inicial.set_anchors_preset(Control.PRESET_FULL_RECT)
++	_retrato_inicial.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
++	_retrato_inicial.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
++	_retrato_inicial.add_theme_font_size_override("font_size", 36)
++	moldura.add_child(_retrato_inicial)
++
++	_retrato_textura = TextureRect.new()
++	_retrato_textura.set_anchors_preset(Control.PRESET_FULL_RECT)
++	_retrato_textura.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
++	_retrato_textura.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
++	moldura.add_child(_retrato_textura)
++
++	# --- Coluna de texto ---
++	var coluna := VBoxContainer.new()
++	coluna.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	coluna.add_theme_constant_override("separation", 4)
++	linha.add_child(coluna)
++
++	_nome = Label.new()
++	_nome.add_theme_font_size_override("font_size", FONTE)
++	_nome.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
++	coluna.add_child(_nome)
++
++	_texto = RichTextLabel.new()
++	_texto.bbcode_enabled = true
++	_texto.fit_content = true
++	_texto.scroll_active = false
++	_texto.custom_minimum_size = Vector2(0, 54)
++	_texto.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	_texto.add_theme_font_size_override("normal_font_size", FONTE)
++	coluna.add_child(_texto)
++
++	_opcoes = VBoxContainer.new()
++	_opcoes.add_theme_constant_override("separation", 3)
++	coluna.add_child(_opcoes)
++
++	_dica = Label.new()
++	_dica.text = "[E] continuar"
++	_dica.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
++	_dica.add_theme_font_size_override("font_size", 10)
++	_dica.modulate = Color(1, 1, 1, 0.6)
++	coluna.add_child(_dica)
++
++
++## Define quem está falando. 'retrato' null = placeholder (cor + inicial).
++func abrir(nome: String, retrato: Texture2D = null) -> void:
++	_nome.text = nome
++	if retrato != null:
++		_retrato_textura.texture = retrato
++		_retrato_textura.visible = true
++		_retrato_fundo.visible = false
++		_retrato_inicial.visible = false
++	else:
++		var partes := nome.split(" ", false)
++		var inicial := partes[partes.size() - 1].substr(0, 1).to_upper() if partes.size() > 0 else "?"
++		_retrato_fundo.color = Color.from_hsv(float(abs(nome.hash()) % 360) / 360.0, 0.45, 0.65)
++		_retrato_inicial.text = inicial
++		_retrato_textura.visible = false
++		_retrato_fundo.visible = true
++		_retrato_inicial.visible = true
++
++
++func fechar() -> void:
++	if _tween:
++		_tween.kill()
++	queue_free()
++
++
++## Mostra uma fala (dividida em páginas se for longa) e espera o jogador avançar
++## em cada página.
++func falar(texto: String) -> void:
++	_limpar_opcoes()
++	_dica.visible = true
++	for pagina in _paginar(texto):
++		await _mostrar_pagina(pagina)
++
++
++## Mostra 'pergunta' + botões e devolve o índice do botão escolhido.
++func escolher(pergunta: String, opcoes: Array[String]) -> int:
++	_limpar_opcoes()
++	_dica.visible = false
++	_texto.text = _escapar(pergunta)
++	_texto.visible_ratio = 1.0
++
++	for i in opcoes.size():
++		var botao := Button.new()
++		botao.text = opcoes[i]
++		botao.alignment = HORIZONTAL_ALIGNMENT_LEFT
++		botao.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++		botao.custom_minimum_size = Vector2(0, 22)
++		botao.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++		botao.add_theme_font_size_override("font_size", FONTE)
++		botao.pressed.connect(func(): _escolheu.emit(i))
++		_opcoes.add_child(botao)
++
++	if _opcoes.get_child_count() > 0:
++		_opcoes.get_child(0).grab_focus()
++
++	var indice: int = await _escolheu
++	_limpar_opcoes()
++	return indice
++
++
++func _mostrar_pagina(pagina: String) -> void:
++	_texto.text = _escapar(pagina)
++	_texto.visible_ratio = 0.0
++	_digitando = true
++	_aguardando_avanco = true
++
++	if _tween:
++		_tween.kill()
++	_tween = create_tween()
++	_tween.tween_property(_texto, "visible_ratio", 1.0, maxf(0.15, pagina.length() * SEGUNDOS_POR_CARACTERE))
++	_tween.finished.connect(func(): _digitando = false)
++
++	await _avancou
++	_aguardando_avanco = false
++
++
++func _input(event: InputEvent) -> void:
++	if not _aguardando_avanco:
++		return  # em modo de escolha, quem trata o teclado são os próprios botões
++
++	var confirmou := event.is_action_pressed("interagir") or event.is_action_pressed("ui_accept")
++	if not confirmou and event is InputEventMouseButton:
++		confirmou = event.pressed and event.button_index == MOUSE_BUTTON_LEFT
++	if not confirmou:
++		return
++
++	get_viewport().set_input_as_handled()
++	if _digitando:
++		if _tween:
++			_tween.kill()
++		_texto.visible_ratio = 1.0
++		_digitando = false
++	else:
++		_avancou.emit()
++
++
++func _limpar_opcoes() -> void:
++	for filho in _opcoes.get_children():
++		_opcoes.remove_child(filho)
++		filho.queue_free()
++
++
++## "[" em texto de conteúdo não pode virar tag BBCode.
++func _escapar(texto: String) -> String:
++	return texto.replace("[", "[lb]")
++
++
++## Divide em páginas de até MAX_CHARS_PAGINA, quebrando preferencialmente no fim de frase.
++func _paginar(texto: String) -> Array[String]:
++	var paginas: Array[String] = []
++	texto = texto.strip_edges()
++	if texto.length() <= MAX_CHARS_PAGINA:
++		paginas.append(texto)
++		return paginas
++
++	var frases: Array[String] = []
++	var atual := ""
++	for i in texto.length():
++		atual += texto[i]
++		var fim_de_frase := texto[i] in [".", "!", "?"] and (i + 1 >= texto.length() or texto[i + 1] == " ")
++		if fim_de_frase:
++			frases.append(atual.strip_edges())
++			atual = ""
++	if atual.strip_edges() != "":
++		frases.append(atual.strip_edges())
++
++	var pagina := ""
++	for frase in frases:
++		if frase.length() > MAX_CHARS_PAGINA:
++			if pagina != "":
++				paginas.append(pagina)
++				pagina = ""
++			paginas.append_array(_quebrar_por_palavras(frase))
++		elif pagina == "":
++			pagina = frase
++		elif pagina.length() + 1 + frase.length() <= MAX_CHARS_PAGINA:
++			pagina += " " + frase
++		else:
++			paginas.append(pagina)
++			pagina = frase
++	if pagina != "":
++		paginas.append(pagina)
++	return paginas
++
++
++func _quebrar_por_palavras(frase: String) -> Array[String]:
++	var partes: Array[String] = []
++	var atual := ""
++	for palavra in frase.split(" ", false):
++		if atual != "" and atual.length() + 1 + palavra.length() > MAX_CHARS_PAGINA:
++			partes.append(atual)
++			atual = palavra
++		else:
++			atual = palavra if atual == "" else atual + " " + palavra
++	if atual != "":
++		partes.append(atual)
++	return partes
+diff --git a/src/ui/FluxoSala.gd b/src/ui/FluxoSala.gd
+new file mode 100644
+index 0000000..a91d72a
+--- /dev/null
++++ b/src/ui/FluxoSala.gd
+@@ -0,0 +1,170 @@
++class_name FluxoSala
++extends Node
++
++## Orquestra as interações da sala de aula: menu de temas -> aula (repetível,
++## pela cadeira) ou prova (com o professor). Cria a CaixaDialogo, congela o
++## jogador enquanto o diálogo está aberto e, ao fim da prova, grava o
++## resultado e desbloqueia a forma/elemento via LocalDB.registrar_resultado_quiz().
++##
++## Uso (a partir de qualquer objeto interagível):
++##   FluxoSala.iniciar(self, "aula",  "formas", {"nome": "Mestre das Formas"})
++##   FluxoSala.iniciar(self, "prova", "cores",  {"nome": "Mestre das Cores"})
++##   FluxoSala.iniciar(self, "falas", "",       {"nome": "Mestre dos Duelos"}, ["Olá!"])
++
++static var _em_andamento := false
++
++var _dialogo: CaixaDialogo
++var _jogador: Node
++var _uid: String = ""
++
++
++## 'professor' aceita {"nome": String, "retrato": Texture2D (opcional)}.
++## 'modo' = "aula" | "prova" | "falas" (só mostra as falas dadas, sem menu).
++static func iniciar(host: Node, modo: String, tipo_sala: String, professor: Dictionary, falas: Array = []) -> void:
++	if _em_andamento:
++		return
++	var cena := host.get_tree().current_scene
++	if cena == null:
++		return
++
++	var fluxo := FluxoSala.new()
++	cena.add_child(fluxo)
++	fluxo._rodar(modo, tipo_sala, professor, falas)
++
++
++func _rodar(modo: String, tipo_sala: String, professor: Dictionary, falas: Array) -> void:
++	_em_andamento = true
++	_uid = LocalDB.get_user_id_ativo()
++	_jogador = get_tree().get_first_node_in_group("jogador")
++	_definir_controle(false)
++
++	_dialogo = CaixaDialogo.new()
++	add_child(_dialogo)
++	_dialogo.abrir(str(professor.get("nome", "Professor")), professor.get("retrato", null))
++
++	match modo:
++		"aula", "prova":
++			await _menu_temas(tipo_sala, modo)
++		"falas":
++			for fala in falas:
++				await _dialogo.falar(str(fala))
++
++	_dialogo.fechar()
++	_definir_controle(true)
++	_em_andamento = false
++	queue_free()
++
++
++func _definir_controle(ativo: bool) -> void:
++	if is_instance_valid(_jogador):
++		_jogador.set("controle_ativo", ativo)
++
++
++# --------------------------------------------------------------------- menu
++
++func _menu_temas(tipo_sala: String, modo: String) -> void:
++	var tipo: String = ConteudoLoader.TIPO_POR_SALA.get(tipo_sala, "")
++	var alvos: Array = ConteudoLoader.ALVOS_POR_SALA.get(tipo_sala, [])
++	if tipo == "" or alvos.is_empty():
++		await _dialogo.falar("Ainda não tenho nada para ensinar por aqui.")
++		return
++
++	var pergunta := "Qual tema você quer estudar?"
++	if modo == "prova":
++		pergunta = "Em qual tema você quer fazer a prova? (é preciso acertar 70%)"
++
++	while true:
++		var rotulos: Array[String] = []
++		for alvo in alvos:
++			rotulos.append(_rotulo_tema(tipo, alvo))
++		rotulos.append("Sair")
++
++		var escolhido: int = await _dialogo.escolher(pergunta, rotulos)
++		if escolhido >= alvos.size():
++			break
++
++		var dados := ConteudoLoader.carregar(tipo, alvos[escolhido])
++		var problemas := ConteudoLoader.validar(dados)
++		if not problemas.is_empty():
++			push_error("Conteúdo %s_%s inválido: %s" % [tipo, alvos[escolhido], ", ".join(problemas)])
++			await _dialogo.falar("Hmm, o material desse tema ainda não está pronto. Tente outro!")
++			continue
++
++		if modo == "aula":
++			await _rodar_aula(dados)
++		else:
++			await _rodar_prova(dados)
++
++
++func _rotulo_tema(tipo: String, alvo: String) -> String:
++	var rotulo := ConteudoLoader.nome_menu(ConteudoLoader.carregar(tipo, alvo), alvo)
++	if LocalDB.ja_passou_quiz(_uid, tipo, alvo):
++		rotulo += "  (aprovado)"
++	elif _ja_desbloqueado(tipo, alvo):
++		rotulo += "  (desbloqueado)"
++	return rotulo
++
++
++func _ja_desbloqueado(tipo: String, alvo: String) -> bool:
++	if tipo == "forma":
++		return LocalDB.forma_desbloqueada(_uid, alvo)
++	return LocalDB.elemento_desbloqueado(_uid, alvo)
++
++
++# --------------------------------------------------------------------- aula
++
++func _rodar_aula(dados: Dictionary) -> void:
++	var aula := ConteudoLoader.aula(dados)
++	for fala in aula.falas:
++		await _dialogo.falar(fala)
++	await _dialogo.falar("Fim da aula sobre %s! Quando se sentir confiante, fale comigo para fazer a prova." % aula.titulo)
++
++
++# -------------------------------------------------------------------- prova
++
++func _rodar_prova(dados: Dictionary) -> void:
++	var quiz := ConteudoLoader.prova(dados)
++	var titulo := ConteudoLoader.aula(dados).titulo
++	var total := quiz.perguntas.size()
++	var minimo := ceili(quiz.nota_de_corte * total - 0.0001)
++
++	await _dialogo.falar("Prova de %s: %d perguntas. Você precisa acertar pelo menos %d. Vamos lá!" % [titulo, total, minimo])
++
++	var acertos: Array = []
++	for i in total:
++		var p := quiz.perguntas[i]
++
++		var opcoes: Array[String] = []
++		var cabecalho := "Pergunta %d de %d" % [i + 1, total]
++		if p.tipo == "vf":
++			opcoes.append("Verdadeiro")
++			opcoes.append("Falso")
++			cabecalho += " (verdadeiro ou falso)"
++		else:
++			for alternativa in p.alternativas:
++				opcoes.append(alternativa)
++			opcoes.shuffle()  # a posição da resposta certa muda a cada tentativa
++
++		var escolhido: int = await _dialogo.escolher("%s\n%s" % [cabecalho, p.pergunta], opcoes)
++		var correta := opcoes[escolhido] == p.resposta_correta
++		acertos.append(correta)
++		await _dialogo.falar(_feedback(correta, p))
++
++	var resultado := quiz.calcular_resultado(acertos)
++	var ja_tinha := _ja_desbloqueado(quiz.tipo, quiz.alvo)
++	LocalDB.registrar_resultado_quiz(_uid, quiz, resultado)
++
++	if resultado["passou"]:
++		SpellLoadout.normalizar_equipados(_uid)
++		var mensagem := "Parabéns! Você acertou %d de %d e dominou %s." % [resultado["acertos"], resultado["total"], titulo]
++		if not ja_tinha:
++			mensagem += " Novo poder desbloqueado: %s! Confira em “Minhas Magias”." % ConteudoLoader.nome_menu(dados, quiz.alvo)
++		await _dialogo.falar(mensagem)
++	else:
++		await _dialogo.falar("Você acertou %d de %d, e precisava de pelo menos %d. Revise a aula na cadeira e tente de novo!" % [resultado["acertos"], resultado["total"], minimo])
++
++
++func _feedback(correta: bool, p: DesafioQuizModel) -> String:
++	if correta:
++		return ("Correto! %s" % p.explicacao).strip_edges()
++	return ("Não foi dessa vez. Resposta certa: %s. %s" % [p.resposta_correta, p.explicacao]).strip_edges()

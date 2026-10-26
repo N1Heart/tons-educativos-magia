@@ -54,6 +54,9 @@ func _ready() -> void:
 	SpellLoadout.preparar_para_jogo(uid)
 
 	var formas := SpellLoadout.formas_disponiveis(uid)
+	# Coop: o time todo joga com o mesmo conjunto de formas (ver DueloRede).
+	if not DueloRede.formas_equipe.is_empty():
+		formas = DueloRede.formas_equipe.duplicate()
 	if formas.size() < SpellLoadout.MIN_FORMAS_COMBATE:
 		push_warning("Grid: só %d forma(s) em jogo; o tabuleiro vai cascatear. O combate deveria estar bloqueado." % formas.size())
 
@@ -147,6 +150,10 @@ func is_in_grid(column, row):
 
 func touch_input():
 	if not can_swipe:
+		return
+	# Só mexe nas peças no próprio turno (antes dava pra jogar durante a vez do
+	# oponente, o que no multiplayer quebraria tudo).
+	if Combat.combat_active and not Combat.can_player_act():
 		return
 	if Input.is_action_just_pressed("ui_touch"):
 		first_touch = get_global_mouse_position()

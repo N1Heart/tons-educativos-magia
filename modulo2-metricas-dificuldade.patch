@@ -1,0 +1,466 @@
+diff --git a/autoload/LocalDB.gd b/autoload/LocalDB.gd
+index 67e3e83..3130cd6 100644
+--- a/autoload/LocalDB.gd
++++ b/autoload/LocalDB.gd
+@@ -55,21 +55,27 @@ func _criar_tabelas() -> void:
+ 			pontuacao INTEGER,
+ 			tempo_decorrido REAL,
+ 			venceu INTEGER DEFAULT 0,
++			jogadas INTEGER DEFAULT 0,
++			latencia_media REAL DEFAULT 0,
++			latencia_max REAL DEFAULT 0,
+ 			jogado_em INTEGER,
+ 			synced INTEGER DEFAULT 0
+ 		)
+ 	""")
+-	# Migração pra quem já tinha o banco antigo sem a coluna 'venceu'
++	# Migração pra quem já tinha o banco antigo sem colunas novas
+ 	# (CREATE TABLE IF NOT EXISTS não adiciona coluna em tabela existente).
+-	# Se a coluna já existir isso só falha silenciosamente — sem problema.
+ 	db.query("PRAGMA table_info(partidas_match3)")
+-	var tem_coluna_venceu := false
++	var colunas_partida: Array[String] = []
+ 	for col in db.query_result:
+-		if col["name"] == "venceu":
+-			tem_coluna_venceu = true
+-			break
+-	if not tem_coluna_venceu:
++		colunas_partida.append(col["name"])
++	if not colunas_partida.has("venceu"):
+ 		db.query("ALTER TABLE partidas_match3 ADD COLUMN venceu INTEGER DEFAULT 0")
++	if not colunas_partida.has("jogadas"):
++		db.query("ALTER TABLE partidas_match3 ADD COLUMN jogadas INTEGER DEFAULT 0")
++	if not colunas_partida.has("latencia_media"):
++		db.query("ALTER TABLE partidas_match3 ADD COLUMN latencia_media REAL DEFAULT 0")
++	if not colunas_partida.has("latencia_max"):
++		db.query("ALTER TABLE partidas_match3 ADD COLUMN latencia_max REAL DEFAULT 0")
+ 	
+ 	db.query("""
+ 		CREATE TABLE IF NOT EXISTS desafios_respondidos (
+@@ -239,17 +245,18 @@ func listar_magias_desbloqueadas(user_id: String) -> Array[String]:
+ 
+ func registrar_partida(user_id: String, partida: PartidaMatch3Model) -> void:
+ 	db.query_with_bindings("""
+-		INSERT INTO partidas_match3 (user_id, nivel_dificuldade, pontuacao, tempo_decorrido, venceu, jogado_em, synced)
+-		VALUES (?, ?, ?, ?, ?, ?, 0)
++		INSERT INTO partidas_match3 (user_id, nivel_dificuldade, pontuacao, tempo_decorrido, venceu, jogadas, latencia_media, latencia_max, jogado_em, synced)
++		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+ 	""", [
+ 		user_id, partida.nivel_dificuldade, partida.pontuacao, partida.tempo_decorrido,
+-		1 if partida.venceu else 0, Time.get_unix_time_from_system()
++		1 if partida.venceu else 0, partida.jogadas, partida.latencia_media, partida.latencia_max,
++		Time.get_unix_time_from_system()
+ 	])
+ 	SyncManager.request_sync()
+ 
+ 
+ func listar_partidas(user_id: String) -> Array[PartidaMatch3Model]:
+-	db.query_with_bindings("SELECT * FROM partidas_match3 WHERE user_id = ? ORDER BY jogado_em DESC", [user_id])
++	db.query_with_bindings("SELECT * FROM partidas_match3 WHERE user_id = ? ORDER BY id DESC", [user_id])
+ 	var partidas: Array[PartidaMatch3Model] = []
+ 	for row in db.query_result:
+ 		var p := PartidaMatch3Model.new()
+@@ -257,9 +264,31 @@ func listar_partidas(user_id: String) -> Array[PartidaMatch3Model]:
+ 		p.pontuacao = row["pontuacao"]
+ 		p.tempo_decorrido = row["tempo_decorrido"]
+ 		p.venceu = row.get("venceu", 0) == 1
++		p.jogadas = int(row.get("jogadas", 0))
++		p.latencia_media = float(row.get("latencia_media", 0.0))
++		p.latencia_max = float(row.get("latencia_max", 0.0))
+ 		partidas.append(p)
+ 	return partidas
+ 
++
++const NIVEL_DIFICULDADE_MAX := 5
++
++
++## Ajuste automático de dificuldade (RF3): sem nenhuma configuração do
++## professor, o próximo nível sai do histórico do aluno. Vitória sobe 1;
++## duas derrotas seguidas descem 1; o resto mantém. Fica entre 1 e o máximo.
++func proximo_nivel_dificuldade(user_id: String) -> int:
++	var partidas := listar_partidas(user_id)  # mais recente primeiro
++	if partidas.is_empty():
++		return 1
++	var ultima := partidas[0]
++	var nivel := ultima.nivel_dificuldade
++	if ultima.venceu:
++		nivel += 1
++	elif partidas.size() >= 2 and not partidas[1].venceu:
++		nivel -= 1
++	return clampi(nivel, 1, NIVEL_DIFICULDADE_MAX)
++
+ # --- Desafios / quizzes respondidos ---
+ 
+ func registrar_resposta_desafio(user_id: String, desafio_id: String, desafio: DesafioQuizModel, resposta_dada: String, correta: bool) -> void:
+diff --git a/modules/estatisticas.lua b/modules/estatisticas.lua
+index 51602e0..406bd95 100644
+--- a/modules/estatisticas.lua
++++ b/modules/estatisticas.lua
+@@ -15,6 +15,15 @@ de adicionar ou editar este arquivo é preciso reiniciar o container nakama
+ ("docker compose restart nakama" ou down/up) pra ele recarregar os módulos.
+ ]]
+ 
++-- Alerta de dificuldade de aprendizado (RF4): se o tempo médio que o aluno
++-- leva entre o tabuleiro ficar livre e a próxima jogada passa desse limite
++-- (em segundos), nas últimas partidas com jogadas suficientes, o professor
++-- vê o alerta. É a "demora excessiva pra combinar as peças" que a consultora
++-- pedagógica apontou como principal indicador.
++local LIMIAR_LATENCIA_SEGUNDOS = 8.0
++local PARTIDAS_RECENTES_ALERTA = 3
++local MIN_JOGADAS_PARA_ALERTA = 5
++
+ -- Lista TODOS os objetos de uma coleção pertencentes a um usuário,
+ -- percorrendo a paginação até o fim.
+ local function listar_colecao(user_id, collection)
+@@ -83,17 +92,51 @@ local function obter_estatisticas_aluno(context, payload)
+ 		nome = perfil_objs[1].value.nome
+ 	end
+ 
+-	-- Partidas de Match-3: tempo de jogo e taxa de vitórias
++	-- Partidas de Match-3: tempo de jogo, taxa de vitórias, nível máximo e
++	-- tempo de reação (latência). A chave de cada partida é o id da linha no
++	-- SQLite; storage_list ordena como texto ("10" < "2"), então ordena aqui.
++	local partidas = listar_colecao(aluno_id, "progresso_partidas")
++	table.sort(partidas, function(a, b)
++		return (tonumber(a.key) or 0) < (tonumber(b.key) or 0)
++	end)
++
+ 	local total_partidas = 0
+ 	local vitorias = 0
+ 	local tempo_total = 0
+-	for _, obj in ipairs(listar_colecao(aluno_id, "progresso_partidas")) do
++	local nivel_maximo = 0
++	for _, obj in ipairs(partidas) do
+ 		total_partidas = total_partidas + 1
+ 		tempo_total = tempo_total + (obj.value.tempo_decorrido or 0)
+ 		if obj.value.venceu == 1 or obj.value.venceu == true then
+ 			vitorias = vitorias + 1
+ 		end
++		local nivel = obj.value.nivel_dificuldade or 0
++		if nivel > nivel_maximo then
++			nivel_maximo = nivel
++		end
++	end
++
++	-- Média de reação ponderada pelo número de jogadas, nas partidas mais recentes
++	local soma_latencia = 0
++	local soma_jogadas = 0
++	local considerando = 0
++	for i = #partidas, 1, -1 do
++		if considerando >= PARTIDAS_RECENTES_ALERTA then
++			break
++		end
++		local v = partidas[i].value
++		local jogadas = v.jogadas or 0
++		if jogadas >= MIN_JOGADAS_PARA_ALERTA then
++			soma_latencia = soma_latencia + (v.latencia_media or 0) * jogadas
++			soma_jogadas = soma_jogadas + jogadas
++			considerando = considerando + 1
++		end
++	end
++	local latencia_recente = 0
++	if soma_jogadas > 0 then
++		latencia_recente = soma_latencia / soma_jogadas
+ 	end
++	local alerta_dificuldade = soma_jogadas > 0 and latencia_recente > LIMIAR_LATENCIA_SEGUNDOS
+ 
+ 	-- Desafios/quizzes respondidos: taxa de acertos
+ 	local total_desafios = 0
+@@ -119,6 +162,10 @@ local function obter_estatisticas_aluno(context, payload)
+ 		nome = nome,
+ 		tempo_jogo_total_segundos = tempo_total,
+ 		total_partidas = total_partidas,
++		nivel_maximo = nivel_maximo,
++		latencia_recente_segundos = latencia_recente,
++		limiar_latencia_segundos = LIMIAR_LATENCIA_SEGUNDOS,
++		alerta_dificuldade = alerta_dificuldade,
+ 		taxa_vitorias_percent = taxa_vitorias,
+ 		total_desafios_respondidos = total_desafios,
+ 		taxa_acertos_percent = taxa_acertos,
+diff --git a/scripts/TelaEstatisticasAluno.gd b/scripts/TelaEstatisticasAluno.gd
+index cf15e6f..e95282d 100644
+--- a/scripts/TelaEstatisticasAluno.gd
++++ b/scripts/TelaEstatisticasAluno.gd
+@@ -41,10 +41,17 @@ func _carregar_estatisticas() -> void:
+ 	var texto := ""
+ 	texto += "Tempo de jogo: %dm %ds\n" % [minutos, segundos]
+ 	texto += "Partidas jogadas: %d\n" % dados.get("total_partidas", 0)
++	texto += "Nível máximo alcançado: %d\n" % dados.get("nivel_maximo", 0)
+ 	texto += "Taxa de vitórias: %.0f%%\n" % dados.get("taxa_vitorias_percent", 0.0)
+ 	texto += "Desafios respondidos: %d\n" % dados.get("total_desafios_respondidos", 0)
+ 	texto += "Taxa de acertos em quizzes: %.0f%%\n" % dados.get("taxa_acertos_percent", 0.0)
+ 
++	if dados.get("alerta_dificuldade", false):
++		texto += "\n⚠ ALERTA: demora média de %.1fs por jogada nas últimas partidas (limite %.0fs). Pode ser sinal de dificuldade de aprendizado.\n\n" % [
++			dados.get("latencia_recente_segundos", 0.0), dados.get("limiar_latencia_segundos", 0.0)]
++	elif dados.get("latencia_recente_segundos", 0.0) > 0.0:
++		texto += "Tempo médio por jogada: %.1fs\n" % dados.get("latencia_recente_segundos", 0.0)
++
+ 	if dados.get("objeto_maior_dificuldade_disponivel", false):
+ 		texto += "Objeto de maior dificuldade: %s\n" % dados.get("objeto_maior_dificuldade", "-")
+ 	else:
+diff --git a/scripts/TelaTurma.gd b/scripts/TelaTurma.gd
+index 4556fdd..b96d8af 100644
+--- a/scripts/TelaTurma.gd
++++ b/scripts/TelaTurma.gd
+@@ -42,6 +42,21 @@ func _atualizar_lista_alunos() -> void:
+ 	else:
+ 		for aluno in _alunos_atuais:
+ 			%listaAlunos.add_item(aluno["username"])
++		_marcar_alertas()
++
++
++## Depois de mostrar a lista, consulta as estatísticas de cada aluno e marca
++## com ⚠ quem está com alerta de dificuldade de aprendizado (RF4). Roda em
++## segundo plano pra não atrasar a tela.
++func _marcar_alertas() -> void:
++	var alunos := _alunos_atuais
++	for i in alunos.size():
++		var dados: Dictionary = await NakamaManager.obter_estatisticas_aluno(alunos[i]["id"])
++		# A tela pode ter sido fechada ou a lista recarregada enquanto esperava
++		if not is_instance_valid(%listaAlunos) or alunos != _alunos_atuais or i >= %listaAlunos.item_count:
++			return
++		if dados.get("alerta_dificuldade", false):
++			%listaAlunos.set_item_text(i, "⚠ " + alunos[i]["username"])
+ 
+ 
+ func _on_aluno_ativado(index: int) -> void:
+diff --git a/scripts/duelos.gd b/scripts/duelos.gd
+index 3260bd3..53f607a 100644
+--- a/scripts/duelos.gd
++++ b/scripts/duelos.gd
+@@ -23,8 +23,23 @@ extends Node2D
+ ## Encontro de teste — troque livremente pra simular oponentes diferentes.
+ @export var enemy_hp_each: int = 20
+ 
++## Cada nível de dificuldade acima do 1 aumenta o HP dos inimigos nessa fração
++## (ajuste automático, sem configuração do professor — ver LocalDB.proximo_nivel_dificuldade).
++const HP_POR_NIVEL := 0.25
++## Uma pausa maior que isso (aluno distraído/ausente) não conta inteira na
++## média de reação, senão uma única pausa distorce o alerta do professor.
++const LATENCIA_MAX_REGISTRADA := 60.0
++
+ var log_lines: Array[String] = []
+ 
++# --- Métricas da partida (gravadas em LocalDB ao fim do combate) ---
++var _nivel: int = 1
++var _inicio_ms: int = 0
++var _pronto_ms: int = -1  # quando o tabuleiro ficou livre pra o jogador jogar
++var _latencias: Array[float] = []
++var _pontuacao: int = 0
++var _registrada := false
++
+ 
+ func _ready() -> void:
+ 	if not SpellLoadout.pode_entrar_em_combate(LocalDB.get_user_id_ativo()):
+@@ -54,7 +69,17 @@ func _ready() -> void:
+ 		SpellLoadout.get_tile_type("Circulo", "Agua"),
+ 	]
+ 
+-	Combat.start_combat(player_types, player_hp_each, enemy_types, enemy_hp_each, 3)
++	# Dificuldade automática: nível sai do histórico; sobe o HP dos inimigos.
++	_nivel = LocalDB.proximo_nivel_dificuldade(LocalDB.get_user_id_ativo())
++	var hp_inimigo := int(round(enemy_hp_each * (1.0 + HP_POR_NIVEL * (_nivel - 1))))
++
++	board.player_moved.connect(_on_player_moved)
++	board.board_idle.connect(_on_board_idle)
++	board.spell_matched.connect(_on_spell_matched)
++	_inicio_ms = Time.get_ticks_msec()
++
++	Combat.start_combat(player_types, player_hp_each, enemy_types, hp_inimigo, 3)
++	_on_log_message("Dificuldade: nível %d" % _nivel)
+ 
+ 
+ func _on_units_changed(player_units: Array, enemy_units: Array) -> void:
+@@ -68,6 +93,26 @@ func _on_tics_changed(remaining: int, max_tics: int) -> void:
+ 
+ func _on_turn_started(is_player: bool) -> void:
+ 	turn_label.text = "Seu turno" if is_player else "Turno do oponente..."
++	_pronto_ms = Time.get_ticks_msec() if is_player else -1
++
++
++## Tabuleiro livre de novo no turno do jogador: começa a contar o tempo de reação.
++func _on_board_idle() -> void:
++	if Combat.is_player_turn and Combat.combat_active:
++		_pronto_ms = Time.get_ticks_msec()
++
++
++## Jogada feita: guarda quanto tempo o aluno levou desde o tabuleiro ficar livre.
++func _on_player_moved() -> void:
++	if _pronto_ms < 0:
++		return
++	var segundos := (Time.get_ticks_msec() - _pronto_ms) / 1000.0
++	_latencias.append(minf(segundos, LATENCIA_MAX_REGISTRADA))
++	_pronto_ms = -1
++
++
++func _on_spell_matched(_tile_type: TileType, match_size: int) -> void:
++	_pontuacao += match_size
+ 
+ 
+ func _on_log_message(text: String) -> void:
+@@ -80,3 +125,25 @@ func _on_log_message(text: String) -> void:
+ func _on_combat_ended(player_won: bool) -> void:
+ 	turn_label.text = "Vitória!" if player_won else "Derrota..."
+ 	board.can_swipe = false
++	_registrar_partida(player_won)
++
++
++func _registrar_partida(player_won: bool) -> void:
++	if _registrada:
++		return
++	_registrada = true
++
++	var partida := PartidaMatch3Model.new()
++	partida.nivel_dificuldade = _nivel
++	partida.pontuacao = _pontuacao
++	partida.tempo_decorrido = (Time.get_ticks_msec() - _inicio_ms) / 1000.0
++	partida.venceu = player_won
++	partida.jogadas = _latencias.size()
++	if not _latencias.is_empty():
++		var soma := 0.0
++		for l in _latencias:
++			soma += l
++			partida.latencia_max = maxf(partida.latencia_max, l)
++		partida.latencia_media = soma / _latencias.size()
++
++	LocalDB.registrar_partida(LocalDB.get_user_id_ativo(), partida)
+diff --git a/src/models/PartidaMatch3Model.gd b/src/models/PartidaMatch3Model.gd
+index aa411b5..a5bbf2b 100644
+--- a/src/models/PartidaMatch3Model.gd
++++ b/src/models/PartidaMatch3Model.gd
+@@ -6,10 +6,19 @@ var pontuacao: int = 0
+ var tempo_decorrido: float = 0.0
+ var venceu: bool = false
+ 
++## Métricas de reação (RF4): quantas jogadas o aluno fez e quanto tempo levou,
++## em média e no máximo, entre o tabuleiro ficar livre e a próxima jogada.
++var jogadas: int = 0
++var latencia_media: float = 0.0
++var latencia_max: float = 0.0
++
+ func exportar_para_dicionario() -> Dictionary:
+ 	return {
+ 		"nivelDificuldade": nivel_dificuldade,
+ 		"pontuacao": pontuacao,
+ 		"tempoDecorrido": tempo_decorrido,
+-		"venceu": venceu
++		"venceu": venceu,
++		"jogadas": jogadas,
++		"latenciaMedia": latencia_media,
++		"latenciaMax": latencia_max
+ 	}
+diff --git a/src/services/NakamaManager.gd b/src/services/NakamaManager.gd
+index d1708d7..7dad41b 100644
+--- a/src/services/NakamaManager.gd
++++ b/src/services/NakamaManager.gd
+@@ -12,9 +12,38 @@ var turma_selecionada_nome: String = ""
+ var aluno_selecionado_id: String = ""
+ var aluno_selecionado_nome: String = ""
+ 
++## Endereço do servidor Nakama. No laboratório, o computador do professor
++## roda o docker compose e os alunos apontam pra o IP dele; sozinho em casa,
++## o padrão 127.0.0.1 continua valendo. Fica salvo em user://servidor.cfg.
++const PORTA_SERVIDOR := 7350
++const ARQUIVO_SERVIDOR := "user://servidor.cfg"
++const SERVIDOR_PADRAO := "127.0.0.1"
++
++
++func carregar_servidor() -> String:
++	var cfg := ConfigFile.new()
++	if cfg.load(ARQUIVO_SERVIDOR) == OK:
++		var host := str(cfg.get_value("servidor", "host", SERVIDOR_PADRAO)).strip_edges()
++		if host != "":
++			return host
++	return SERVIDOR_PADRAO
++
++
++## Troca o servidor (só faz sentido antes do login). Recria o cliente.
++func definir_servidor(host: String) -> void:
++	host = host.strip_edges()
++	if host == "":
++		host = SERVIDOR_PADRAO
++	var cfg := ConfigFile.new()
++	cfg.set_value("servidor", "host", host)
++	cfg.save(ARQUIVO_SERVIDOR)
++	session = null
++	client = Nakama.create_client("defaultkey", host, PORTA_SERVIDOR, "http")
++
++
+ func _ready() -> void:
+ 	# A variável global 'Nakama' agora existe graças ao Autoload oficial
+-	client = Nakama.create_client("defaultkey", "127.0.0.1", 7350, "http")
++	client = Nakama.create_client("defaultkey", carregar_servidor(), PORTA_SERVIDOR, "http")
+ 
+ func login_convidado(id_dispositivo: String) -> bool:
+ 	var result = await client.authenticate_device_async(id_dispositivo)
+diff --git a/src/ui/TelaAutenticacao.gd b/src/ui/TelaAutenticacao.gd
+index 7372134..64f82df 100644
+--- a/src/ui/TelaAutenticacao.gd
++++ b/src/ui/TelaAutenticacao.gd
+@@ -4,6 +4,10 @@ extends Node
+ @onready var login_box = $CenterContainer/PanelContainer/LoginBox
+ @onready var cadastro_box = $CenterContainer/PanelContainer/CadastroBox	
+ 
++## Campo "Servidor" (IP do computador do professor no laboratório). Montado
++## por código pra não mexer na cena; vazio/127.0.0.1 = servidor na própria máquina.
++var _campo_servidor: LineEdit
++
+ func _ready():
+ 	# Garante que começa na tela de login
+ 	login_box.visible = true
+@@ -16,6 +20,30 @@ func _ready():
+ 	%BtnConvidado.pressed.connect(_on_btn_convidado_pressed)
+ 	%BtnEntrar.pressed.connect(_on_btn_entrar_pressed)
+ 	%BtnCadastro.pressed.connect(_on_btn_cadastrar_pressed)
++	_montar_campo_servidor()
++
++
++func _montar_campo_servidor() -> void:
++	var rotulo := Label.new()
++	rotulo.text = "Servidor (IP do professor):"
++	rotulo.add_theme_font_size_override("font_size", 11)
++	login_box.add_child(rotulo)
++
++	_campo_servidor = LineEdit.new()
++	_campo_servidor.text = NakamaManager.carregar_servidor()
++	_campo_servidor.placeholder_text = NakamaManager.SERVIDOR_PADRAO
++	login_box.add_child(_campo_servidor)
++
++
++## Aplica o endereço digitado antes de qualquer chamada ao servidor.
++func _aplicar_servidor() -> void:
++	if _campo_servidor == null:
++		return
++	var digitado := _campo_servidor.text.strip_edges()
++	if digitado == "":
++		digitado = NakamaManager.SERVIDOR_PADRAO
++	if digitado != NakamaManager.carregar_servidor():
++		NakamaManager.definir_servidor(digitado)
+ # --- NAVEGAÇÃO ENTRE TELAS ---
+ 
+ func _on_btn_ir_cadastro_pressed():
+@@ -32,6 +60,7 @@ func _on_btn_voltar_login_pressed():
+ func _on_btn_convidado_pressed():
+ 	# Bloqueia o botão para evitar cliques duplos
+ 	%BtnConvidado.disabled = true 
++	_aplicar_servidor()
+ 	
+ 	var device_id = OS.get_unique_id()
+ 	# Chama a função que você já tem no NakamaManager
+@@ -53,6 +82,7 @@ func _on_btn_entrar_pressed():
+ 		return
+ 		
+ 	%BtnEntrar.disabled = true
++	_aplicar_servidor()
+ 	var sucesso = await NakamaManager.login_conta(email, senha)
+ 	
+ 	if sucesso == "professor":
+@@ -81,6 +111,7 @@ func _on_btn_cadastrar_pressed():
+ 		return
+ 		
+ 	%Cadastro.disabled = true
++	_aplicar_servidor()
+ 	
+ 	# Usa a função de cadastro que criamos no gerenciador
+ 	var sucesso = await NakamaManager.cadastrar_conta(email, senha, nome, tipo_conta)

@@ -28,6 +28,7 @@ animations = [{
 [node name="Professor1" type="CharacterBody2D" unique_id=1475615145]
 scale = Vector2(0.7, 0.7)
 script = ExtResource("2_npc")
+nome_exibicao = "Mestre das Formas"
 tipo = "formas"
 mensagem = "Quer assistir uma aula sobre as formas das peças?"
 

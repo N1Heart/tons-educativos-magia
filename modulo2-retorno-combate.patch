@@ -1,0 +1,104 @@
+diff --git a/entities/teste.gd b/entities/teste.gd
+index b91176a..651dda0 100644
+--- a/entities/teste.gd
++++ b/entities/teste.gd
+@@ -25,6 +25,15 @@ func _ready() -> void:
+ 		tecla.physical_keycode = KEY_E
+ 		InputMap.action_add_event("interagir", tecla)
+ 
++	# Quem trocou de cena pode ter pedido pra o jogador nascer num ponto
++	# específico (ex: voltar do combate pra frente da porta dos duelos).
++	if Engine.has_meta("spawn_proxima_cena"):
++		var pedido: Dictionary = Engine.get_meta("spawn_proxima_cena")
++		Engine.remove_meta("spawn_proxima_cena")
++		var cena_atual := get_tree().current_scene
++		if cena_atual != null and cena_atual.scene_file_path == pedido.get("cena", ""):
++			global_position = pedido.get("posicao", global_position)
++
+ 	zona_interacao.area_entered.connect(_on_zona_interacao_area_entered)
+ 	zona_interacao.area_exited.connect(_on_zona_interacao_area_exited)
+ 
+diff --git a/scripts/duelos.gd b/scripts/duelos.gd
+index 53f607a..e041195 100644
+--- a/scripts/duelos.gd
++++ b/scripts/duelos.gd
+@@ -30,7 +30,13 @@ const HP_POR_NIVEL := 0.25
+ ## média de reação, senão uma única pausa distorce o alerta do professor.
+ const LATENCIA_MAX_REGISTRADA := 60.0
+ 
++## Pra onde o jogador volta quando o combate termina, e onde ele reaparece
++## (em frente à porta dos duelos, não no começo da sala).
++const CENA_RETORNO := "res://scenes/salas/fundosDoCastelo.tscn"
++const SPAWN_RETORNO := Vector2(405, 330)
++
+ var log_lines: Array[String] = []
++var _botao_voltar: Button
+ 
+ # --- Métricas da partida (gravadas em LocalDB ao fim do combate) ---
+ var _nivel: int = 1
+@@ -126,6 +132,7 @@ func _on_combat_ended(player_won: bool) -> void:
+ 	turn_label.text = "Vitória!" if player_won else "Derrota..."
+ 	board.can_swipe = false
+ 	_registrar_partida(player_won)
++	_mostrar_resultado(player_won)
+ 
+ 
+ func _registrar_partida(player_won: bool) -> void:
+@@ -147,3 +154,57 @@ func _registrar_partida(player_won: bool) -> void:
+ 		partida.latencia_media = soma / _latencias.size()
+ 
+ 	LocalDB.registrar_partida(LocalDB.get_user_id_ativo(), partida)
++
++
++## Painel de fim de combate: resultado, resumo e botão pra voltar ao quintal.
++## Espera um instante antes, pra última animação de dano terminar de aparecer.
++func _mostrar_resultado(player_won: bool) -> void:
++	await get_tree().create_timer(1.2).timeout
++	if not is_inside_tree():
++		return
++
++	var painel := PanelContainer.new()
++	painel.set_anchors_preset(Control.PRESET_CENTER)
++	painel.grow_horizontal = Control.GROW_DIRECTION_BOTH
++	painel.grow_vertical = Control.GROW_DIRECTION_BOTH
++	$HUD.add_child(painel)
++
++	var margem := MarginContainer.new()
++	for lado in ["left", "top", "right", "bottom"]:
++		margem.add_theme_constant_override("margin_" + lado, 14)
++	painel.add_child(margem)
++
++	var caixa := VBoxContainer.new()
++	caixa.add_theme_constant_override("separation", 8)
++	margem.add_child(caixa)
++
++	var titulo := Label.new()
++	titulo.text = "Vitória!" if player_won else "Derrota..."
++	titulo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
++	titulo.add_theme_font_size_override("font_size", 22)
++	caixa.add_child(titulo)
++
++	var resumo := Label.new()
++	resumo.text = "Dificuldade: nível %d  •  Jogadas: %d" % [_nivel, _latencias.size()]
++	resumo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
++	caixa.add_child(resumo)
++
++	_botao_voltar = Button.new()
++	_botao_voltar.text = "Voltar ao quintal  [E]"
++	_botao_voltar.pressed.connect(_voltar_ao_quintal)
++	caixa.add_child(_botao_voltar)
++	_botao_voltar.grab_focus()
++
++
++func _unhandled_input(event: InputEvent) -> void:
++	if _botao_voltar != null and event.is_action_pressed("interagir"):
++		_voltar_ao_quintal()
++
++
++func _voltar_ao_quintal() -> void:
++	if _botao_voltar == null:
++		return
++	_botao_voltar = null  # evita voltar duas vezes (clique + tecla)
++	# O jogador (entities/teste.gd) lê isso ao nascer na cena de destino.
++	Engine.set_meta("spawn_proxima_cena", {"cena": CENA_RETORNO, "posicao": SPAWN_RETORNO})
++	get_tree().change_scene_to_file(CENA_RETORNO)

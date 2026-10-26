@@ -1,0 +1,92 @@
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt base4/scripts/combat.gd tons-educativos-magia/scripts/combat.gd
+--- a/scripts/combat.gd	2026-10-08 21:31:40.000000000 -0400
++++ b/scripts/combat.gd	2026-10-08 21:45:22.125425484 -0400
+@@ -28,6 +28,12 @@
+ const SLOW_TIC_PENALTY: int = 1
+ const TEMPO_CIRCLE_BONUS_TICS: int = 1
+ 
++## Combinações da mesma forma e do mesmo tamanho no mesmo turno (cascatas
++## incluídas) viram UM feitiço só. Cada repetição extra soma este tanto do
++## poder base: 1.0 = soma linear (×N, mesmo poder total de antes, só mais
++## rápido); valores menores enfraquecem as cascatas.
++const BONUS_POR_REPETICAO := 1.0
++
+ ## Dano deste elemento ignora o escudo: destrói o escudo inteiro e o dano passa.
+ const ELEMENTO_QUEBRA_ESCUDO := "Eletricidade"
+ 
+@@ -208,7 +214,22 @@
+ 
+ # --- Resolução do turno ---
+ 
++## Junta feitiços iguais (lado + forma + elemento + tamanho) em um só.
++func _juntar_feiticos_iguais() -> void:
++	var juntos: Array[SpellCast] = []
++	var por_chave := {}
++	for sp in pending_spells:
++		var chave := "%s|%s|%s|%d" % [sp.caster, sp.tile_type.shape_name, sp.tile_type.element_name, sp.match_size]
++		if por_chave.has(chave):
++			por_chave[chave].repeticoes += 1
++		else:
++			por_chave[chave] = sp
++			juntos.append(sp)
++	pending_spells = juntos
++
++
+ func resolve_turn() -> void:
++	_juntar_feiticos_iguais()
+ 	pending_spells.sort_custom(func(a, b): return a.get_priority() < b.get_priority())
+ 
+ 	for spell in pending_spells:
+@@ -270,7 +291,8 @@
+ 	if caster_unit == null:
+ 		return  # a unidade morreu entre a fila e a resolução — feitiço não sai
+ 
+-	var scale = spell.get_scale()
++	var scale = spell.get_scale() * (1.0 + BONUS_POR_REPETICAO * (spell.repeticoes - 1))
++	var rotulo := "" if spell.repeticoes <= 1 else " ×%d" % spell.repeticoes
+ 	var element = spell.tile_type.element_name
+ 	var shape = spell.tile_type.shape_name
+ 
+@@ -299,8 +321,8 @@
+ 				caster_status["shield_stun"] = true
+ 				log_message.emit("Proteção contra stun ativada.")
+ 			"Circulo":
+-				caster_status["bonus_tics"] += TEMPO_CIRCLE_BONUS_TICS
+-				log_message.emit("+%d Tics no próximo turno!" % TEMPO_CIRCLE_BONUS_TICS)
++				caster_status["bonus_tics"] += TEMPO_CIRCLE_BONUS_TICS * spell.repeticoes
++				log_message.emit("+%d Tics no próximo turno!" % (TEMPO_CIRCLE_BONUS_TICS * spell.repeticoes))
+ 		return
+ 
+ 	var category: String = SpellLoadout.get_category(shape)
+@@ -313,17 +335,17 @@
+ 			var escudo_destruido: int = 0
+ 			for t in targets:
+ 				escudo_destruido += t.take_damage(amount, quebra)
+-			log_message.emit("%d de dano em %d alvo(s) (%s)" % [amount, targets.size(), element])
++			log_message.emit("%d de dano em %d alvo(s) (%s%s)" % [amount, targets.size(), element, rotulo])
+ 			if escudo_destruido > 0:
+ 				log_message.emit("A Eletricidade destruiu %d de escudo!" % escudo_destruido)
+ 		"defesa_rapida", "defesa_forte":
+ 			var protegidos := _escudo_alvos(caster_units, caster_unit, spell.match_size)
+ 			for u in protegidos:
+ 				u.add_shield(amount)
+-			log_message.emit("+%d de escudo em %d unidade(s) (%s)" % [amount, protegidos.size(), element])
++			log_message.emit("+%d de escudo em %d unidade(s) (%s%s)" % [amount, protegidos.size(), element, rotulo])
+ 		"auto":
+ 			caster_unit.heal(amount)
+-			log_message.emit("+%d de cura (%s)" % [amount, element])
++			log_message.emit("+%d de cura (%s%s)" % [amount, element, rotulo])
+ 
+ 
+ func _check_combat_end() -> bool:
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt base4/scripts/spell_cast.gd tons-educativos-magia/scripts/spell_cast.gd
+--- a/scripts/spell_cast.gd	2026-09-29 19:37:38.000000000 -0400
++++ b/scripts/spell_cast.gd	2026-10-08 21:45:14.251271275 -0400
+@@ -6,6 +6,7 @@
+ var caster: String            # "player" ou "monster"
+ var tile_type: TileType       # forma + cor/elemento que gerou o feitiço
+ var match_size: int           # tamanho da combinação (3, 4, 5+)
++var repeticoes: int = 1       # quantas combinações iguais foram juntadas neste feitiço
+ 
+ func _init(p_caster: String, p_tile_type: TileType, p_match_size: int):
+ 	caster = p_caster

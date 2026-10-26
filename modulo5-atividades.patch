@@ -1,0 +1,1098 @@
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base5/project.godot tons-educativos-magia/project.godot
+--- a/project.godot	2026-10-08 21:17:05.000000000 -0400
++++ b/project.godot	2026-10-13 15:16:31.125652267 -0400
+@@ -30,6 +30,7 @@
+ SyncManager="*uid://chv25kjav3818"
+ MenuPausa="*res://src/ui/MenuPausa.gd"
+ LobbyManager="*res://src/services/LobbyManager.gd"
++DueloRede="*res://src/services/DueloRede.gd"
+ 
+ [display]
+ 
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base5/scripts/TelaLobby.gd tons-educativos-magia/scripts/TelaLobby.gd
+--- a/scripts/TelaLobby.gd	2026-10-08 21:17:05.000000000 -0400
++++ b/scripts/TelaLobby.gd	2026-10-13 15:17:43.331370796 -0400
+@@ -10,6 +10,7 @@
+ 
+ const CENA_PROFESSOR := "res://scenes/Login/TelaTurma.tscn"
+ const CENA_ALUNO := "res://scenes/Login/TelaAluno.tscn"
++const CENA_DUELO := "res://scenes/salas/duelos.tscn"
+ const MIN_ALUNOS_PVE := 1
+ const MIN_ALUNOS_PVP := 2
+ 
+@@ -21,6 +22,7 @@
+ var _codigo_label: Label
+ var _btn_pve: Button
+ var _btn_pvp: Button
++var _btn_encerrar_atividade: Button
+ var _campo_codigo: LineEdit
+ var _btn_entrar: Button
+ var _ocupado := false
+@@ -48,6 +50,7 @@
+ 	LobbyManager.sala_atualizada.connect(_atualizar)
+ 	LobbyManager.atividade_iniciada.connect(_on_atividade_iniciada)
+ 	LobbyManager.sala_encerrada.connect(_on_sala_encerrada)
++	DueloRede.estados_atualizados.connect(_atualizar)
+ 
+ 	if _professor:
+ 		_montar_sala()
+@@ -135,6 +138,8 @@
+ 		_btn_pvp = _botao("Iniciar PvP (duelo)", func(): _iniciar("pvp"))
+ 		linha.add_child(_btn_pve)
+ 		linha.add_child(_btn_pvp)
++		_btn_encerrar_atividade = _botao("Encerrar atividade", func(): LobbyManager.encerrar_atividade())
++		linha.add_child(_btn_encerrar_atividade)
+ 		linha.add_child(_botao("Encerrar sala", _voltar))
+ 	else:
+ 		linha.add_child(_botao("Sair da sala", _voltar))
+@@ -203,26 +208,55 @@
+ 	_lista.clear()
+ 	for a in LobbyManager.alunos:
+ 		var eu: bool = a["id"] == LobbyManager.meu_id
+-		_lista.add_item(str(a["nome"]) + ("  (você)" if eu else ""))
++		var linha := str(a["nome"]) + ("  (você)" if eu else "")
++		if _professor:
++			var estado := DueloRede.texto_estado(str(a["id"]))
++			if estado != "":
++				linha += "  —  " + estado
++		_lista.add_item(linha)
+ 	if LobbyManager.alunos.is_empty():
+ 		_lista.add_item("Ninguém entrou ainda...")
+ 		_lista.set_item_disabled(0, true)
+ 
+ 	var n: int = LobbyManager.alunos.size()
++	var em_atividade: bool = LobbyManager.atividade != ""
+ 	if _professor:
+-		_btn_pve.disabled = n < MIN_ALUNOS_PVE
+-		_btn_pvp.disabled = n < MIN_ALUNOS_PVP
+-		if LobbyManager.atividade == "":
++		_btn_pve.disabled = n < MIN_ALUNOS_PVE or em_atividade
++		_btn_pvp.disabled = n < MIN_ALUNOS_PVP or em_atividade
++		_btn_encerrar_atividade.visible = em_atividade
++		if em_atividade:
++			_status.text = "Atividade em andamento: %s." % _nome_atividade(LobbyManager.atividade)
++		else:
+ 			_status.text = "%d aluno(s) na sala. Compartilhe o código com a turma." % n
+-	elif LobbyManager.atividade == "":
++	elif not em_atividade:
+ 		_status.text = "Aguardando o professor iniciar a atividade..."
++	elif _status.text == "" or _status.text.begins_with("Aguardando"):
++		_status.text = "Atividade em andamento. Aguarde o professor."
++
++
++func _nome_atividade(modo: String) -> String:
++	return "PvE cooperativo" if modo == "pve" else "PvP (duelo)"
+ 
+ 
+ func _on_atividade_iniciada(modo: String) -> void:
+-	var nome := "PvE cooperativo" if modo == "pve" else "PvP (duelo)"
+-	if _status != null and is_instance_valid(_status):
+-		# As partidas multiplayer em si entram nos próximos patches deste módulo.
+-		_status.text = "Atividade iniciada: %s. (a partida multiplayer chega na próxima atualização)" % nome
++	if _status == null or not is_instance_valid(_status):
++		return
++	if _professor:
++		_atualizar()
++		return
++	if modo == "":
++		_status.text = "Aguardando o professor iniciar a atividade..."
++		return
++	_status.text = "Preparando a partida (%s)..." % _nome_atividade(modo)
++	var resultado: String = await DueloRede.preparar(LobbyManager.atividade_dados)
++	if not is_inside_tree():
++		return
++	if resultado == "SEM_PAR":
++		_status.text = "Você ficou sem par nesta rodada. Aguarde o professor."
++	elif resultado != "":
++		_status.text = resultado
++	else:
++		get_tree().change_scene_to_file(CENA_DUELO)
+ 
+ 
+ func _on_sala_encerrada(motivo: String) -> void:
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base5/scripts/combat.gd tons-educativos-magia/scripts/combat.gd
+--- a/scripts/combat.gd	2026-10-08 21:45:22.000000000 -0400
++++ b/scripts/combat.gd	2026-10-13 15:25:48.535160547 -0400
+@@ -22,6 +22,9 @@
+ signal spell_resolving(spell: SpellCast)
+ signal combat_ended(player_won: bool)
+ signal log_message(text: String)
++## Modo multiplayer: emitido quando o turno local acabou e foi resolvido.
++## Leva o estado resultante (ver gerar_snapshot) pra ser enviado aos outros.
++signal turno_rede_encerrado(snapshot: Dictionary)
+ 
+ ## Com poucos Tics por turno (2 por padrão), o efeito de Tempo precisa ser
+ ## proporcional: lento tira 1 Tic (metade do turno) e o círculo roxo dá +1.
+@@ -59,6 +62,28 @@
+ 
+ var _board: Node = null
+ 
++## --- Multiplayer (ver DueloRede) ---
++## "" = PvE solo (inimigo controlado pela IA daqui)
++## "pvp"  = o "oponente" é outro jogador; ele joga o turno dele no PC dele
++## "coop" = vários jogadores alternam turnos do mesmo time contra um monstro
++## Em rede, quem tem o turno resolve os feitiços no PRÓPRIO PC e manda o
++## resultado (HP, escudos, status) pros outros, que só aplicam. Assim não
++## precisa sincronizar sorteios de alvo.
++var modo_rede: String = ""
++## No coop, o monstro só age depois do último jogador da rodada.
++var monstro_age_ao_fim: bool = true
++## Empate por tempo esgotado (a UI mostra "Empate!" em vez de "Derrota").
++var resultado_empate: bool = false
++var _log_turno: Array = []
++var _coletando_log := false
++
++func _ready() -> void:
++	# Guarda as mensagens do turno pra mandar junto com o resultado em rede.
++	log_message.connect(func(texto: String):
++		if _coletando_log:
++			_log_turno.append(texto))
++
++
+ # --- Ligação com o tabuleiro (grid.gd) ---
+ 
+ ## Conecta esse Combat aos sinais do tabuleiro ativo. Chame isso no _ready()
+@@ -100,6 +125,7 @@
+ 	for t in enemy_types:
+ 		enemy_units.append(CombatUnit.new(t, enemy_hp_each))
+ 
++	resultado_empate = false
+ 	tics_max = p_tics_max
+ 	player_status = {"stunned": false, "slow": false, "shield_slow": false, "shield_stun": false, "bonus_tics": 0}
+ 	monster_status = {"stunned": false, "slow": false, "shield_slow": false, "shield_stun": false, "bonus_tics": 0}
+@@ -179,6 +205,10 @@
+ 	is_player_turn = false
+ 	turn_started.emit(false)
+ 
++	if modo_rede != "":
++		await _encerrar_turno_rede()
++		return
++
+ 	_queue_enemy_actions()
+ 	await resolve_turn()
+ 
+@@ -186,6 +216,128 @@
+ 		start_player_turn()
+ 
+ 
++# --- Multiplayer ---
++
++func _encerrar_turno_rede() -> void:
++	_log_turno = []
++	_coletando_log = true
++	if modo_rede == "coop" and monstro_age_ao_fim:
++		_queue_enemy_actions()
++	await resolve_turn()
++	_coletando_log = false
++	turno_rede_encerrado.emit(gerar_snapshot())
++
++
++func _dados_unidades(unidades: Array[CombatUnit]) -> Array:
++	var r := []
++	for u in unidades:
++		r.append({"f": u.shape_name, "hp": u.current_hp, "sh": u.shield})
++	return r
++
++
++func _aplicar_unidades(unidades: Array[CombatUnit], dados: Array) -> void:
++	for d in dados:
++		for u in unidades:
++			if u.shape_name == str(d.get("f", "")):
++				u.current_hp = int(d.get("hp", u.current_hp))
++				u.shield = int(d.get("sh", u.shield))
++				break
++
++
++func _status_limpo(d: Dictionary) -> Dictionary:
++	return {
++		"stunned": bool(d.get("stunned", false)),
++		"slow": bool(d.get("slow", false)),
++		"shield_slow": bool(d.get("shield_slow", false)),
++		"shield_stun": bool(d.get("shield_stun", false)),
++		"bonus_tics": int(d.get("bonus_tics", 0)),
++	}
++
++
++## Estado completo depois do turno local: "mi" = meu lado, "ou" = o outro lado
++## (oponente/monstro), mais os status de cada um e o que aconteceu no turno.
++func gerar_snapshot() -> Dictionary:
++	return {
++		"mi": _dados_unidades(player_units),
++		"ou": _dados_unidades(enemy_units),
++		"sm": player_status.duplicate(),
++		"so": monster_status.duplicate(),
++		"log": _log_turno.duplicate(),
++	}
++
++
++## Aplica o estado enviado por quem jogou. `espelhar` = PvP: o "meu lado" de
++## quem mandou é o "oponente" aqui. `minha_vez` = o próximo turno é meu.
++func aplicar_snapshot(s: Dictionary, espelhar: bool, minha_vez: bool, tempo_esgotado: bool = false) -> void:
++	if not combat_active:
++		return
++	var meus: Array = s.get("ou", []) if espelhar else s.get("mi", [])
++	var outros: Array = s.get("mi", []) if espelhar else s.get("ou", [])
++	_aplicar_unidades(player_units, meus)
++	_aplicar_unidades(enemy_units, outros)
++	player_status = _status_limpo(s.get("so", {}) if espelhar else s.get("sm", {}))
++	monster_status = _status_limpo(s.get("sm", {}) if espelhar else s.get("so", {}))
++	for linha in s.get("log", []):
++		log_message.emit(str(linha))
++	units_changed.emit(player_units, enemy_units)
++	if _check_combat_end():
++		return
++	if tempo_esgotado:
++		encerrar_por_limite_de_turnos()
++		return
++	if minha_vez:
++		start_player_turn()
++	else:
++		aguardar_turno_rede()
++
++
++## Fica esperando a vez (não é o turno deste jogador).
++func aguardar_turno_rede() -> void:
++	is_player_turn = false
++	tics_remaining = 0
++	tics_changed.emit(tics_remaining, tics_max)
++	turn_started.emit(false)
++
++
++## Limite de turnos (evita partida eterna, p.ex. quando ninguém mais tem
++## unidade de dano): PvP vence quem tem mais HP total (igual = empate);
++## coop, o monstro resistiu e o time perde. Os dois lados chegam ao mesmo
++## resultado porque o estado aplicado é o mesmo.
++func encerrar_por_limite_de_turnos() -> void:
++	if not combat_active:
++		return
++	combat_active = false
++	var meu_hp := 0
++	var outro_hp := 0
++	for u in player_units:
++		meu_hp += u.current_hp
++	for u in enemy_units:
++		outro_hp += u.current_hp
++	if modo_rede == "pvp":
++		if meu_hp > outro_hp:
++			log_message.emit("Tempo esgotado: você venceu pelos pontos de vida!")
++			combat_ended.emit(true)
++		elif meu_hp < outro_hp:
++			log_message.emit("Tempo esgotado: o adversário venceu pelos pontos de vida.")
++			combat_ended.emit(false)
++		else:
++			resultado_empate = true
++			log_message.emit("Tempo esgotado: empate!")
++			combat_ended.emit(false)
++	else:
++		log_message.emit("Tempo esgotado: o monstro resistiu.")
++		combat_ended.emit(false)
++
++
++## O outro jogador saiu: quem ficou vence por W.O. (PvP).
++func encerrar_por_wo() -> void:
++	if not combat_active:
++		return
++	combat_active = false
++	log_message.emit("O adversário saiu: vitória por W.O.!")
++	combat_ended.emit(true)
++
++
+ ## IA simples: cada unidade inimiga viva age uma vez por turno, com combo
+ ## fixo de 3 (1 alvo). Trocar por algo mais elaborado depois é só mudar aqui.
+ func _queue_enemy_actions() -> void:
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base5/scripts/duelos.gd tons-educativos-magia/scripts/duelos.gd
+--- a/scripts/duelos.gd	2026-10-08 20:41:46.000000000 -0400
++++ b/scripts/duelos.gd	2026-10-13 15:28:19.923368241 -0400
+@@ -41,8 +41,16 @@
+ const CENA_RETORNO := "res://scenes/salas/fundosDoCastelo.tscn"
+ const SPAWN_RETORNO := Vector2(405, 330)
+ 
++## Multiplayer: HP do time cresce com o tamanho da equipe (coop) e o monstro
++## ganha HP proporcional ao número de jogadores.
++const HP_TIME_POR_MEMBRO := 0.25
++const HP_PVP := 30
++const CENA_LOBBY := "res://scenes/Login/TelaLobby.tscn"
++const CENA_MENU_ALUNO := "res://scenes/Login/TelaAluno.tscn"
++
+ var log_lines: Array[String] = []
+ var _botao_voltar: Button
++var _em_rede := false   # esta partida é PvE cooperativo ou PvP (ver DueloRede)
+ 
+ # --- Métricas da partida (gravadas em LocalDB ao fim do combate) ---
+ var _nivel: int = 1
+@@ -59,6 +67,8 @@
+ 		get_tree().change_scene_to_file.call_deferred("res://scenes/salas/fundosDoCastelo.tscn")
+ 		return
+ 		
++	_em_rede = DueloRede.ativo
++	Combat.modo_rede = DueloRede.modo_combate if _em_rede else ""
+ 	Combat.bind_board(board)
+ 
+ 	Combat.units_changed.connect(_on_units_changed)
+@@ -70,6 +80,8 @@
+ 	var player_types: Array[TileType] = []
+ 	var formas: Array[String] = player_shapes if not player_shapes.is_empty() \
+ 		else SpellLoadout.formas_disponiveis(LocalDB.get_user_id_ativo())
++	if _em_rede and not DueloRede.formas_equipe.is_empty():
++		formas = DueloRede.formas_equipe.duplicate()
+ 	for shape_name in formas:
+ 		player_types.append(SpellLoadout.get_equipped_type(shape_name))
+ 
+@@ -82,16 +94,139 @@
+ 	]
+ 
+ 	# Dificuldade automática: nível sai do histórico; sobe o HP dos inimigos.
+-	_nivel = LocalDB.proximo_nivel_dificuldade(LocalDB.get_user_id_ativo())
+-	var hp_inimigo := int(round(enemy_hp_each * (1.0 + HP_POR_NIVEL * (_nivel - 1))))
++	var hp_time := player_hp_each
++	var hp_inimigo: int
++	if _em_rede and DueloRede.modo_combate == "pvp":
++		enemy_types = DueloRede.tipos_adversario.duplicate()
++		hp_time = HP_PVP
++		hp_inimigo = HP_PVP
++		_nivel = 0
++	elif _em_rede:
++		var n := DueloRede.membros.size()
++		_nivel = DueloRede.nivel_equipe
++		hp_time = int(round(player_hp_each * (1.0 + HP_TIME_POR_MEMBRO * (n - 1))))
++		hp_inimigo = int(round(enemy_hp_each * (1.0 + HP_POR_NIVEL * (_nivel - 1)) * n))
++	else:
++		_nivel = LocalDB.proximo_nivel_dificuldade(LocalDB.get_user_id_ativo())
++		hp_inimigo = int(round(enemy_hp_each * (1.0 + HP_POR_NIVEL * (_nivel - 1))))
+ 
+ 	board.player_moved.connect(_on_player_moved)
+ 	board.board_idle.connect(_on_board_idle)
+ 	board.spell_matched.connect(_on_spell_matched)
+ 	_inicio_ms = Time.get_ticks_msec()
+ 
+-	Combat.start_combat(player_types, player_hp_each, enemy_types, hp_inimigo, tics_por_turno)
+-	_on_log_message("Dificuldade: nível %d" % _nivel)
++	if _em_rede:
++		_preparar_rede()
++
++	Combat.start_combat(player_types, hp_time, enemy_types, hp_inimigo, tics_por_turno)
++	if _em_rede:
++		_iniciar_rede()
++	else:
++		_on_log_message("Dificuldade: nível %d" % _nivel)
++
++
++# ------------------------------------------------------------- multiplayer
++
++func _preparar_rede() -> void:
++	Combat.turno_rede_encerrado.connect(_on_turno_rede_encerrado)
++	DueloRede.turno_recebido.connect(_on_turno_recebido)
++	DueloRede.membro_saiu.connect(_on_membro_saiu)
++	DueloRede.atividade_encerrada.connect(_on_atividade_encerrada)
++	DueloRede.sala_perdida.connect(_on_sala_perdida)
++
++	var painel_inimigo := $HUD/EnemyPanel/NameLabel as Label
++	var painel_time := $HUD/PlayerPanel/NameLabel as Label
++	if DueloRede.modo_combate == "pvp":
++		painel_inimigo.text = DueloRede.nome_do_adversario()
++		painel_time.text = "Você"
++	else:
++		var nomes: Array[String] = []
++		for m in DueloRede.membros:
++			nomes.append(str(m["nome"]))
++		painel_inimigo.text = "Monstro"
++		painel_time.text = "Equipe: " + ", ".join(nomes)
++
++
++## Depois do start_combat: quem não começa fica esperando a vez.
++func _iniciar_rede() -> void:
++	if not DueloRede.meu_turno():
++		Combat.aguardar_turno_rede()
++	_atualizar_rotulo_turno()
++	_enviar_estado("")
++
++
++func _atualizar_rotulo_turno() -> void:
++	if not _em_rede or not Combat.combat_active:
++		return
++	if Combat.is_player_turn:
++		turn_label.text = "Seu turno"
++	elif DueloRede.turno_idx == DueloRede.meu_indice:
++		turn_label.text = "Resolvendo seu turno..."
++	else:
++		turn_label.text = "Vez de %s..." % DueloRede.nome_de_quem_joga()
++
++
++## Meu turno acabou e foi resolvido: manda o resultado e passa a vez.
++func _on_turno_rede_encerrado(snapshot: Dictionary) -> void:
++	var de_novo_eu := DueloRede.enviar_turno(snapshot)
++	if Combat.combat_active:
++		_enviar_estado("")
++	_atualizar_rotulo_turno()
++	if Combat.combat_active and DueloRede.limite_atingido():
++		Combat.encerrar_por_limite_de_turnos()
++		return
++	if de_novo_eu and Combat.combat_active:
++		Combat.start_player_turn()
++
++
++## O jogador da vez terminou: aplica o resultado dele (e começa o meu, se for a minha vez).
++func _on_turno_recebido(snapshot: Dictionary) -> void:
++	if not Combat.combat_active:
++		return
++	Combat.aplicar_snapshot(snapshot, DueloRede.modo_combate == "pvp", DueloRede.meu_turno(), DueloRede.limite_atingido())
++	if Combat.combat_active:
++		_enviar_estado("")
++	_atualizar_rotulo_turno()
++
++
++func _on_membro_saiu(user_id: String) -> void:
++	if not Combat.combat_active:
++		return
++	if DueloRede.modo_combate == "pvp":
++		Combat.encerrar_por_wo()
++	else:
++		_on_log_message("Um colega saiu da equipe.")
++		_atualizar_rotulo_turno()
++
++
++func _on_atividade_encerrada() -> void:
++	# O professor encerrou: sem derrota nem vitória, todo mundo volta pra sala.
++	Combat.combat_active = false
++	_registrada = true
++	_voltar_para_sala()
++
++
++func _on_sala_perdida(_motivo: String) -> void:
++	Combat.combat_active = false
++	_registrada = true
++	get_tree().change_scene_to_file(CENA_MENU_ALUNO)
++
++
++func _enviar_estado(fim: String) -> void:
++	if not _em_rede or not DueloRede.ativo:
++		return
++	var hp := 0
++	var hp_max := 0
++	for u in Combat.player_units:
++		hp += u.current_hp
++		hp_max += u.max_hp
++	DueloRede.enviar_estado(hp, hp_max, fim)
++
++
++func _voltar_para_sala() -> void:
++	DueloRede.limpar_partida()
++	Engine.set_meta("lobby_modo", "aluno")
++	get_tree().change_scene_to_file(CENA_LOBBY)
+ 
+ 
+ func _on_units_changed(player_units: Array, enemy_units: Array) -> void:
+@@ -104,7 +239,12 @@
+ 
+ 
+ func _on_turn_started(is_player: bool) -> void:
+-	turn_label.text = "Seu turno" if is_player else "Turno do oponente..."
++	if _em_rede:
++		if is_player:
++			Combat.monstro_age_ao_fim = DueloRede.sou_ultimo()
++		_atualizar_rotulo_turno()
++	else:
++		turn_label.text = "Seu turno" if is_player else "Turno do oponente..."
+ 	_pronto_ms = Time.get_ticks_msec() if is_player else -1
+ 
+ 
+@@ -135,14 +275,15 @@
+ 
+ 
+ func _on_combat_ended(player_won: bool) -> void:
+-	turn_label.text = "Vitória!" if player_won else "Derrota..."
++	turn_label.text = "Empate!" if Combat.resultado_empate else ("Vitória!" if player_won else "Derrota...")
+ 	board.can_swipe = false
+ 	_registrar_partida(player_won)
++	_enviar_estado("empate" if Combat.resultado_empate else ("venceu" if player_won else "perdeu"))
+ 	_mostrar_resultado(player_won)
+ 
+ 
+ func _registrar_partida(player_won: bool) -> void:
+-	if _registrada:
++	if _registrada or _em_rede:
+ 		return
+ 	_registrada = true
+ 
+@@ -185,18 +326,23 @@
+ 	margem.add_child(caixa)
+ 
+ 	var titulo := Label.new()
+-	titulo.text = "Vitória!" if player_won else "Derrota..."
++	titulo.text = "Empate!" if Combat.resultado_empate else ("Vitória!" if player_won else "Derrota...")
+ 	titulo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ 	titulo.add_theme_font_size_override("font_size", 22)
+ 	caixa.add_child(titulo)
+ 
+ 	var resumo := Label.new()
+-	resumo.text = "Dificuldade: nível %d  •  Jogadas: %d" % [_nivel, _latencias.size()]
++	if _em_rede and DueloRede.modo_combate == "pvp":
++		resumo.text = "Duelo contra %s  •  Jogadas: %d" % [DueloRede.nome_do_adversario(), _latencias.size()]
++	elif _em_rede:
++		resumo.text = "Equipe de %d  •  Suas jogadas: %d" % [DueloRede.membros.size(), _latencias.size()]
++	else:
++		resumo.text = "Dificuldade: nível %d  •  Jogadas: %d" % [_nivel, _latencias.size()]
+ 	resumo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ 	caixa.add_child(resumo)
+ 
+ 	_botao_voltar = Button.new()
+-	_botao_voltar.text = "Voltar ao quintal  [E]"
++	_botao_voltar.text = "Voltar à sala  [E]" if _em_rede else "Voltar ao quintal  [E]"
+ 	_botao_voltar.pressed.connect(_voltar_ao_quintal)
+ 	caixa.add_child(_botao_voltar)
+ 	_botao_voltar.grab_focus()
+@@ -211,7 +357,10 @@
+ 	if _botao_voltar == null:
+ 		return
+ 	_botao_voltar = null  # evita voltar duas vezes (clique + tecla)
+-	_ir_para_o_quintal()
++	if _em_rede:
++		_voltar_para_sala()
++	else:
++		_ir_para_o_quintal()
+ 
+ 
+ func _ir_para_o_quintal() -> void:
+@@ -226,13 +375,23 @@
+ 	if _registrada or not Combat.combat_active:
+ 		return
+ 	Combat.combat_active = false
++	if _em_rede:
++		# Os outros ficam sabendo: no PvP o adversário vence por W.O.
++		_registrada = true
++		DueloRede.avisar_saida()
++		_enviar_estado("perdeu")
++		return
+ 	_registrar_partida(false)
+ 
+ 
+-## "Desistir do combate" do menu ESC: grava a derrota e volta pro quintal.
++## "Desistir do combate" do menu ESC: grava a derrota e volta pro quintal
++## (ou pra sala, se for uma atividade em grupo).
+ func desistir() -> void:
+ 	abandonar()
+-	_ir_para_o_quintal()
++	if _em_rede:
++		_voltar_para_sala()
++	else:
++		_ir_para_o_quintal()
+ 
+ 
+ func _notification(what: int) -> void:
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base5/scripts/grid.gd tons-educativos-magia/scripts/grid.gd
+--- a/scripts/grid.gd	2026-10-04 21:20:48.000000000 -0400
++++ b/scripts/grid.gd	2026-10-13 15:15:42.896829107 -0400
+@@ -54,6 +54,9 @@
+ 	SpellLoadout.preparar_para_jogo(uid)
+ 
+ 	var formas := SpellLoadout.formas_disponiveis(uid)
++	# Coop: o time todo joga com o mesmo conjunto de formas (ver DueloRede).
++	if not DueloRede.formas_equipe.is_empty():
++		formas = DueloRede.formas_equipe.duplicate()
+ 	if formas.size() < SpellLoadout.MIN_FORMAS_COMBATE:
+ 		push_warning("Grid: só %d forma(s) em jogo; o tabuleiro vai cascatear. O combate deveria estar bloqueado." % formas.size())
+ 
+@@ -148,6 +151,10 @@
+ func touch_input():
+ 	if not can_swipe:
+ 		return
++	# Só mexe nas peças no próprio turno (antes dava pra jogar durante a vez do
++	# oponente, o que no multiplayer quebraria tudo).
++	if Combat.combat_active and not Combat.can_player_act():
++		return
+ 	if Input.is_action_just_pressed("ui_touch"):
+ 		first_touch = get_global_mouse_position()
+ 		var grid_position = pixel_to_grid(first_touch.x, first_touch.y)
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base5/src/services/DueloRede.gd tons-educativos-magia/src/services/DueloRede.gd
+--- a/src/services/DueloRede.gd	1969-12-31 20:00:00.000000000 -0400
++++ b/src/services/DueloRede.gd	2026-10-13 15:25:48.536150128 -0400
+@@ -0,0 +1,355 @@
++extends Node
++class_name DueloRedeClass
++
++## Autoload "DueloRede" — as atividades multiplayer da sala (Módulo 5).
++##
++##   PvE cooperativo ("pve" na sala; "coop" no Combat): equipes de até 3
++##     alunos enfrentam o MESMO monstro, alternando turnos. O monstro age uma
++##     vez por rodada, depois do último aluno da equipe.
++##   PvP ("pvp"): duelo 1x1, cada um no seu tabuleiro, alternando turnos.
++##
++## O professor já mandou os grupos em LobbyManager.atividade_dados. Aqui:
++##   1. cada aluno anuncia seu "roster" (formas/elementos que pode usar) —
++##      OP_PRONTO — e espera os colegas do grupo;
++##   2. a cena duelos.tscn roda o Combat em modo rede (ver combat.gd): quem
++##      tem a vez resolve o turno e manda o estado — OP_TURNO — pros outros;
++##   3. cada aluno manda um resumo pro professor acompanhar — OP_ESTADO.
++##
++## Todas as mensagens levam "r" (rodada) e "g" (grupo) pra descartar o que
++## sobrou de uma atividade anterior ou de outro grupo.
++
++signal turno_recebido(snapshot: Dictionary)
++signal membro_saiu(user_id: String)       # alguém do meu grupo saiu (ou caiu)
++signal atividade_encerrada                # o professor encerrou a atividade
++signal sala_perdida(motivo: String)       # o professor fechou a sala / conexão caiu
++signal estados_atualizados                # chegou resumo de algum aluno (professor)
++
++const OP_PRONTO := 101
++const OP_TURNO := 102
++const OP_SAIDA := 103
++const OP_ESTADO := 104
++
++const TEMPO_ESPERA_GRUPO := 12.0
++## Cada jogador tem no máximo este número de turnos; depois disso o combate
++## termina por tempo (ver Combat.encerrar_por_limite_de_turnos).
++const LIMITE_RODADAS := 10
++
++## --- Estado da partida em andamento (cena duelos.tscn lê tudo isto) ---
++var ativo := false
++var modo: String = ""                 # "pve" | "pvp" (nomes da sala)
++var modo_combate: String = ""         # "coop" | "pvp" (nomes do Combat)
++var rodada: int = -1
++var grupo: int = -1
++var membros: Array = []               # [{id, nome}] na ordem dos turnos
++var meu_indice: int = 0
++var turno_idx: int = 0                # de quem é a vez agora
++var turnos_jogados: int = 0           # turnos já resolvidos nesta partida (todos os jogadores)
++var formas_equipe: Array[String] = [] # coop: formas que o time usa (vazio = as do próprio jogador)
++var tipos_adversario: Array[TileType] = []   # pvp: formas/elementos do outro jogador
++var nivel_equipe: int = 1             # coop: média dos níveis de dificuldade
++
++var _prontos := {}                    # user_id -> roster (OP_PRONTO) da rodada atual
++var estados := {}                     # user_id -> último OP_ESTADO (o professor lê)
++
++
++func _ready() -> void:
++	LobbyManager.mensagem_recebida.connect(_on_mensagem)
++	LobbyManager.atividade_iniciada.connect(_on_atividade)
++	LobbyManager.jogador_saiu.connect(_on_jogador_saiu)
++	LobbyManager.sala_encerrada.connect(_on_sala_encerrada)
++
++
++# --------------------------------------------------------------- preparação
++
++func _on_atividade(novo_modo: String) -> void:
++	# Começou (ou terminou) uma atividade: o que sobrou da anterior vale nada.
++	_prontos.clear()
++	estados.clear()
++	if novo_modo == "":
++		if ativo:
++			atividade_encerrada.emit()
++		limpar_partida()
++
++
++## Zera o estado da partida (volta ao comportamento normal de PvE solo).
++func limpar_partida() -> void:
++	ativo = false
++	modo = ""
++	modo_combate = ""
++	grupo = -1
++	membros = []
++	meu_indice = 0
++	turno_idx = 0
++	turnos_jogados = 0
++	formas_equipe = []
++	tipos_adversario = []
++	Combat.modo_rede = ""
++
++
++## Procura o meu grupo nos grupos que o professor mandou.
++func _meu_grupo(dados: Dictionary) -> int:
++	var grupos: Array = dados.get("grupos", [])
++	for i in grupos.size():
++		for m in grupos[i]:
++			if str(m.get("id", "")) == LobbyManager.meu_id:
++				return i
++	return -1
++
++
++## Chamado pela TelaLobby do aluno quando o professor inicia uma atividade.
++## Devolve "" se a partida está pronta (a cena pode abrir), "SEM_PAR" se o
++## aluno não tem grupo/adversário nesta rodada, ou a mensagem de erro.
++func preparar(dados: Dictionary) -> String:
++	limpar_partida()
++	var modo_sala := str(dados.get("modo", ""))
++	rodada = int(dados.get("rodada", -1))
++	grupo = _meu_grupo(dados)
++	if grupo < 0:
++		return "SEM_PAR"
++	var previstos: Array = dados["grupos"][grupo]
++	if modo_sala == "pvp" and previstos.size() < 2:
++		grupo = -1
++		return "SEM_PAR"
++
++	# Anuncia o que eu posso usar na partida.
++	var uid := LocalDB.get_user_id_ativo()
++	var motivo := SpellLoadout.motivo_bloqueio_combate(uid)
++	var formas_info := []
++	if motivo == "":
++		for f in SpellLoadout.formas_disponiveis(uid):
++			formas_info.append({"f": f, "e": SpellLoadout.get_equipped_type(f).element_name})
++	var roster := {
++		"id": LobbyManager.meu_id,
++		"nome": _meu_nome(),
++		"pode": motivo == "",
++		"formas": formas_info,
++		"nivel": LocalDB.proximo_nivel_dificuldade(uid) if motivo == "" else 1,
++	}
++	_prontos[LobbyManager.meu_id] = roster
++	await LobbyManager.enviar_atividade(OP_PRONTO, _com_ids(roster))
++	if motivo != "":
++		grupo = -1
++		return motivo
++
++	# Espera os colegas do grupo anunciarem também.
++	var limite := Time.get_ticks_msec() + int(TEMPO_ESPERA_GRUPO * 1000.0)
++	while Time.get_ticks_msec() < limite and not _todos_prontos(previstos):
++		await get_tree().create_timer(0.1).timeout
++
++	var validos := []
++	for m in previstos:
++		var id := str(m["id"])
++		if _prontos.has(id) and _prontos[id]["pode"]:
++			validos.append({"id": id, "nome": _prontos[id]["nome"]})
++	if modo_sala == "pvp" and validos.size() < 2:
++		grupo = -1
++		return "Seu adversário não conseguiu entrar na partida."
++
++	modo = modo_sala
++	modo_combate = "pvp" if modo_sala == "pvp" else "coop"
++	membros = validos
++	meu_indice = 0
++	for i in membros.size():
++		if membros[i]["id"] == LobbyManager.meu_id:
++			meu_indice = i
++	turno_idx = 0
++	turnos_jogados = 0
++
++	if modo_combate == "pvp":
++		var outro: Dictionary = _prontos[membros[1 - meu_indice]["id"]]
++		for fe in outro["formas"]:
++			tipos_adversario.append(SpellLoadout.get_tile_type(str(fe["f"]), str(fe["e"])))
++	else:
++		formas_equipe = _formas_da_equipe()
++		var soma := 0
++		for m in membros:
++			soma += int(_prontos[m["id"]]["nivel"])
++		nivel_equipe = maxi(1, int(round(soma / float(membros.size()))))
++
++	ativo = true
++	return ""
++
++
++func _todos_prontos(previstos: Array) -> bool:
++	for m in previstos:
++		if not _prontos.has(str(m["id"])):
++			return false
++	return true
++
++
++func _meu_nome() -> String:
++	var perfil := LocalDB.carregar_perfil(LocalDB.get_user_id_ativo())
++	if perfil != null and perfil.nome != "":
++		return perfil.nome
++	return NakamaManager.convidado_nome if NakamaManager.convidado_nome != "" else "Aluno"
++
++
++func _com_ids(d: Dictionary) -> Dictionary:
++	var r := d.duplicate()
++	r["r"] = rodada
++	r["g"] = grupo
++	return r
++
++
++## Formas que toda a equipe usa: as que TODOS têm; se sobrar menos de 3,
++## todas as que alguém tem (até 5).
++func _formas_da_equipe() -> Array[String]:
++	var comuns: Array[String] = []
++	var todas: Array[String] = []
++	for forma in SpellLoadout.SHAPES:
++		var todos_tem := true
++		var alguem_tem := false
++		for m in membros:
++			var tem := false
++			for fe in _prontos[m["id"]]["formas"]:
++				if fe["f"] == forma:
++					tem = true
++			todos_tem = todos_tem and tem
++			alguem_tem = alguem_tem or tem
++		if todos_tem:
++			comuns.append(forma)
++		if alguem_tem:
++			todas.append(forma)
++	return comuns if comuns.size() >= SpellLoadout.MIN_FORMAS_COMBATE else todas
++
++
++# ------------------------------------------------------------------- turnos
++
++func limite_atingido() -> bool:
++	return turnos_jogados >= LIMITE_RODADAS * maxi(1, membros.size())
++
++
++func meu_turno() -> bool:
++	return ativo and turno_idx == meu_indice
++
++
++func sou_ultimo() -> bool:
++	return meu_indice == membros.size() - 1
++
++
++func nome_de_quem_joga() -> String:
++	if turno_idx >= 0 and turno_idx < membros.size():
++		return str(membros[turno_idx]["nome"])
++	return "?"
++
++
++## Nome do adversário (PvP) ou "" (coop).
++func nome_do_adversario() -> String:
++	if modo_combate == "pvp" and membros.size() == 2:
++		return str(membros[1 - meu_indice]["nome"])
++	return ""
++
++
++## Termina o turno local: manda o estado pros outros e passa a vez.
++## Devolve true se o próximo turno também é meu (equipe de um só).
++func enviar_turno(snapshot: Dictionary) -> bool:
++	turno_idx = (turno_idx + 1) % maxi(1, membros.size())
++	turnos_jogados += 1
++	snapshot["prox"] = turno_idx
++	snapshot["t"] = turnos_jogados
++	snapshot["nome"] = _meu_nome()
++	LobbyManager.enviar_atividade(OP_TURNO, _com_ids(snapshot))
++	return turno_idx == meu_indice
++
++
++## Resumo pro painel do professor (hp = soma do meu lado).
++func enviar_estado(hp: int, hp_max: int, fim: String) -> void:
++	if not ativo:
++		return
++	var contra := nome_do_adversario()
++	var d := {
++		"id": LobbyManager.meu_id,
++		"nome": _meu_nome(),
++		"modo": modo,
++		"hp": hp,
++		"hpmax": hp_max,
++		"fim": fim,
++		"contra": contra,
++		"vez": nome_de_quem_joga(),
++	}
++	estados[LobbyManager.meu_id] = d
++	LobbyManager.enviar_atividade(OP_ESTADO, _com_ids(d))
++
++
++## Aviso de que estou saindo da partida (desistência ou fechamento).
++func avisar_saida() -> void:
++	if grupo < 0:
++		return
++	LobbyManager.enviar_atividade(OP_SAIDA, _com_ids({"id": LobbyManager.meu_id}))
++
++
++# -------------------------------------------------------------- recebimento
++
++func _on_mensagem(op_code: int, remetente: String, dados: Dictionary) -> void:
++	if int(dados.get("r", -2)) != LobbyManager.atividade_dados.get("rodada", -1):
++		return
++	match op_code:
++		OP_ESTADO:
++			# Todos recebem; o professor é quem usa.
++			estados[remetente] = dados
++			estados_atualizados.emit()
++		OP_PRONTO:
++			if int(dados.get("g", -1)) == grupo or grupo == -1 and not ativo:
++				_prontos[remetente] = dados
++		OP_TURNO:
++			if ativo and int(dados.get("g", -1)) == grupo:
++				turno_idx = int(dados.get("prox", 0))
++				turnos_jogados = int(dados.get("t", turnos_jogados + 1))
++				turno_recebido.emit(dados)
++		OP_SAIDA:
++			if ativo and int(dados.get("g", -1)) == grupo:
++				_remover_membro(remetente)
++
++
++func _on_jogador_saiu(user_id: String) -> void:
++	if ativo:
++		_remover_membro(user_id)
++
++
++## Tira alguém do grupo (saiu/caiu/desistiu). Todos os clientes fazem a mesma
++## conta, então concordam sobre de quem é a vez.
++func _remover_membro(user_id: String) -> void:
++	var idx := -1
++	for i in membros.size():
++		if membros[i]["id"] == user_id:
++			idx = i
++	if idx < 0 or user_id == LobbyManager.meu_id:
++		return
++	membros.remove_at(idx)
++	if idx < meu_indice:
++		meu_indice -= 1
++	var vez_dele := idx == turno_idx
++	if idx < turno_idx:
++		turno_idx -= 1
++	if turno_idx >= membros.size():
++		turno_idx = 0
++	membro_saiu.emit(user_id)
++	if vez_dele and meu_turno() and Combat.combat_active and modo_combate == "coop":
++		Combat.monstro_age_ao_fim = sou_ultimo()
++		Combat.start_player_turn()
++
++
++func _on_sala_encerrada(motivo: String) -> void:
++	if ativo:
++		limpar_partida()
++		sala_perdida.emit(motivo)
++
++
++# ------------------------------------------------------------------ professor
++
++## Linha de texto do estado de um aluno pro painel do professor ("" = nada).
++func texto_estado(user_id: String) -> String:
++	if not estados.has(user_id):
++		return ""
++	var e: Dictionary = estados[user_id]
++	var fim := str(e.get("fim", ""))
++	if fim == "venceu":
++		return "venceu!"
++	if fim == "perdeu":
++		return "perdeu"
++	if fim == "empate":
++		return "empate"
++	var base := "HP %d/%d" % [int(e.get("hp", 0)), int(e.get("hpmax", 0))]
++	if str(e.get("contra", "")) != "":
++		base += " vs %s" % e["contra"]
++	return base
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base5/src/services/LobbyManager.gd tons-educativos-magia/src/services/LobbyManager.gd
+--- a/src/services/LobbyManager.gd	2026-10-08 21:15:49.000000000 -0400
++++ b/src/services/LobbyManager.gd	2026-10-13 15:15:57.282523047 -0400
+@@ -13,13 +13,14 @@
+ ## Mensagens (op codes, corpo em JSON):
+ ##   OP_HELLO   aluno -> sala   {nome}           "cheguei"
+ ##   OP_SALA    professor -> todos {turma, professor, alunos:[{id,nome}], atividade}
+-##   OP_INICIAR professor -> todos {modo}        "pve" | "pvp"
++##   OP_INICIAR professor -> todos {modo, rodada, grupos}  "pve" | "pvp"; modo "" = encerra
+ ##   OP_ENCERRAR professor -> todos              sala fechada
+ 
+ signal sala_atualizada                      # lista/estado mudou
+ signal atividade_iniciada(modo: String)
+ signal sala_encerrada(motivo: String)
+ signal mensagem_recebida(op_code: int, remetente_id: String, dados: Dictionary)
++signal jogador_saiu(user_id: String)        # alguém saiu da sala (ou caiu)
+ 
+ const OP_HELLO := 1
+ const OP_SALA := 2
+@@ -28,6 +29,9 @@
+ ## A partir daqui ficam as mensagens das atividades (PvE/PvP).
+ const OP_ATIVIDADE_BASE := 100
+ 
++## Tamanho máximo de cada equipe no PvE cooperativo.
++const TAMANHO_EQUIPE_PVE := 3
++
+ const PREFIXO_NOME_PARTIDA := "tons_"
+ const ALFABETO_CODIGO := "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # sem I/O/0/1 (confundem)
+ const TAMANHO_CODIGO := 4
+@@ -48,6 +52,8 @@
+ var nome_professor: String = ""
+ var atividade: String = ""        # "" = ainda no saguão; "pve" / "pvp" depois de iniciar
+ var alunos: Array = []            # [{id, nome}]
++var atividade_dados: Dictionary = {}   # último OP_INICIAR: {modo, rodada, grupos:[[{id,nome}]]}
++var _rodada: int = 0              # conta as atividades iniciadas (descarta mensagens velhas)
+ 
+ var _nomes_alunos := {}           # user_id -> nome (só o professor usa)
+ var _presentes := {}              # user_id -> true (quem está conectado na partida)
+@@ -99,6 +105,8 @@
+ 		if NakamaManager.session == null:
+ 			return "Sem conexão com o servidor. Confira o IP do professor na tela de login."
+ 
++	# O menu ESC pausa o jogo; sem isto o websocket parava de ser lido.
++	Nakama.process_mode = Node.PROCESS_MODE_ALWAYS
+ 	_descartar_socket()
+ 	socket = Nakama.create_socket_from(_cliente())
+ 	var r = await socket.connect_async(_sessao())
+@@ -121,6 +129,7 @@
+ 
+ 
+ func _zerar_estado() -> void:
++	atividade_dados = {}
+ 	match_id = ""
+ 	codigo = ""
+ 	nome_turma = ""
+@@ -166,16 +175,49 @@
+ 	return ""
+ 
+ 
++## Divide os alunos presentes em grupos: PvE = equipes de até TAMANHO_EQUIPE_PVE
++## (as mais equilibradas possível); PvP = pares (quem sobra fica sem par).
++## Devolve [[{id, nome}, ...], ...]; a ordem dentro do grupo é a ordem dos turnos.
++static func montar_grupos(modo: String, lista: Array) -> Array:
++	var embaralhada := lista.duplicate()
++	embaralhada.shuffle()
++	var grupos: Array = []
++	if modo == "pvp":
++		var i := 0
++		while i + 1 < embaralhada.size():
++			grupos.append([embaralhada[i], embaralhada[i + 1]])
++			i += 2
++		if i < embaralhada.size():
++			grupos.append([embaralhada[i]])  # sem par
++	elif modo == "pve":
++		var n_equipes := int(ceil(embaralhada.size() / float(TAMANHO_EQUIPE_PVE)))
++		for k in n_equipes:
++			grupos.append([])
++		for k in embaralhada.size():
++			grupos[k % n_equipes].append(embaralhada[k])
++	return grupos
++
++
+ func iniciar_atividade(modo: String) -> void:
+ 	if not sou_professor or not esta_em_sala():
+ 		return
++	_rodada += 1
+ 	atividade = modo
+-	await _enviar(OP_INICIAR, {"modo": modo})
++	var grupos := montar_grupos(modo, alunos)
++	atividade_dados = {"modo": modo, "rodada": _rodada, "grupos": grupos}
++	await _enviar(OP_INICIAR, atividade_dados)
+ 	atividade_iniciada.emit(modo)
+ 	sala_atualizada.emit()
+ 	_transmitir_sala()
+ 
+ 
++## Professor encerra a atividade em andamento: todos voltam pra sala.
++func encerrar_atividade() -> void:
++	if not sou_professor or not esta_em_sala() or atividade == "":
++		return
++	await iniciar_atividade("")
++
++
+ func _transmitir_sala() -> void:
+ 	if not sou_professor or not esta_em_sala():
+ 		return
+@@ -256,6 +298,7 @@
+ 		_presentes[p.user_id] = true
+ 	for p in ev.leaves:
+ 		_presentes.erase(p.user_id)
++		jogador_saiu.emit(p.user_id)
+ 		if not sou_professor and p.user_id != meu_id and _professor_saiu(p.user_id):
+ 			_zerar_estado()
+ 			_descartar_socket()
+@@ -303,6 +346,7 @@
+ 		OP_INICIAR:
+ 			if not sou_professor:
+ 				atividade = str(dados.get("modo", ""))
++				atividade_dados = dados
+ 				atividade_iniciada.emit(atividade)
+ 				sala_atualizada.emit()
+ 		OP_ENCERRAR:
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base5/src/ui/MenuPausa.gd tons-educativos-magia/src/ui/MenuPausa.gd
+--- a/src/ui/MenuPausa.gd	2026-10-08 20:41:46.000000000 -0400
++++ b/src/ui/MenuPausa.gd	2026-10-13 15:17:30.132705870 -0400
+@@ -212,6 +212,8 @@
+ 
+ func _sair_para_menu() -> void:
+ 	_abandonar_combate_se_houver()
++	if LobbyManager.esta_em_sala():
++		LobbyManager.sair()  # sai da sala do professor também
+ 	fechar()
+ 	get_tree().change_scene_to_file(CENA_MENU_ALUNO)
+ 

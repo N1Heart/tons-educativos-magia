@@ -66,6 +66,7 @@ static func importar_de_dicionario(d: Dictionary) -> QuizModel:
 			alternativas.append(alt)
 		p.alternativas = alternativas
 		p.resposta_correta = pd.get("respostaCorreta", "")
+		p.explicacao = pd.get("explicacao", "")
 		q.perguntas.append(p)
 
 	return q

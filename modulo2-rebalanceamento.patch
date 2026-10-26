@@ -1,0 +1,71 @@
+diff --git a/scripts/combat.gd b/scripts/combat.gd
+index 28887ce..0a813e4 100644
+--- a/scripts/combat.gd
++++ b/scripts/combat.gd
+@@ -23,8 +23,10 @@ signal spell_resolving(spell: SpellCast)
+ signal combat_ended(player_won: bool)
+ signal log_message(text: String)
+ 
+-const SLOW_TIC_PENALTY: int = 2
+-const TEMPO_CIRCLE_BONUS_TICS: int = 2
++## Com poucos Tics por turno (2 por padrão), o efeito de Tempo precisa ser
++## proporcional: lento tira 1 Tic (metade do turno) e o círculo roxo dá +1.
++const SLOW_TIC_PENALTY: int = 1
++const TEMPO_CIRCLE_BONUS_TICS: int = 1
+ 
+ const CATEGORY_BASE := {
+ 	"dano_rapido": 8,
+@@ -182,9 +184,24 @@ func _queue_enemy_actions() -> void:
+ 		log_message.emit("O oponente está atordoado e não age!")
+ 		monster_status["stunned"] = false
+ 		return
++
++	var agindo: Array[CombatUnit] = []
+ 	for unit in enemy_units:
+ 		if unit.is_alive():
+-			queue_spell("monster", unit.tile_type, 3)
++			agindo.append(unit)
++
++	# Lento (Triângulo de Tempo): metade das unidades do oponente (arredondando
++	# pra baixo, mínimo 1 agindo) perde a ação neste turno.
++	if monster_status["slow"]:
++		monster_status["slow"] = false
++		agindo.shuffle()
++		var perdem := agindo.size() / 2
++		if perdem > 0:
++			agindo = agindo.slice(perdem)
++			log_message.emit("O oponente está lento: %d unidade(s) não agem!" % perdem)
++
++	for unit in agindo:
++		queue_spell("monster", unit.tile_type, 3)
+ 
+ # --- Resolução do turno ---
+ 
+diff --git a/scripts/duelos.gd b/scripts/duelos.gd
+index e041195..6c2899a 100644
+--- a/scripts/duelos.gd
++++ b/scripts/duelos.gd
+@@ -21,7 +21,13 @@ extends Node2D
+ @export var player_hp_each: int = 30
+ 
+ ## Encontro de teste — troque livremente pra simular oponentes diferentes.
+-@export var enemy_hp_each: int = 20
++## HP base no nível 1 (sobe 25% por nível). Com 2 Tics por turno o jogador age
++## menos que antes, então o valor padrão é bem menor que o antigo 20.
++@export var enemy_hp_each: int = 10
++
++## Quantas jogadas (trocas de peças) o jogador faz por turno. Era 3; o
++## encadeamento de ações ficava longo e o roxo (Tempo) soma mais por cima.
++@export var tics_por_turno: int = 2
+ 
+ ## Cada nível de dificuldade acima do 1 aumenta o HP dos inimigos nessa fração
+ ## (ajuste automático, sem configuração do professor — ver LocalDB.proximo_nivel_dificuldade).
+@@ -84,7 +90,7 @@ func _ready() -> void:
+ 	board.spell_matched.connect(_on_spell_matched)
+ 	_inicio_ms = Time.get_ticks_msec()
+ 
+-	Combat.start_combat(player_types, player_hp_each, enemy_types, hp_inimigo, 3)
++	Combat.start_combat(player_types, player_hp_each, enemy_types, hp_inimigo, tics_por_turno)
+ 	_on_log_message("Dificuldade: nível %d" % _nivel)
+ 
+ 

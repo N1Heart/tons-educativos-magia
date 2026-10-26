@@ -1,0 +1,107 @@
+{
+  "versao": 1,
+  "tipo": "elemento",
+  "alvo": "Eletricidade",
+  "nome_menu": "Amarelo (Eletricidade)",
+  "aula": {
+    "id": "aula_elemento_eletricidade",
+    "tipo": "elemento",
+    "alvo": "Eletricidade",
+    "titulo": "Amarelo — Eletricidade",
+    "falas": [
+      "Hoje estudamos o Amarelo, a cor da Eletricidade! É a cor mais luminosa do círculo cromático: lembra o sol, a alegria e também o alerta. No Círculo Mágico, é o elemento da velocidade, da energia e do instante.",
+      "A ciência da cor: o amarelo é a terceira primária das tintas. Com o vermelho forma o laranja; com o azul forma o verde. A Eletricidade é um elemento primordial, assim como sua cor é primária.",
+      "É uma cor quente e a mais “clara” de todas: nossos olhos a percebem com muita facilidade, até pela visão periférica (o canto do olho). Na luz, ocupa uma faixa estreita do espectro, por volta de 570 a 590 nm, entre o verde e o laranja. A cor oposta ao amarelo é o roxo (violeta).",
+      "Por que o amarelo combina com a Eletricidade? As placas de perigo elétrico geralmente são triângulos amarelos com um raio preto. O amarelo com preto é uma das combinações mais fáceis de enxergar, por isso é usado para avisar “cuidado!”.",
+      "Os relâmpagos aparecem brancos, amarelados ou azulados, mas, nos desenhos e símbolos, o raio quase sempre é amarelo: a cor da luz e da energia.",
+      "Grimório, ficha do elemento Eletricidade. Essência: velocidade, energia e o instante. Feitiços de exemplo: Relâmpago Veloz (lança um raio), Passo do Trovão (move o mago num piscar de olhos) e Pulso Elétrico (acende luzes e máquinas).",
+      "Combinações: Eletricidade + Fogo = Terra (amarelo + vermelho = laranja). Eletricidade + Água = Cura (amarelo + azul = verde). O oposto é o Tempo (roxo): a Eletricidade age num instante; o Tempo controla a duração das coisas.",
+      "Você sabia? Um raio pode chegar a cerca de 30.000 °C, aproximadamente 5 vezes a temperatura da superfície do Sol! E o Brasil está entre os países com mais incidência de raios no mundo, com dezenas de milhões por ano.",
+      "O Sol não é amarelo: a luz do Sol é praticamente branca. Ele parece amarelado porque nossa atmosfera espalha um pouco do azul."
+    ]
+  },
+  "prova": {
+    "id": "prova_elemento_eletricidade",
+    "tipo": "elemento",
+    "alvo": "Eletricidade",
+    "notaDeCorte": 0.7,
+    "perguntas": [
+      {
+        "tipo": "vf",
+        "pergunta": "O amarelo é uma cor primária.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "Amarelo, vermelho e azul são as primárias das tintas."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "Placas de perigo elétrico costumam usar amarelo por ser uma cor muito fácil de enxergar.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "Amarelo com preto é uma das combinações mais visíveis."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "Um raio é mais frio do que a superfície do Sol.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "Pode chegar a ~30.000 °C, cerca de 5 vezes mais quente."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "O amarelo é uma cor fria.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "É uma cor quente."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Qual é a cor complementar (oposta) do amarelo?",
+        "alternativas": [
+          "Roxo",
+          "Verde",
+          "Azul",
+          "Laranja"
+        ],
+        "respostaCorreta": "Roxo",
+        "explicacao": "Amarelo e roxo ficam em lados opostos do círculo."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Misturando tinta amarela com tinta vermelha, obtemos:",
+        "alternativas": [
+          "Verde",
+          "Marrom",
+          "Roxo",
+          "Laranja"
+        ],
+        "respostaCorreta": "Laranja",
+        "explicacao": "Amarelo + vermelho = laranja (na magia, Eletricidade + Fogo = Terra)."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Qual é a temperatura aproximada que um raio pode atingir?",
+        "alternativas": [
+          "100 °C",
+          "1.000 °C",
+          "30.000 °C",
+          "5 °C"
+        ],
+        "respostaCorreta": "30.000 °C",
+        "explicacao": "Cerca de 30.000 °C."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "No Círculo Mágico, qual elemento é o oposto da Eletricidade?",
+        "alternativas": [
+          "Água",
+          "Tempo",
+          "Fogo",
+          "Terra"
+        ],
+        "respostaCorreta": "Tempo",
+        "explicacao": "O Tempo, de cor roxa, complementar do amarelo."
+      }
+    ]
+  }
+}

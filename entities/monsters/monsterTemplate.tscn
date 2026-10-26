@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://xpy25bucywnx"]
+
+[ext_resource type="Script" uid="uid://bgonea8ghbp" path="res://entities/monsters/monster_template.gd" id="1_gbw7f"]
+[ext_resource type="SpriteFrames" uid="uid://bpj4yqe4c4bks" path="res://resources/moldeMontros.tres" id="1_u730i"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_e2ube"]
+
+[node name="MonsterTemplate" type="CharacterBody2D" unique_id=572115898]
+script = ExtResource("1_gbw7f")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=13399534]
+shape = SubResource("CapsuleShape2D_e2ube")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=312418595]
+sprite_frames = ExtResource("1_u730i")
+animation = &"idle"
+autoplay = "idle"

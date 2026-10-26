@@ -1,0 +1,107 @@
+{
+  "versao": 1,
+  "tipo": "elemento",
+  "alvo": "Tempo",
+  "nome_menu": "Roxo (Tempo)",
+  "aula": {
+    "id": "aula_elemento_tempo",
+    "tipo": "elemento",
+    "alvo": "Tempo",
+    "titulo": "Roxo — Tempo",
+    "falas": [
+      "Agora o Roxo, a cor do Tempo! É uma cor misteriosa, ligada à realeza, à sabedoria e à imaginação. No Círculo Mágico, é o elemento mais raro: controla o passado, o presente e o futuro.",
+      "A ciência da cor: roxo = vermelho + azul, uma cor secundária. Mais azul dá o violeta; mais vermelho, o púrpura. Costuma ser classificada como cor fria, embora os tons mais avermelhados pareçam mais quentes.",
+      "Na luz, o violeta tem o menor comprimento de onda que enxergamos (cerca de 380 a 450 nm). Logo depois dele vem o ultravioleta, invisível para nós: é ele que causa queimaduras de sol. A cor oposta ao roxo é o amarelo.",
+      "Por que o roxo combina com o Tempo? O céu fica roxo no crepúsculo, os minutos de passagem entre o dia e a noite. É a cor que marca a transição do tempo.",
+      "Na natureza, árvores com flores roxas funcionam como “relógios”: a quaresmeira floresce na época da Quaresma (e daí vem seu nome), e o ipê-roxo enche as cidades de flores no inverno.",
+      "Grimório, ficha do elemento Tempo. O Tempo é um elemento combinado: nasce do Fogo + Água, como o roxo nasce do vermelho + azul, duas forças opostas que, juntas, lembram o ciclo do dia e da noite. Essência: memória, paciência e sabedoria.",
+      "Feitiços de exemplo: Pausa do Instante (congela tudo por um segundo), Eco do Passado (mostra o que aconteceu num lugar) e Ampulheta Lenta (deixa um inimigo mais lento). O oposto do Tempo é a Eletricidade (amarelo): a Eletricidade é o instante; o Tempo é a duração.",
+      "Você sabia? Na Antiguidade, a púrpura de Tiro era feita de milhares de caramujos marinhos para produzir só um pouco de corante. Era tão cara que ficou reservada a reis e imperadores.",
+      "Algumas abelhas e pássaros enxergam o ultravioleta, que fica além do violeta: veem nas flores desenhos que para nós são invisíveis. E o violeta é sempre a última faixa do arco-íris, do lado de dentro do arco."
+    ]
+  },
+  "prova": {
+    "id": "prova_elemento_tempo",
+    "tipo": "elemento",
+    "alvo": "Tempo",
+    "notaDeCorte": 0.7,
+    "perguntas": [
+      {
+        "tipo": "vf",
+        "pergunta": "O roxo é obtido misturando vermelho e azul.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "Roxo = vermelho + azul."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "O roxo é uma cor primária.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "É secundária."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "A púrpura de Tiro era um corante barato e comum na Antiguidade.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "Era caríssima, feita de milhares de caramujos, e reservada à realeza."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "Depois do violeta existe a luz ultravioleta, que os olhos humanos não enxergam.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "O ultravioleta tem comprimento de onda ainda menor que o violeta."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Qual é a cor complementar (oposta) do roxo?",
+        "alternativas": [
+          "Verde",
+          "Laranja",
+          "Azul",
+          "Amarelo"
+        ],
+        "respostaCorreta": "Amarelo",
+        "explicacao": "Roxo e amarelo ficam em lados opostos do círculo."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "A antiga púrpura de Tiro era produzida a partir de:",
+        "alternativas": [
+          "Uvas",
+          "Caramujos marinhos",
+          "Flores de ipê",
+          "Pedras preciosas"
+        ],
+        "respostaCorreta": "Caramujos marinhos",
+        "explicacao": "Usavam-se milhares de caramujos marinhos."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "A quaresmeira recebe esse nome porque:",
+        "alternativas": [
+          "Floresce na época da Quaresma",
+          "Tem quarenta pétalas",
+          "Só cresce em quaresmas",
+          "Foi plantada por Quaresma"
+        ],
+        "respostaCorreta": "Floresce na época da Quaresma",
+        "explicacao": "Suas flores roxas aparecem nessa época do ano."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "No Círculo Mágico, o Tempo nasce da combinação de:",
+        "alternativas": [
+          "Fogo + Eletricidade",
+          "Água + Eletricidade",
+          "Fogo + Água",
+          "Terra + Cura"
+        ],
+        "respostaCorreta": "Fogo + Água",
+        "explicacao": "Assim como vermelho + azul = roxo."
+      }
+    ]
+  }
+}

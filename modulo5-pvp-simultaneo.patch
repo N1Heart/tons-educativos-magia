@@ -1,0 +1,306 @@
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base6/scripts/combat.gd tons-educativos-magia/scripts/combat.gd
+--- a/scripts/combat.gd	2026-10-13 15:25:48.000000000 -0400
++++ b/scripts/combat.gd	2026-10-13 15:47:13.917340060 -0400
+@@ -25,6 +25,9 @@
+ ## Modo multiplayer: emitido quando o turno local acabou e foi resolvido.
+ ## Leva o estado resultante (ver gerar_snapshot) pra ser enviado aos outros.
+ signal turno_rede_encerrado(snapshot: Dictionary)
++## PvP: o turno local acabou; leva a lista de feitiços (ver _serializar_feiticos)
++## pro anfitrião resolver junto com a do outro jogador, por ordem de prioridade.
++signal feiticos_pvp_prontos(lista: Array)
+ 
+ ## Com poucos Tics por turno (2 por padrão), o efeito de Tempo precisa ser
+ ## proporcional: lento tira 1 Tic (metade do turno) e o círculo roxo dá +1.
+@@ -70,6 +73,10 @@
+ ## resultado (HP, escudos, status) pros outros, que só aplicam. Assim não
+ ## precisa sincronizar sorteios de alvo.
+ var modo_rede: String = ""
++## PvP: os dois jogam ao mesmo tempo, cada um no seu ritmo. No fim, UM dos
++## lados (o anfitrião) junta os feitiços dos dois, resolve por prioridade e
++## manda o resultado pro outro.
++var pvp_anfitriao: bool = false
+ ## No coop, o monstro só age depois do último jogador da rodada.
+ var monstro_age_ao_fim: bool = true
+ ## Empate por tempo esgotado (a UI mostra "Empate!" em vez de "Derrota").
+@@ -205,6 +212,9 @@
+ 	is_player_turn = false
+ 	turn_started.emit(false)
+ 
++	if modo_rede == "pvp":
++		_encerrar_turno_pvp()
++		return
+ 	if modo_rede != "":
+ 		await _encerrar_turno_rede()
+ 		return
+@@ -228,6 +238,38 @@
+ 	turno_rede_encerrado.emit(gerar_snapshot())
+ 
+ 
++## PvP: manda meus feitiços e espera o resultado da rodada.
++func _encerrar_turno_pvp() -> void:
++	_juntar_feiticos_iguais()
++	var lista := _serializar_feiticos(pending_spells)
++	if not pvp_anfitriao:
++		pending_spells.clear()  # o anfitrião é quem resolve (e manda o estado)
++	feiticos_pvp_prontos.emit(lista)
++
++
++func _serializar_feiticos(feiticos: Array) -> Array:
++	var r := []
++	for sp in feiticos:
++		r.append({"f": sp.tile_type.shape_name, "e": sp.tile_type.element_name,
++			"t": sp.match_size, "c": sp.repeticoes})
++	return r
++
++
++## Anfitrião: junta os feitiços do outro jogador (viram "monster" aqui) aos
++## meus, resolve tudo por prioridade e publica o estado resultante.
++func resolver_rodada_pvp(lista_oponente: Array) -> void:
++	for d in lista_oponente:
++		var tt := SpellLoadout.get_tile_type(str(d.get("f", "")), str(d.get("e", "")))
++		var sp := SpellCast.new("monster", tt, int(d.get("t", 3)))
++		sp.repeticoes = maxi(1, int(d.get("c", 1)))
++		pending_spells.append(sp)
++	_log_turno = []
++	_coletando_log = true
++	await resolve_turn()
++	_coletando_log = false
++	turno_rede_encerrado.emit(gerar_snapshot())
++
++
+ func _dados_unidades(unidades: Array[CombatUnit]) -> Array:
+ 	var r := []
+ 	for u in unidades:
+@@ -373,7 +415,7 @@
+ 	for sp in pending_spells:
+ 		var chave := "%s|%s|%s|%d" % [sp.caster, sp.tile_type.shape_name, sp.tile_type.element_name, sp.match_size]
+ 		if por_chave.has(chave):
+-			por_chave[chave].repeticoes += 1
++			por_chave[chave].repeticoes += sp.repeticoes
+ 		else:
+ 			por_chave[chave] = sp
+ 			juntos.append(sp)
+@@ -382,6 +424,9 @@
+ 
+ func resolve_turn() -> void:
+ 	_juntar_feiticos_iguais()
++	# Menor prioridade resolve primeiro; no empate, ordem sorteada (assim
++	# nenhum dos lados leva vantagem fixa quando os dois jogam ao mesmo tempo).
++	pending_spells.shuffle()
+ 	pending_spells.sort_custom(func(a, b): return a.get_priority() < b.get_priority())
+ 
+ 	for spell in pending_spells:
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base6/scripts/duelos.gd tons-educativos-magia/scripts/duelos.gd
+--- a/scripts/duelos.gd	2026-10-13 15:28:19.000000000 -0400
++++ b/scripts/duelos.gd	2026-10-13 15:51:35.320891693 -0400
+@@ -45,11 +45,15 @@
+ ## ganha HP proporcional ao número de jogadores.
+ const HP_TIME_POR_MEMBRO := 0.25
+ const HP_PVP := 30
++## Se o jogador demorar mais que isso, o turno dele termina sozinho (a
++## partida em grupo não pode ficar esperando um aluno parado).
++const TEMPO_MAX_TURNO := 90.0
+ const CENA_LOBBY := "res://scenes/Login/TelaLobby.tscn"
+ const CENA_MENU_ALUNO := "res://scenes/Login/TelaAluno.tscn"
+ 
+ var log_lines: Array[String] = []
+ var _botao_voltar: Button
++var _timer_turno: Timer = null
+ var _em_rede := false   # esta partida é PvE cooperativo ou PvP (ver DueloRede)
+ 
+ # --- Métricas da partida (gravadas em LocalDB ao fim do combate) ---
+@@ -130,6 +134,15 @@
+ func _preparar_rede() -> void:
+ 	Combat.turno_rede_encerrado.connect(_on_turno_rede_encerrado)
+ 	DueloRede.turno_recebido.connect(_on_turno_recebido)
++	if DueloRede.modo_combate == "pvp":
++		Combat.pvp_anfitriao = DueloRede.sou_anfitriao()
++		Combat.feiticos_pvp_prontos.connect(_on_feiticos_pvp_prontos)
++		DueloRede.feiticos_recebidos.connect(_tentar_resolver_pvp)
++	_timer_turno = Timer.new()
++	_timer_turno.one_shot = true
++	_timer_turno.wait_time = TEMPO_MAX_TURNO
++	_timer_turno.timeout.connect(_on_tempo_turno_esgotado)
++	add_child(_timer_turno)
+ 	DueloRede.membro_saiu.connect(_on_membro_saiu)
+ 	DueloRede.atividade_encerrada.connect(_on_atividade_encerrada)
+ 	DueloRede.sala_perdida.connect(_on_sala_perdida)
+@@ -160,14 +173,56 @@
+ 		return
+ 	if Combat.is_player_turn:
+ 		turn_label.text = "Seu turno"
++	elif DueloRede.modo_combate == "pvp":
++		turn_label.text = "Aguardando %s..." % DueloRede.nome_do_adversario()
+ 	elif DueloRede.turno_idx == DueloRede.meu_indice:
+ 		turn_label.text = "Resolvendo seu turno..."
+ 	else:
+ 		turn_label.text = "Vez de %s..." % DueloRede.nome_de_quem_joga()
+ 
+ 
++## Passou o tempo do turno: encerra sozinho (se o tabuleiro ainda estiver
++## animando, o fim da cascata encerra, pois os Tics já foram zerados).
++func _on_tempo_turno_esgotado() -> void:
++	if not Combat.combat_active or not Combat.is_player_turn:
++		return
++	Combat.tics_remaining = 0
++	Combat.tics_changed.emit(0, Combat.tics_max)
++	if board.can_swipe:
++		Combat.end_player_turn()
++
++
++## PvP: meu turno acabou. Manda meus feitiços; o anfitrião resolve a rodada.
++func _on_feiticos_pvp_prontos(lista: Array) -> void:
++	DueloRede.enviar_feiticos(lista)
++	_atualizar_rotulo_turno()
++	_tentar_resolver_pvp()
++
++
++## Anfitrião: só resolve quando os dois lados já mandaram os feitiços.
++func _tentar_resolver_pvp() -> void:
++	if Combat.combat_active and DueloRede.pvp_pronto_para_resolver():
++		turn_label.text = "Resolvendo a rodada..."
++		Combat.resolver_rodada_pvp(DueloRede.consumir_lista_oponente())
++
++
++## Anfitrião, PvP: a rodada foi resolvida; publica e abre a próxima.
++func _on_rodada_pvp_resolvida(snapshot: Dictionary) -> void:
++	DueloRede.publicar_rodada_pvp(snapshot)
++	if not Combat.combat_active:
++		return
++	_enviar_estado("")
++	if DueloRede.limite_atingido():
++		Combat.encerrar_por_limite_de_turnos()
++		return
++	Combat.start_player_turn()
++
++
+ ## Meu turno acabou e foi resolvido: manda o resultado e passa a vez.
+ func _on_turno_rede_encerrado(snapshot: Dictionary) -> void:
++	if DueloRede.modo_combate == "pvp":
++		_on_rodada_pvp_resolvida(snapshot)
++		return
+ 	var de_novo_eu := DueloRede.enviar_turno(snapshot)
+ 	if Combat.combat_active:
+ 		_enviar_estado("")
+@@ -242,6 +297,9 @@
+ 	if _em_rede:
+ 		if is_player:
+ 			Combat.monstro_age_ao_fim = DueloRede.sou_ultimo()
++			_timer_turno.start()
++		else:
++			_timer_turno.stop()
+ 		_atualizar_rotulo_turno()
+ 	else:
+ 		turn_label.text = "Seu turno" if is_player else "Turno do oponente..."
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt -x '*.orig' base6/src/services/DueloRede.gd tons-educativos-magia/src/services/DueloRede.gd
+--- a/src/services/DueloRede.gd	2026-10-13 15:25:48.000000000 -0400
++++ b/src/services/DueloRede.gd	2026-10-13 15:47:13.917865641 -0400
+@@ -22,12 +22,14 @@
+ signal membro_saiu(user_id: String)       # alguém do meu grupo saiu (ou caiu)
+ signal atividade_encerrada                # o professor encerrou a atividade
+ signal sala_perdida(motivo: String)       # o professor fechou a sala / conexão caiu
++signal feiticos_recebidos                 # PvP (anfitrião): chegaram os feitiços do outro jogador
+ signal estados_atualizados                # chegou resumo de algum aluno (professor)
+ 
+ const OP_PRONTO := 101
+ const OP_TURNO := 102
+ const OP_SAIDA := 103
+ const OP_ESTADO := 104
++const OP_FEITICOS := 105
+ 
+ const TEMPO_ESPERA_GRUPO := 12.0
+ ## Cada jogador tem no máximo este número de turnos; depois disso o combate
+@@ -43,11 +45,15 @@
+ var membros: Array = []               # [{id, nome}] na ordem dos turnos
+ var meu_indice: int = 0
+ var turno_idx: int = 0                # de quem é a vez agora
++var rodada_pvp: int = 0               # PvP: número da rodada (os dois jogam a mesma por vez)
+ var turnos_jogados: int = 0           # turnos já resolvidos nesta partida (todos os jogadores)
+ var formas_equipe: Array[String] = [] # coop: formas que o time usa (vazio = as do próprio jogador)
+ var tipos_adversario: Array[TileType] = []   # pvp: formas/elementos do outro jogador
+ var nivel_equipe: int = 1             # coop: média dos níveis de dificuldade
+ 
++var _lista_oponente: Array = []       # PvP: feitiços recebidos do outro jogador
++var _lista_oponente_n := -1           # ...e de qual rodada
++var _meu_envio_n := -1                # rodada em que eu já mandei os meus
+ var _prontos := {}                    # user_id -> roster (OP_PRONTO) da rodada atual
+ var estados := {}                     # user_id -> último OP_ESTADO (o professor lê)
+ 
+@@ -81,6 +87,10 @@
+ 	meu_indice = 0
+ 	turno_idx = 0
+ 	turnos_jogados = 0
++	rodada_pvp = 0
++	_lista_oponente = []
++	_lista_oponente_n = -1
++	_meu_envio_n = -1
+ 	formas_equipe = []
+ 	tipos_adversario = []
+ 	Combat.modo_rede = ""
+@@ -154,6 +164,7 @@
+ 			meu_indice = i
+ 	turno_idx = 0
+ 	turnos_jogados = 0
++	rodada_pvp = 0
+ 
+ 	if modo_combate == "pvp":
+ 		var outro: Dictionary = _prontos[membros[1 - meu_indice]["id"]]
+@@ -219,8 +230,42 @@
+ 	return turnos_jogados >= LIMITE_RODADAS * maxi(1, membros.size())
+ 
+ 
++## PvP: os dois jogam ao mesmo tempo, então a "vez" é sempre minha.
+ func meu_turno() -> bool:
+-	return ativo and turno_idx == meu_indice
++	return ativo and (modo_combate == "pvp" or turno_idx == meu_indice)
++
++
++## PvP: o membro 0 resolve a rodada (junta os feitiços dos dois).
++func sou_anfitriao() -> bool:
++	return meu_indice == 0
++
++
++## PvP: mando os feitiços que conjurei nesta rodada.
++func enviar_feiticos(lista: Array) -> void:
++	_meu_envio_n = rodada_pvp
++	LobbyManager.enviar_atividade(OP_FEITICOS, _com_ids({"n": rodada_pvp, "lista": lista}))
++
++
++## Anfitrião: tenho os meus e os do outro jogador desta rodada?
++func pvp_pronto_para_resolver() -> bool:
++	return ativo and sou_anfitriao() and _meu_envio_n == rodada_pvp and _lista_oponente_n == rodada_pvp
++
++
++func consumir_lista_oponente() -> Array:
++	var l := _lista_oponente
++	_lista_oponente = []
++	return l
++
++
++## Anfitrião: publica o resultado da rodada e abre a próxima.
++func publicar_rodada_pvp(snapshot: Dictionary) -> void:
++	snapshot["n"] = rodada_pvp
++	rodada_pvp += 1
++	turnos_jogados += membros.size()
++	snapshot["t"] = turnos_jogados
++	snapshot["prox"] = meu_indice
++	snapshot["nome"] = _meu_nome()
++	LobbyManager.enviar_atividade(OP_TURNO, _com_ids(snapshot))
+ 
+ 
+ func sou_ultimo() -> bool:
+@@ -295,7 +340,14 @@
+ 			if ativo and int(dados.get("g", -1)) == grupo:
+ 				turno_idx = int(dados.get("prox", 0))
+ 				turnos_jogados = int(dados.get("t", turnos_jogados + 1))
++				if modo_combate == "pvp":
++					rodada_pvp = int(dados.get("n", rodada_pvp)) + 1
+ 				turno_recebido.emit(dados)
++		OP_FEITICOS:
++			if ativo and modo_combate == "pvp" and sou_anfitriao() and int(dados.get("g", -1)) == grupo:
++				_lista_oponente = dados.get("lista", [])
++				_lista_oponente_n = int(dados.get("n", -1))
++				feiticos_recebidos.emit()
+ 		OP_SAIDA:
+ 			if ativo and int(dados.get("g", -1)) == grupo:
+ 				_remover_membro(remetente)

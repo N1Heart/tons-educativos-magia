@@ -1,0 +1,107 @@
+{
+  "versao": 1,
+  "tipo": "forma",
+  "alvo": "Hexagono",
+  "nome_menu": "Hexágono",
+  "aula": {
+    "id": "aula_forma_hexagono",
+    "tipo": "forma",
+    "alvo": "Hexagono",
+    "titulo": "Hexágonos",
+    "falas": [
+      "Chegou a vez do Hexágono! É o polígono de 6 lados, 6 vértices e 6 ângulos (hexa = seis, em grego). O hexágono regular, com todos os lados e ângulos iguais, é uma das formas mais eficientes e presentes na natureza.",
+      "Pela regra S = (n − 2) × 180°: (6 − 2) × 180° = 720°. No hexágono regular, cada ângulo mede 720° ÷ 6 = 120°.",
+      "Tem seis triângulos escondidos nele! Ligando o centro de um hexágono regular aos seus 6 vértices, ele fica dividido em 6 triângulos equiláteros iguais. Por isso o lado do hexágono regular tem a mesma medida que o raio da circunferência que passa pelos seus vértices.",
+      "Com um compasso aberto na medida do raio dá para marcar 6 pontos na circunferência e desenhar um hexágono perfeito! Já as diagonais: D = n × (n − 3) ÷ 2 = 6 × 3 ÷ 2 = 9 diagonais.",
+      "O hexágono é o campeão da pavimentação. Só três polígonos regulares conseguem, sozinhos, cobrir uma superfície sem buracos: o triângulo equilátero, o quadrado e o hexágono. No hexágono, 3 ângulos de 120° somam exatamente 360° em cada ponto de encontro. Entre os três, é o que cerca a maior área usando o menor perímetro.",
+      "Perímetro: P = 6 × ℓ. Com lado 5 cm → P = 30 cm. Área: como são 6 triângulos equiláteros, A é aproximadamente 2,6 × ℓ².",
+      "Você sabia? As abelhas constroem alvéolos hexagonais porque essa forma armazena o máximo de mel usando o mínimo de cera. Em 1999, o matemático Thomas Hales provou que o hexágono é mesmo a forma mais econômica para dividir uma superfície em partes iguais.",
+      "No polo norte de Saturno existe uma gigantesca nuvem em forma de hexágono, maior que o diâmetro da Terra, fotografada por sondas espaciais. E na Calçada dos Gigantes, na Irlanda do Norte, há milhares de colunas de rocha vulcânica, muitas hexagonais, criadas pelo resfriamento lento da lava.",
+      "Os flocos de neve têm simetria de 6 pontas, e as porcas e parafusos sextavados são hexagonais para que a chave tenha bastante apoio ao girá-los."
+    ]
+  },
+  "prova": {
+    "id": "prova_forma_hexagono",
+    "tipo": "forma",
+    "alvo": "Hexagono",
+    "notaDeCorte": 0.7,
+    "perguntas": [
+      {
+        "tipo": "vf",
+        "pergunta": "Um hexágono regular pode ser dividido em 6 triângulos equiláteros.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "Ligando o centro aos 6 vértices, surgem 6 triângulos equiláteros."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "A soma dos ângulos internos de um hexágono é 540°.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "É 720°: (6 − 2) × 180°. 540° é a soma do pentágono."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "Hexágonos regulares conseguem cobrir uma superfície sem deixar buracos.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "3 × 120° = 360°."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "Um hexágono possui 6 diagonais.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "Possui 9: 6 × (6 − 3) ÷ 2 = 9."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Quanto mede cada ângulo interno de um hexágono regular?",
+        "alternativas": [
+          "108°",
+          "120°",
+          "135°",
+          "60°"
+        ],
+        "respostaCorreta": "120°",
+        "explicacao": "720° ÷ 6 = 120°."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Qual é o perímetro de um hexágono regular com lados de 5 cm?",
+        "alternativas": [
+          "25 cm",
+          "11 cm",
+          "30 cm",
+          "60 cm"
+        ],
+        "respostaCorreta": "30 cm",
+        "explicacao": "P = 6 × 5 = 30 cm."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Por que as abelhas constroem favos hexagonais?",
+        "alternativas": [
+          "Porque o hexágono armazena mais mel gastando menos cera",
+          "Porque é a única forma que elas enxergam",
+          "Porque o hexágono é um círculo",
+          "Porque gastam mais cera e o favo fica mais pesado"
+        ],
+        "respostaCorreta": "Porque o hexágono armazena mais mel gastando menos cera",
+        "explicacao": "O hexágono cobre o espaço sem buracos e com o menor perímetro."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Em qual planeta foi observada uma tempestade em forma de hexágono?",
+        "alternativas": [
+          "Marte",
+          "Júpiter",
+          "Vênus",
+          "Saturno"
+        ],
+        "respostaCorreta": "Saturno",
+        "explicacao": "Ela fica no polo norte de Saturno."
+      }
+    ]
+  }
+}

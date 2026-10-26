@@ -10,6 +10,8 @@ var tipo: String = "objetiva"
 var pergunta: String = ""
 var alternativas: Array[String] = []   # só usado quando tipo == "objetiva"
 var resposta_correta: String = ""
+## "Por quê?" mostrado pelo professor depois da resposta (gabarito comentado).
+var explicacao: String = ""
 
 ## Recompensa de UMA pergunta avulsa (fluxo antigo/teste, ver LocalDB.registrar_resposta_desafio).
 ## Perguntas dentro de uma QuizModel NÃO usam isso — a recompensa da prova
@@ -23,5 +25,6 @@ func exportar_para_dicionario() -> Dictionary:
 		"pergunta": pergunta,
 		"alternativas": alternativas,
 		"respostaCorreta": resposta_correta,
+		"explicacao": explicacao,
 		"recompensaMagia": recompensa_magia
 	}

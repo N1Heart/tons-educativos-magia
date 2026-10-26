@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://ci55navu03wg3" path="res://entities/professorCores.tscn" id="7_qyu4q"]
 [ext_resource type="PackedScene" uid="uid://dporta0001xy0" path="res://entities/Porta.tscn" id="8_porta"]
 [ext_resource type="PackedScene" uid="uid://cxi6l52qlb8q0" path="res://entities/camera_2d.tscn" id="9_k3cnd"]
+[ext_resource type="PackedScene" path="res://entities/Cadeira.tscn" id="11_cad"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_k3cnd"]
 texture = ExtResource("3_qyu4q")
@@ -60,3 +61,35 @@ cena_destino = "res://scenes/salas/Saguao.tscn"
 
 [node name="Camera2d" parent="." unique_id=1480513400 instance=ExtResource("9_k3cnd")]
 position = Vector2(100, 287)
+
+[node name="cadeiras" type="Node2D" parent="." unique_id=622894834]
+
+[node name="Cadeira" parent="cadeiras" unique_id=1277843797 instance=ExtResource("11_cad")]
+position = Vector2(460, 310)
+tipo = "cores"
+nome_exibicao = "Mestre das Cores"
+
+[node name="Cadeira2" parent="cadeiras" unique_id=1888872339 instance=ExtResource("11_cad")]
+position = Vector2(392, 311)
+tipo = "cores"
+nome_exibicao = "Mestre das Cores"
+
+[node name="Cadeira3" parent="cadeiras" unique_id=265582771 instance=ExtResource("11_cad")]
+position = Vector2(326, 311)
+tipo = "cores"
+nome_exibicao = "Mestre das Cores"
+
+[node name="Cadeira4" parent="cadeiras" unique_id=1480818161 instance=ExtResource("11_cad")]
+position = Vector2(267, 312)
+tipo = "cores"
+nome_exibicao = "Mestre das Cores"
+
+[node name="Cadeira5" parent="cadeiras" unique_id=302255372 instance=ExtResource("11_cad")]
+position = Vector2(205, 313)
+tipo = "cores"
+nome_exibicao = "Mestre das Cores"
+
+[node name="Cadeira6" parent="cadeiras" unique_id=1041575385 instance=ExtResource("11_cad")]
+position = Vector2(140, 312)
+tipo = "cores"
+nome_exibicao = "Mestre das Cores"

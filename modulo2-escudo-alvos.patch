@@ -1,0 +1,41 @@
+diff -ruN -x .godot -x '*.uid' -x '*.dll' -x .git -x 'modulo*.patch' -x out5.txt base3/scripts/combat.gd tons-educativos-magia/scripts/combat.gd
+--- a/scripts/combat.gd	2026-10-08 21:08:37.000000000 -0400
++++ b/scripts/combat.gd	2026-10-08 21:31:40.041802332 -0400
+@@ -233,6 +233,24 @@
+ 	return min(1, pool_size)
+ 
+ 
++## Quem recebe o escudo: combinação de 3 protege só a própria unidade; de 4,
++## ela e mais uma aliada sorteada; de 5 ou mais, todas as aliadas vivas.
++func _escudo_alvos(aliadas: Array[CombatUnit], propria: CombatUnit, match_size: int) -> Array[CombatUnit]:
++	var vivas: Array[CombatUnit] = []
++	for u in aliadas:
++		if u.is_alive():
++			vivas.append(u)
++	if match_size >= 5:
++		return vivas
++	var alvos: Array[CombatUnit] = [propria]
++	if match_size == 4:
++		var outras: Array[CombatUnit] = vivas.filter(func(u): return u != propria)
++		outras.shuffle()
++		if not outras.is_empty():
++			alvos.append(outras[0])
++	return alvos
++
++
+ func _random_targets(units: Array[CombatUnit], count: int) -> Array[CombatUnit]:
+ 	var alive: Array[CombatUnit] = []
+ 	for u in units:
+@@ -299,8 +317,10 @@
+ 			if escudo_destruido > 0:
+ 				log_message.emit("A Eletricidade destruiu %d de escudo!" % escudo_destruido)
+ 		"defesa_rapida", "defesa_forte":
+-			caster_unit.add_shield(amount)
+-			log_message.emit("+%d de escudo (%s)" % [amount, element])
++			var protegidos := _escudo_alvos(caster_units, caster_unit, spell.match_size)
++			for u in protegidos:
++				u.add_shield(amount)
++			log_message.emit("+%d de escudo em %d unidade(s) (%s)" % [amount, protegidos.size(), element])
+ 		"auto":
+ 			caster_unit.heal(amount)
+ 			log_message.emit("+%d de cura (%s)" % [amount, element])

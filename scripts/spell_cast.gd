@@ -6,6 +6,7 @@ extends RefCounted
 var caster: String            # "player" ou "monster"
 var tile_type: TileType       # forma + cor/elemento que gerou o feitiço
 var match_size: int           # tamanho da combinação (3, 4, 5+)
+var repeticoes: int = 1       # quantas combinações iguais foram juntadas neste feitiço
 
 func _init(p_caster: String, p_tile_type: TileType, p_match_size: int):
 	caster = p_caster
