@@ -1,0 +1,107 @@
+{
+  "versao": 1,
+  "tipo": "forma",
+  "alvo": "Quadrado",
+  "nome_menu": "Quadrado",
+  "aula": {
+    "id": "aula_forma_quadrado",
+    "tipo": "forma",
+    "alvo": "Quadrado",
+    "titulo": "Quadrados",
+    "falas": [
+      "Vamos ao Quadrado! É um quadrilátero (polígono de 4 lados) muito especial: tem os 4 lados com a mesma medida e os 4 ângulos retos (90°). É um polígono regular: todos os seus lados e todos os seus ângulos são iguais.",
+      "Cada ângulo interno mede 90°. Somando os quatro: 4 × 90° = 360°. Essa soma vale para qualquer quadrilátero, pois todo quadrilátero pode ser dividido em 2 triângulos (2 × 180° = 360°).",
+      "O quadrado faz parte de uma família. O retângulo tem 4 ângulos retos; o quadrado também, então todo quadrado é um retângulo. O losango tem 4 lados iguais; o quadrado também, então todo quadrado é um losango.",
+      "Mas o contrário não vale: um retângulo de 2 cm × 5 cm não é quadrado, porque seus lados não são todos iguais. Nem todo retângulo é quadrado!",
+      "O quadrado tem 2 diagonais (segmentos que ligam cantos opostos). Elas têm a mesma medida, cortam-se exatamente no meio e são perpendiculares (formam um ângulo de 90° entre si). A medida da diagonal é ℓ × √2, ou seja, cerca de ℓ × 1,41.",
+      "Simetria: um eixo de simetria divide a figura em duas metades que se encaixam perfeitamente ao dobrar. O quadrado tem 4 eixos de simetria: um vertical, um horizontal e as duas diagonais.",
+      "Perímetro: P = 4 × ℓ. Quadrado de lado 7 cm → P = 28 cm. Área: A = ℓ × ℓ = ℓ². Quadrado de lado 9 cm → A = 81 cm². E o caminho inverso também funciona: se a área é 49 cm², o lado é a raiz quadrada de 49, ou seja, 7 cm.",
+      "Você sabia? A expressão 5² se lê “cinco ao quadrado” justamente porque 5 × 5 é a área de um quadrado de lado 5. E o metro quadrado (m²) é a área de um quadrado de 1 m de lado.",
+      "Uma lenda chinesa antiga (Lo Shu) fala de um quadro 3 × 3 com os números de 1 a 9, em que cada linha, coluna e diagonal soma 15: o quadrado mágico! As imagens digitais também são feitas de quadradinhos, os pixels, e o tabuleiro de xadrez tem 8 × 8 = 64 casas."
+    ]
+  },
+  "prova": {
+    "id": "prova_forma_quadrado",
+    "tipo": "forma",
+    "alvo": "Quadrado",
+    "notaDeCorte": 0.7,
+    "perguntas": [
+      {
+        "tipo": "vf",
+        "pergunta": "Todo quadrado é também um retângulo.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "O quadrado tem 4 ângulos retos, que é a exigência para ser retângulo."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "Todo retângulo é também um quadrado.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "Um retângulo pode ter lados diferentes (ex.: 2 cm × 5 cm)."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "As diagonais de um quadrado são perpendiculares entre si.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "Elas se cruzam formando ângulos de 90°."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "O quadrado possui apenas 2 eixos de simetria.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "São 4: vertical, horizontal e as duas diagonais."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Qual é o perímetro de um quadrado de lado 7 cm?",
+        "alternativas": [
+          "14 cm",
+          "21 cm",
+          "28 cm",
+          "49 cm"
+        ],
+        "respostaCorreta": "28 cm",
+        "explicacao": "P = 4 × 7 = 28 cm."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Qual é a área de um quadrado de lado 9 cm?",
+        "alternativas": [
+          "81 cm²",
+          "36 cm²",
+          "18 cm²",
+          "72 cm²"
+        ],
+        "respostaCorreta": "81 cm²",
+        "explicacao": "A = 9 × 9 = 81 cm²."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Quanto vale a soma dos ângulos internos de um quadrado?",
+        "alternativas": [
+          "180°",
+          "270°",
+          "540°",
+          "360°"
+        ],
+        "respostaCorreta": "360°",
+        "explicacao": "4 × 90° = 360°."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Um quadrado tem área de 49 cm². Quanto mede o seu lado?",
+        "alternativas": [
+          "7 cm",
+          "12,25 cm",
+          "24,5 cm",
+          "49 cm"
+        ],
+        "respostaCorreta": "7 cm",
+        "explicacao": "7 × 7 = 49, então o lado mede 7 cm."
+      }
+    ]
+  }
+}

@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://dndykgsoc0wxi"]
+
+[ext_resource type="Texture2D" uid="uid://bfthxdu47k8m7" path="res://assets/UI_Flat_FrameMarker03a.png" id="1_nhv6a"]
+[ext_resource type="Texture2D" uid="uid://b068apfewb7f8" path="res://assets/UI_Flat_Banner03a.png" id="2_yb5af"]
+[ext_resource type="Texture2D" uid="uid://53u18cqni1he" path="res://assets/UI_Flat_Banner01a.png" id="3_eq4v2"]
+[ext_resource type="Script" uid="uid://ds15lpukgsyi1" path="res://scripts/grid.gd" id="4_yb5af"]
+
+[node name="combate" type="Node2D" unique_id=1522165575]
+
+[node name="background" type="TextureRect" parent="." unique_id=1284979675]
+offset_left = 422.0
+offset_top = 56.0
+offset_right = 622.0
+offset_bottom = 296.0
+texture = ExtResource("1_nhv6a")
+
+[node name="uiTop" type="TextureRect" parent="." unique_id=1647437112]
+offset_left = 462.0
+offset_top = 7.0
+offset_right = 582.0
+offset_bottom = 47.0
+texture = ExtResource("2_yb5af")
+
+[node name="uiBotton" type="TextureRect" parent="." unique_id=1609486723]
+offset_left = 438.0
+offset_top = 307.0
+offset_right = 604.0
+offset_bottom = 347.0
+texture = ExtResource("3_eq4v2")
+
+[node name="grid" type="Node2D" parent="." unique_id=903458376]
+script = ExtResource("4_yb5af")
+
+[node name="destroy_timer" type="Timer" parent="." unique_id=366447926]
+wait_time = 0.5
+one_shot = true
+
+[node name="colapse_timer" type="Timer" parent="." unique_id=1559345016]
+wait_time = 0.5
+one_shot = true
+
+[connection signal="timeout" from="destroy_timer" to="grid" method="_on_destroy_timer_timeout"]
+[connection signal="timeout" from="colapse_timer" to="grid" method="_on_colapse_timer_timeout"]

@@ -1,0 +1,107 @@
+{
+  "versao": 1,
+  "tipo": "elemento",
+  "alvo": "Terra",
+  "nome_menu": "Laranja (Terra)",
+  "aula": {
+    "id": "aula_elemento_terra",
+    "tipo": "elemento",
+    "alvo": "Terra",
+    "titulo": "Laranja — Terra",
+    "falas": [
+      "Vamos ao Laranja, a cor da Terra! É a primeira das cores secundárias: nasce da mistura de duas primárias. É uma cor quente, acolhedora e cheia de energia. No Círculo Mágico, é o elemento da firmeza, da resistência e da proteção.",
+      "A ciência da cor: laranja = vermelho + amarelo. Mais vermelho deixa o tom mais escuro (como o tijolo); mais amarelo deixa mais claro (como a manga). É uma cor quente e fica entre o vermelho e o amarelo, as outras duas cores quentes.",
+      "Na luz, o laranja ocupa a faixa de cerca de 590 a 620 nm, entre o amarelo e o vermelho. A cor oposta ao laranja é o azul.",
+      "Por que o laranja combina com a Terra? Grande parte dos solos brasileiros tem cor alaranjada ou avermelhada, por causa da presença de óxidos de ferro, os mesmos que deixam Marte vermelho. Tijolos, telhas e vasos de barro ficam laranja depois de cozidos no forno porque o ferro presente na argila muda de cor com o calor.",
+      "Grimório, ficha do elemento Terra. A Terra é um elemento combinado: nasce do Fogo + Eletricidade, assim como o laranja nasce do vermelho + amarelo. Na natureza há um bom exemplo disso: o calor dos vulcões forma rochas, e o raio, ao cair na areia, derrete e cria uma rocha de vidro chamada fulgurito.",
+      "Essência: firmeza, resistência e proteção. Feitiços de exemplo: Pele de Pedra (endurece a pele), Raízes Firmes (impede que o mago seja derrubado) e Tremor (faz o chão tremer). O oposto da Terra é a Água (azul, a complementar do laranja).",
+      "Você sabia? A palavra laranja vem da fruta. Antes disso, muitas línguas chamavam esse tom de “amarelo-avermelhado”.",
+      "O solo fértil de partes do Paraná, de São Paulo e do Mato Grosso do Sul é chamado de “terra roxa”, mas é avermelhado! O nome vem dos imigrantes italianos, que o chamavam de terra rossa: “terra vermelha”.",
+      "E por segurança, coletes, cones e boias são laranja porque essa cor contrasta fortemente com o céu e a água (azuis) e com a vegetação."
+    ]
+  },
+  "prova": {
+    "id": "prova_elemento_terra",
+    "tipo": "elemento",
+    "alvo": "Terra",
+    "notaDeCorte": 0.7,
+    "perguntas": [
+      {
+        "tipo": "vf",
+        "pergunta": "O laranja é uma cor primária.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "É secundária: vermelho + amarelo."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "Misturando vermelho e amarelo obtemos laranja.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "Laranja = vermelho + amarelo."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "A cor alaranjada de muitos solos brasileiros vem da presença de óxidos de ferro.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "Os óxidos de ferro dão o tom avermelhado/alaranjado."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "A cor complementar do laranja é o verde.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "É o azul."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Qual é a cor complementar (oposta) do laranja?",
+        "alternativas": [
+          "Roxo",
+          "Azul",
+          "Vermelho",
+          "Amarelo"
+        ],
+        "respostaCorreta": "Azul",
+        "explicacao": "Laranja e azul ficam em lados opostos do círculo."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "No Círculo Mágico, a Terra nasce da combinação de:",
+        "alternativas": [
+          "Fogo + Eletricidade",
+          "Água + Fogo",
+          "Água + Eletricidade",
+          "Cura + Tempo"
+        ],
+        "respostaCorreta": "Fogo + Eletricidade",
+        "explicacao": "Assim como vermelho + amarelo = laranja."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "A \"terra roxa\" tem esse nome porque:",
+        "alternativas": [
+          "Ela é roxa de verdade",
+          "Nasce em plantações de uva",
+          "Veio do italiano \"rossa\", que significa vermelha",
+          "Fica roxa à noite"
+        ],
+        "respostaCorreta": "Veio do italiano \"rossa\", que significa vermelha",
+        "explicacao": "Os imigrantes italianos a chamavam de terra rossa."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Por que coletes e boias de segurança costumam ser laranja?",
+        "alternativas": [
+          "Porque é a cor mais barata",
+          "Porque contrasta fortemente com o céu, a água e a vegetação",
+          "Porque espanta insetos",
+          "Porque é uma cor fria"
+        ],
+        "respostaCorreta": "Porque contrasta fortemente com o céu, a água e a vegetação",
+        "explicacao": "O laranja se destaca contra fundos azuis e verdes."
+      }
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+--- a/src/ui/TelaAutenticacao.gd	2026-10-08 20:41:46.000000000 -0400
++++ b/src/ui/TelaAutenticacao.gd	2026-10-26 15:19:47.410445785 -0400
+@@ -24,15 +24,27 @@
+ 
+ 
+ func _montar_campo_servidor() -> void:
++	# Faixa fixa no rodapé da tela (a caixa de login já ocupa a altura toda de
++	# 640x360, então um campo dentro dela ficava para fora da janela).
++	var camada := CanvasLayer.new()
++	add_child(camada)
++	var painel := PanelContainer.new()
++	camada.add_child(painel)
++	var linha := HBoxContainer.new()
++	painel.add_child(linha)
++
+ 	var rotulo := Label.new()
+ 	rotulo.text = "Servidor (IP do professor):"
+ 	rotulo.add_theme_font_size_override("font_size", 11)
+-	login_box.add_child(rotulo)
++	linha.add_child(rotulo)
+ 
+ 	_campo_servidor = LineEdit.new()
+ 	_campo_servidor.text = NakamaManager.carregar_servidor()
+ 	_campo_servidor.placeholder_text = NakamaManager.SERVIDOR_PADRAO
+-	login_box.add_child(_campo_servidor)
++	_campo_servidor.custom_minimum_size = Vector2(130, 0)
++	_campo_servidor.add_theme_font_size_override("font_size", 11)
++	linha.add_child(_campo_servidor)
++	painel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, 6)
+ 
+ 
+ ## Aplica o endereço digitado antes de qualquer chamada ao servidor.

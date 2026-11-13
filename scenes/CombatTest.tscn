@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://bbleub68sh1vk"]
+
+[ext_resource type="Script" uid="uid://k2vnmf2hbij7" path="res://scripts/combat_test.gd" id="1_test"]
+[ext_resource type="PackedScene" uid="uid://dndykgsoc0wxi" path="res://scenes/grid/grid.tscn" id="2_grid"]
+
+[node name="CombatTest" type="Node2D" unique_id=292779056]
+script = ExtResource("1_test")
+
+[node name="combate" parent="." unique_id=220121433 instance=ExtResource("2_grid")]

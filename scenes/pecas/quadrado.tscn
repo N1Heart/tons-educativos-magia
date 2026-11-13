@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://0178yarew6ea"]
+
+[ext_resource type="PackedScene" uid="uid://c4ydfw8yw7w72" path="res://scenes/pecas/piece.tscn" id="1_12klt"]
+[ext_resource type="Texture2D" uid="uid://syiqwa0tu80m" path="res://assets/pecasEditaveis/quadrado.png" id="2_djhnj"]
+
+[node name="quadrado" unique_id=1264187183 instance=ExtResource("1_12klt")]
+
+[node name="Sprite2D" parent="." index="0" unique_id=696197292]
+texture = ExtResource("2_djhnj")

@@ -1,0 +1,107 @@
+{
+  "versao": 1,
+  "tipo": "forma",
+  "alvo": "Pentagono",
+  "nome_menu": "Pentágono",
+  "aula": {
+    "id": "aula_forma_pentagono",
+    "tipo": "forma",
+    "alvo": "Pentagono",
+    "titulo": "Pentágonos",
+    "falas": [
+      "Hoje é dia de Pentágono! É o polígono de 5 lados, 5 vértices e 5 ângulos. O nome vem do grego: penta = cinco e gonos = ângulo. Quando todos os lados e ângulos são iguais, ele se chama pentágono regular.",
+      "Soma dos ângulos internos: escolhendo um vértice e traçando segmentos até os vértices não vizinhos, o pentágono fica dividido em 3 triângulos. Como cada triângulo soma 180°: 3 × 180° = 540°.",
+      "Isso segue uma regra geral para qualquer polígono de n lados: S = (n − 2) × 180°. Para o pentágono: (5 − 2) × 180° = 540°.",
+      "No pentágono regular, os 540° são divididos igualmente entre os 5 ângulos: 540° ÷ 5 = 108° cada um. O perímetro é 5 × ℓ; com lado 6 cm, por exemplo, P = 30 cm.",
+      "A quantidade de diagonais de um polígono é D = n × (n − 3) ÷ 2. No pentágono: 5 × 2 ÷ 2 = 5 diagonais.",
+      "Ao traçar as 5 diagonais de um pentágono regular, aparece uma estrela de cinco pontas, o pentagrama. No centro dela surge um novo pentágono, menor e de cabeça para baixo! A razão entre a diagonal e o lado é o famoso número de ouro (≈ 1,618).",
+      "Pavimentar é cobrir uma superfície com peças, sem buracos nem sobreposição. Para isso, os ângulos que se encontram em um ponto precisam somar exatamente 360°. Com pentágonos regulares é impossível: 3 × 108° = 324° (sobra um buraco) e 4 × 108° = 432° (passa de 360°). Curiosamente, alguns pentágonos irregulares conseguem: hoje se conhecem 15 tipos!",
+      "Você sabia? A bola de futebol clássica, em preto e branco, é costurada com 12 pentágonos (pretos) e 20 hexágonos (brancos). Na natureza, muitas flores têm 5 pétalas, a estrela-do-mar tem 5 braços, e a carambola e o quiabo, cortados ao meio, mostram formas pentagonais.",
+      "A sede do Departamento de Defesa dos Estados Unidos é um enorme prédio em forma de pentágono, daí o apelido “O Pentágono”. E a proporção 1,618 do pentagrama também aparece em espirais de conchas e girassóis, e foi usada por artistas e arquitetos."
+    ]
+  },
+  "prova": {
+    "id": "prova_forma_pentagono",
+    "tipo": "forma",
+    "alvo": "Pentagono",
+    "notaDeCorte": 0.7,
+    "perguntas": [
+      {
+        "tipo": "vf",
+        "pergunta": "A soma dos ângulos internos de um pentágono é 540°.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "(5 − 2) × 180° = 540°."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "É possível cobrir um piso inteiro apenas com pentágonos regulares iguais, sem deixar buracos.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "Os ângulos de 108° não completam 360° em um ponto."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "Um pentágono possui 5 diagonais.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "D = 5 × (5 − 3) ÷ 2 = 5."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "Cada ângulo interno de um pentágono regular mede 90°.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "Mede 108° (540° ÷ 5). 90° é o ângulo do quadrado."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Quanto mede cada ângulo interno de um pentágono regular?",
+        "alternativas": [
+          "72°",
+          "90°",
+          "108°",
+          "120°"
+        ],
+        "respostaCorreta": "108°",
+        "explicacao": "540° ÷ 5 = 108°."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Qual é o perímetro de um pentágono regular com lados de 6 cm?",
+        "alternativas": [
+          "11 cm",
+          "30 cm",
+          "36 cm",
+          "24 cm"
+        ],
+        "respostaCorreta": "30 cm",
+        "explicacao": "P = 5 × 6 = 30 cm."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Que figura aparece ao traçarmos todas as diagonais de um pentágono regular?",
+        "alternativas": [
+          "Um hexágono",
+          "Um quadrado",
+          "Um círculo",
+          "Uma estrela de cinco pontas (pentagrama)"
+        ],
+        "respostaCorreta": "Uma estrela de cinco pontas (pentagrama)",
+        "explicacao": "As 5 diagonais se cruzam formando o pentagrama."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Quantos pentágonos tem a bola de futebol clássica (preta e branca)?",
+        "alternativas": [
+          "12",
+          "5",
+          "20",
+          "32"
+        ],
+        "respostaCorreta": "12",
+        "explicacao": "São 12 pentágonos e 20 hexágonos, 32 peças no total."
+      }
+    ]
+  }
+}

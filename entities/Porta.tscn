@@ -1,0 +1,60 @@
+[gd_scene format=3 uid="uid://dporta0001xy0"]
+
+[ext_resource type="Script" uid="uid://b0014iujacmfh" path="res://entities/Porta.gd" id="1_porta"]
+[ext_resource type="Texture2D" uid="uid://co73gdb0mo64l" path="res://assets/sprites/doors.png" id="2_lj5vk"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_porta"]
+size = Vector2(32, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_u1k6v"]
+atlas = ExtResource("2_lj5vk")
+region = Rect2(0, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lyp0p"]
+atlas = ExtResource("2_lj5vk")
+region = Rect2(32, 0, 16, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_e2ube"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_u1k6v")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lyp0p")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 1.0
+}]
+
+[node name="Porta" type="Area2D" unique_id=782612751]
+script = ExtResource("1_porta")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1871825754]
+shape = SubResource("RectangleShape2D_porta")
+
+[node name="Visual" type="ColorRect" parent="." unique_id=1743275289]
+offset_left = -16.0
+offset_top = -32.0
+offset_right = 16.0
+offset_bottom = 32.0
+mouse_filter = 2
+color = Color(0.6, 0.3, 0.9, 0.45)
+
+[node name="Label" type="Label" parent="." unique_id=286107712]
+offset_left = -32.0
+offset_top = -48.0
+offset_right = 32.0
+offset_bottom = -32.0
+text = "PORTA"
+horizontal_alignment = 1
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1093942118]
+z_index = -1
+position = Vector2(0, 6.0000005)
+scale = Vector2(1.5999995, 1.5999995)
+sprite_frames = SubResource("SpriteFrames_e2ube")
+frame_progress = 0.5564325
+
+[connection signal="area_shape_exited" from="." to="." method="_on_area_shape_exited"]

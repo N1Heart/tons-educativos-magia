@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://khu0arxc43da"]
+
+[ext_resource type="PackedScene" uid="uid://c4ydfw8yw7w72" path="res://scenes/pecas/piece.tscn" id="1_ej7bp"]
+[ext_resource type="Texture2D" uid="uid://dmsojpc41xal4" path="res://assets/pecasEditaveis/pentagono.png" id="2_ppb3y"]
+
+[node name="pentagono" unique_id=1264187183 instance=ExtResource("1_ej7bp")]
+
+[node name="Sprite2D" parent="." index="0" unique_id=696197292]
+texture = ExtResource("2_ppb3y")

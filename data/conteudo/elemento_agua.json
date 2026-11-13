@@ -1,0 +1,107 @@
+{
+  "versao": 1,
+  "tipo": "elemento",
+  "alvo": "Agua",
+  "nome_menu": "Azul (Água)",
+  "aula": {
+    "id": "aula_elemento_agua",
+    "tipo": "elemento",
+    "alvo": "Agua",
+    "titulo": "Azul — Água",
+    "falas": [
+      "Hoje o assunto é o Azul, a cor da Água! É a cor do céu limpo e do oceano: transmite calma, profundidade e confiança. No Círculo Mágico, é o elemento da adaptação, da fluidez e da serenidade.",
+      "A ciência da cor: o azul é uma das três primárias das tintas. Misturado ao amarelo forma o verde; misturado ao vermelho forma o roxo. A Água é um elemento primordial, assim como sua cor é primária.",
+      "O azul é a cor fria mais típica, junto com o verde e o roxo. Cores frias passam sensação de calma, frescor e distância. Na luz, o azul tem comprimento de onda curto (cerca de 450 a 495 nm), e ondas curtas se espalham mais quando batem nas partículas do ar. A cor oposta ao azul é o laranja.",
+      "Por que o céu é azul? A luz do Sol contém todas as cores. Ao atravessar a atmosfera, a parte azul é espalhada em todas as direções pelas moléculas do ar muito mais que a vermelha, e o céu inteiro parece azul. Não tem nada a ver com reflexo do mar!",
+      "Por que o mar é azul? A água absorve um pouco da luz vermelha. Em grandes volumes, sobra principalmente o azul. Um copo d’água parece transparente porque a camada é fina demais para notar.",
+      "Grimório, ficha do elemento Água. Essência: calma, adaptação e fluidez. Feitiços de exemplo: Onda Serena (acalma pessoas e animais), Escudo de Névoa (esconde o mago numa nuvem) e Correnteza (move objetos com jatos de água).",
+      "Combinações: Água + Eletricidade = Cura (azul + amarelo = verde). Água + Fogo = Tempo (azul + vermelho = roxo). O oposto da Água é a Terra (laranja): a água desgasta a rocha; a terra represa e absorve a água.",
+      "Você sabia? O pigmento azul ultramarino era feito moendo a pedra semipreciosa lápis-lazúli e, na época dos grandes pintores europeus, chegou a valer mais que o ouro.",
+      "Cerca de 71% da superfície da Terra é coberta de água, por isso, vista do espaço, ela é azul. E o azul é raro na natureza: quase nenhum animal ou planta produz pigmento azul de verdade. As asas azuis da borboleta-morfo, por exemplo, brilham por causa de estruturas microscópicas que refletem a luz."
+    ]
+  },
+  "prova": {
+    "id": "prova_elemento_agua",
+    "tipo": "elemento",
+    "alvo": "Agua",
+    "notaDeCorte": 0.7,
+    "perguntas": [
+      {
+        "tipo": "vf",
+        "pergunta": "O azul é uma cor primária.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "É uma das três primárias, com o vermelho e o amarelo."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "O céu é azul porque reflete a cor do mar.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "É porque a luz azul do Sol é espalhada pelas moléculas do ar."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "A água absorve parte da luz vermelha; por isso grandes volumes de água parecem azulados.",
+        "alternativas": [],
+        "respostaCorreta": "Verdadeiro",
+        "explicacao": "Em grandes volumes, sobra principalmente a luz azul."
+      },
+      {
+        "tipo": "vf",
+        "pergunta": "A cor complementar do azul é o verde.",
+        "alternativas": [],
+        "respostaCorreta": "Falso",
+        "explicacao": "É o laranja."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Qual é a cor complementar (oposta) do azul?",
+        "alternativas": [
+          "Vermelho",
+          "Roxo",
+          "Laranja",
+          "Verde"
+        ],
+        "respostaCorreta": "Laranja",
+        "explicacao": "Azul e laranja ficam em lados opostos do círculo."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "Misturando tinta azul com tinta amarela, obtemos:",
+        "alternativas": [
+          "Verde",
+          "Roxo",
+          "Laranja",
+          "Marrom"
+        ],
+        "respostaCorreta": "Verde",
+        "explicacao": "Azul + amarelo = verde (e, na magia, Água + Eletricidade = Cura)."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "No Círculo Mágico, qual elemento é o oposto da Água?",
+        "alternativas": [
+          "Fogo",
+          "Tempo",
+          "Cura",
+          "Terra"
+        ],
+        "respostaCorreta": "Terra",
+        "explicacao": "A Terra, cuja cor (laranja) é a complementar do azul."
+      },
+      {
+        "tipo": "objetiva",
+        "pergunta": "O antigo pigmento azul ultramarino era feito a partir de:",
+        "alternativas": [
+          "Flores azuis",
+          "Pedra lápis-lazúli moída",
+          "Água do mar",
+          "Penas de aves"
+        ],
+        "respostaCorreta": "Pedra lápis-lazúli moída",
+        "explicacao": "Moía-se a pedra semipreciosa lápis-lazúli."
+      }
+    ]
+  }
+}

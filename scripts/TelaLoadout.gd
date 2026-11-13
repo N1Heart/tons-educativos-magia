@@ -1,0 +1,142 @@
+extends Control
+
+## Tela de loadout de magias (mockup "Página X" — Personagem + Disposição das
+## peças). Deixa o jogador escolher, PRA CADA FORMA DESBLOQUEADA, qual
+## ELEMENTO DESBLOQUEADO equipar nela.
+##
+## Forma e elemento são eixos independentes (decisão do módulo 2): o aluno
+## desbloqueia uma forma na sala das formas e um elemento na sala das cores,
+## e pode recombinar os dois livremente aqui — por isso a tela só mostra uma
+## linha por forma JÁ DESBLOQUEADA, e cada dropdown só lista elementos JÁ
+## DESBLOQUEADOS (nunca os 5x6 = 30 combos inteiros de uma vez).
+
+## Uma linha (forma) da tela: os três controles que a representam.
+class _Linha:
+	var icone: TextureRect
+	var opcoes: OptionButton
+	var forma: String
+
+var _linhas: Array = []
+var _elementos_desbloqueados: Array[String] = []
+var _lista_formas: VBoxContainer
+var _aviso_vazio: Label
+
+
+func _ready() -> void:
+	var t := TemaUI.preparar(self, "Loadout de magias", "‹ Voltar", _on_btn_voltar_pressed)
+	var linha_tela := HBoxContainer.new()
+	linha_tela.add_theme_constant_override("separation", 10)
+	t["corpo"].add_child(linha_tela)
+	var esq := TemaUI.painel("PERSONAGEM")
+	linha_tela.add_child(esq)
+	TemaUI.conteudo(esq).add_child(TemaUI.retrato_personagem(110))
+	var dir := TemaUI.painel("DISPOSIÇÃO DAS PEÇAS")
+	dir.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	linha_tela.add_child(dir)
+	var v := TemaUI.conteudo(dir)
+	v.add_child(TemaUI.rotulo("Escolha o elemento de cada forma. Só aparecem o que você já desbloqueou.", "Discreto"))
+	_lista_formas = VBoxContainer.new()
+	_lista_formas.add_theme_constant_override("separation", 8)
+	v.add_child(_lista_formas)
+	_aviso_vazio = TemaUI.rotulo("", "Aviso")
+	_aviso_vazio.visible = false
+	v.add_child(_aviso_vazio)
+
+	var uid := LocalDB.get_user_id_ativo()
+
+	# Garante que o loadout salvo do jogador (se algum) já está aplicado
+	# antes de montar a tela, senão ela mostraria o padrão hardcoded.
+	SpellLoadout.carregar_equipado(uid)
+
+	_elementos_desbloqueados = LocalDB.listar_elementos_desbloqueados(uid)
+	var formas_desbloqueadas := LocalDB.listar_formas_desbloqueadas(uid)
+
+	if formas_desbloqueadas.is_empty() or _elementos_desbloqueados.is_empty():
+		_aviso_vazio.text = "Você ainda não desbloqueou nenhuma forma ou elemento — vá pra sala de aula!"
+		_aviso_vazio.visible = true
+		return
+
+	_aviso_vazio.visible = false
+	_montar_linhas(formas_desbloqueadas)
+	_atualizar_todos_os_icones()
+
+
+func _montar_linhas(formas_desbloqueadas: Array) -> void:
+	for forma in formas_desbloqueadas:
+		var linha := HBoxContainer.new()
+		linha.add_theme_constant_override("separation", 12)
+
+		var icone := TextureRect.new()
+		icone.custom_minimum_size = Vector2(48, 48)
+		icone.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icone.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		linha.add_child(icone)
+
+		var nome := Label.new()
+		nome.text = forma
+		nome.custom_minimum_size = Vector2(90, 0)
+		nome.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		linha.add_child(nome)
+
+		var opcoes := OptionButton.new()
+		for elemento in _elementos_desbloqueados:
+			opcoes.add_item(elemento)
+		linha.add_child(opcoes)
+
+		_lista_formas.add_child(linha)
+
+		var registro := _Linha.new()
+		registro.icone = icone
+		registro.opcoes = opcoes
+		registro.forma = forma
+		_linhas.append(registro)
+
+		opcoes.item_selected.connect(_on_elemento_selecionado.bind(registro))
+
+
+func _atualizar_todos_os_icones() -> void:
+	for registro in _linhas:
+		var elemento_atual: String = SpellLoadout.equipped.get(registro.forma, "")
+
+		# O elemento equipado pode não estar mais entre os desbloqueados
+		# (ex: valor padrão hardcoded de uma forma recém-desbloqueada que
+		# ainda não tinha elemento nenhum escolhido) — nesse caso cai pro
+		# primeiro elemento desbloqueado disponível, e já corrige/persiste.
+		var indice: int = _elementos_desbloqueados.find(elemento_atual)
+		if indice == -1:
+			indice = 0
+			elemento_atual = _elementos_desbloqueados[0]
+			SpellLoadout.set_equipped(registro.forma, elemento_atual)
+
+		registro.opcoes.select(indice)
+		_atualizar_icone(registro, elemento_atual)
+
+
+func _atualizar_icone(registro: _Linha, elemento: String) -> void:
+	var tipo := SpellLoadout.get_tile_type(registro.forma, elemento)
+	registro.icone.texture = tipo.shape_texture
+	registro.icone.modulate = tipo.color
+
+
+func _on_elemento_selecionado(indice: int, registro: _Linha) -> void:
+	var elemento: String = _elementos_desbloqueados[indice]
+	SpellLoadout.set_equipped(registro.forma, elemento)
+	_atualizar_icone(registro, elemento)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_on_btn_voltar_pressed()
+
+
+## Volta pra onde o jogador estava (aberto pelo menu ESC / tecla I dentro do
+## jogo) ou, sem pedido nenhum, pro menu do aluno.
+func _on_btn_voltar_pressed() -> void:
+	var destino := "res://scenes/Login/TelaAluno.tscn"
+	if Engine.has_meta("voltar_para"):
+		var pedido: Dictionary = Engine.get_meta("voltar_para")
+		Engine.remove_meta("voltar_para")
+		destino = pedido.get("cena", destino)
+		if pedido.has("posicao"):
+			Engine.set_meta("spawn_proxima_cena", {"cena": destino, "posicao": pedido["posicao"]})
+	Transicao.ir_para(destino)
