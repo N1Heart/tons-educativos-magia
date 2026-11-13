@@ -15,7 +15,8 @@ const MIN_ALUNOS_PVE := 1
 const MIN_ALUNOS_PVP := 2
 
 var _professor := false
-var _caixa: VBoxContainer
+var _corpo: Control
+var _btn_voltar_barra: Button
 var _status: Label
 var _lista: ItemList
 var _titulo: Label
@@ -30,22 +31,10 @@ var _ocupado := false
 
 func _ready() -> void:
 	_professor = Engine.get_meta("lobby_modo", "aluno") == "professor"
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-
-	var fundo := ColorRect.new()
-	fundo.color = Color(0.1, 0.1, 0.16)
-	fundo.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(fundo)
-
-	var margem := MarginContainer.new()
-	margem.set_anchors_preset(Control.PRESET_FULL_RECT)
-	for lado in ["left", "top", "right", "bottom"]:
-		margem.add_theme_constant_override("margin_" + lado, 14)
-	add_child(margem)
-
-	_caixa = VBoxContainer.new()
-	_caixa.add_theme_constant_override("separation", 6)
-	margem.add_child(_caixa)
+	var t := TemaUI.preparar(self, "Sala", "‹ Voltar", _voltar)
+	_corpo = t["corpo"]
+	_titulo = t["titulo"]
+	_btn_voltar_barra = t["voltar"]
 
 	LobbyManager.sala_atualizada.connect(_atualizar)
 	LobbyManager.atividade_iniciada.connect(_on_atividade_iniciada)
@@ -66,87 +55,69 @@ func _ready() -> void:
 
 # ---------------------------------------------------------------- construção
 
-func _rotulo(texto: String, tamanho: int = 14, cor: Color = Color.WHITE) -> Label:
-	var l := Label.new()
-	l.text = texto
-	l.add_theme_font_size_override("font_size", tamanho)
-	l.add_theme_color_override("font_color", cor)
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	return l
-
-
-func _botao(texto: String, acao: Callable) -> Button:
-	var b := Button.new()
-	b.text = texto
-	b.add_theme_font_size_override("font_size", 14)
-	b.pressed.connect(acao)
-	return b
-
-
 func _limpar() -> void:
-	for c in _caixa.get_children():
+	for c in _corpo.get_children():
 		c.queue_free()
 
 
 func _montar_entrada_aluno() -> void:
 	_limpar()
-	_caixa.add_child(_rotulo("Entrar em uma sala", 20, Color(1.0, 0.85, 0.4)))
-	_caixa.add_child(_rotulo("Digite o código que o professor mostrou na tela dele:"))
+	_titulo.text = "Entrar em uma sala"
+	_btn_voltar_barra.text = "‹ Voltar"
+
+	var centro := CenterContainer.new()
+	_corpo.add_child(centro)
+	var painel := TemaUI.painel("CÓDIGO DA SALA")
+	painel.custom_minimum_size = Vector2(340, 0)
+	centro.add_child(painel)
+	var v := TemaUI.conteudo(painel)
+
+	v.add_child(TemaUI.rotulo("Digite o código que o professor mostrou na tela dele."))
 
 	_campo_codigo = LineEdit.new()
 	_campo_codigo.max_length = LobbySalaClass.TAMANHO_CODIGO
 	_campo_codigo.placeholder_text = "CÓDIGO"
 	_campo_codigo.alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_campo_codigo.custom_minimum_size = Vector2(160, 40)
+	_campo_codigo.custom_minimum_size = Vector2(0, 42)
 	_campo_codigo.add_theme_font_size_override("font_size", 24)
 	_campo_codigo.text_submitted.connect(func(_t): _entrar_como_aluno())
-	var centro := CenterContainer.new()
-	centro.add_child(_campo_codigo)
-	_caixa.add_child(centro)
+	v.add_child(_campo_codigo)
 
-	_status = _rotulo("", 13, Color(1.0, 0.75, 0.4))
-	_caixa.add_child(_status)
+	_status = TemaUI.rotulo("", "Aviso")
+	v.add_child(_status)
 
-	var linha := HBoxContainer.new()
-	_btn_entrar = _botao("Entrar", _entrar_como_aluno)
-	linha.add_child(_btn_entrar)
-	linha.add_child(_botao("Voltar", _voltar))
-	_caixa.add_child(linha)
+	_btn_entrar = TemaUI.botao("Entrar na sala", _entrar_como_aluno, "BotaoPrimario")
+	v.add_child(_btn_entrar)
 	_campo_codigo.grab_focus()
 
 
 func _montar_sala() -> void:
 	_limpar()
-	_titulo = _rotulo("", 18, Color(1.0, 0.85, 0.4))
-	_caixa.add_child(_titulo)
+	_titulo.text = "Sala"
+	_btn_voltar_barra.text = "‹ Encerrar sala" if _professor else "‹ Sair da sala"
 
-	_codigo_label = _rotulo("", 30, Color(0.6, 0.9, 1.0))
-	_caixa.add_child(_codigo_label)
+	var colunas := TemaUI.duas_colunas(_corpo, "NA SALA", "CÓDIGO DA SALA", 240)
+	_lista = TemaUI.lista()
+	TemaUI.conteudo(colunas[0]).add_child(_lista)
 
-	_caixa.add_child(_rotulo("Na sala:", 13, Color(0.8, 0.8, 0.8)))
-	_lista = ItemList.new()
-	_lista.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_lista.select_mode = ItemList.SELECT_SINGLE
-	_lista.add_theme_font_size_override("font_size", 14)
-	_caixa.add_child(_lista)
+	var v := TemaUI.conteudo(colunas[1])
+	_codigo_label = TemaUI.rotulo("", "Codigo")
+	_codigo_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	v.add_child(_codigo_label)
 
-	_status = _rotulo("", 13, Color(1.0, 0.75, 0.4))
-	_caixa.add_child(_status)
+	_status = TemaUI.rotulo("", "Aviso")
+	_status.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	v.add_child(_status)
 
-	var linha := HBoxContainer.new()
 	if _professor:
-		_btn_pve = _botao("Iniciar PvE (cooperativo)", func(): _iniciar("pve"))
-		_btn_pvp = _botao("Iniciar PvP (duelo)", func(): _iniciar("pvp"))
-		linha.add_child(_btn_pve)
-		linha.add_child(_btn_pvp)
-		_btn_encerrar_atividade = _botao("Encerrar atividade", func(): LobbyManager.encerrar_atividade())
-		linha.add_child(_btn_encerrar_atividade)
-		linha.add_child(_botao("Encerrar sala", _voltar))
-	else:
-		if Engine.has_meta("lobby_retorno"):
-			linha.add_child(_botao("Voltar ao jogo (continua na sala)", _voltar_ao_jogo))
-		linha.add_child(_botao("Sair da sala", _voltar))
-	_caixa.add_child(linha)
+		_btn_pve = TemaUI.botao("Iniciar PvE (cooperativo)", func(): _iniciar("pve"), "BotaoPrimario")
+		_btn_pvp = TemaUI.botao("Iniciar PvP (duelo)", func(): _iniciar("pvp"), "BotaoPrimario")
+		v.add_child(_btn_pve)
+		v.add_child(_btn_pvp)
+		_btn_encerrar_atividade = TemaUI.botao("Encerrar atividade", func(): LobbyManager.encerrar_atividade(), "BotaoPerigo")
+		v.add_child(_btn_encerrar_atividade)
+	elif Engine.has_meta("lobby_retorno"):
+		v.add_child(TemaUI.botao("Voltar ao jogo (continua na sala)", _voltar_ao_jogo, "BotaoPrimario"))
 
 
 # ------------------------------------------------------------------- ações
@@ -195,7 +166,7 @@ func _voltar() -> void:
 	await LobbyManager.sair()
 	if is_inside_tree():
 		if _professor:
-			get_tree().change_scene_to_file(CENA_PROFESSOR)
+			Transicao.ir_para(CENA_PROFESSOR)
 		else:
 			_ir_para_retorno()
 
@@ -215,7 +186,7 @@ func _ir_para_retorno() -> void:
 		destino = pedido.get("cena", destino)
 		if pedido.has("posicao"):
 			Engine.set_meta("spawn_proxima_cena", {"cena": destino, "posicao": pedido["posicao"]})
-	get_tree().change_scene_to_file(destino)
+	Transicao.ir_para(destino)
 
 
 # ------------------------------------------------------------------ eventos
@@ -223,9 +194,9 @@ func _ir_para_retorno() -> void:
 func _atualizar() -> void:
 	if _lista == null or not is_instance_valid(_lista) or not LobbyManager.esta_em_sala():
 		return
-	_codigo_label.text = "CÓDIGO: " + LobbyManager.codigo
+	_codigo_label.text = LobbyManager.codigo
 	if _professor:
-		_titulo.text = "Sala da turma: " + LobbyManager.nome_turma
+		_titulo.text = "Sala da turma " + LobbyManager.nome_turma
 	else:
 		_titulo.text = "Sala de %s (prof. %s)" % [LobbyManager.nome_turma, LobbyManager.nome_professor]
 

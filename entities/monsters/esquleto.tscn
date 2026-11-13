@@ -289,3 +289,4 @@ sprite_frames = SubResource("SpriteFrames_rx00w")
 animation = &"ataque"
 autoplay = ""
 frame_progress = 0.50418687
+flip_h = true

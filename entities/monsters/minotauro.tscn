@@ -238,3 +238,4 @@ sprite_frames = SubResource("SpriteFrames_1yv2w")
 animation = &"dano"
 autoplay = ""
 frame_progress = 0.18692484
+flip_h = true

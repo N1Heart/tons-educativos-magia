@@ -17,6 +17,11 @@ var aluno_selecionado_nome: String = ""
 ## o padrão 127.0.0.1 continua valendo. Fica salvo em user://servidor.cfg.
 const PORTA_SERVIDOR := 7350
 const ARQUIVO_SERVIDOR := "user://servidor.cfg"
+
+
+## Com --perfil=X (teste de duas janelas no mesmo PC) cada perfil guarda o seu.
+func _arquivo_servidor() -> String:
+	return LocalDB.arquivo_usuario("servidor", "cfg")
 const SERVIDOR_PADRAO := "127.0.0.1"
 
 
@@ -37,7 +42,7 @@ func prefixo_convidado() -> String:
 	var dispositivo := OS.get_unique_id()
 	if dispositivo == "":
 		dispositivo = LocalDB.get_id_dispositivo()
-	return "g_" + dispositivo.sha256_text().substr(0, 12) + "_"
+	return "g_" + (dispositivo + LocalDB.perfil()).sha256_text().substr(0, 12) + "_"
 
 
 ## Nome -> trecho seguro pra id (minúsculo, sem acento, só letras/números).
@@ -85,7 +90,7 @@ func tentar_reconectar() -> void:
 
 func carregar_servidor() -> String:
 	var cfg := ConfigFile.new()
-	if cfg.load(ARQUIVO_SERVIDOR) == OK:
+	if cfg.load(_arquivo_servidor()) == OK:
 		var host := str(cfg.get_value("servidor", "host", SERVIDOR_PADRAO)).strip_edges()
 		if host != "":
 			return host
@@ -99,7 +104,7 @@ func definir_servidor(host: String) -> void:
 		host = SERVIDOR_PADRAO
 	var cfg := ConfigFile.new()
 	cfg.set_value("servidor", "host", host)
-	cfg.save(ARQUIVO_SERVIDOR)
+	cfg.save(_arquivo_servidor())
 	session = null
 	client = Nakama.create_client("defaultkey", host, PORTA_SERVIDOR, "http")
 

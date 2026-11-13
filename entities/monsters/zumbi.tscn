@@ -206,4 +206,3 @@ sprite_frames = SubResource("SpriteFrames_g7cp6")
 animation = &"ataque"
 autoplay = ""
 frame_progress = 0.1823204
-flip_h = true

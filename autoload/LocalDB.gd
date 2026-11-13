@@ -13,7 +13,20 @@ extends Node
 ## persistido em user://device_id.txt).
 
 var db: SQLite
-const DB_PATH := "user://progresso.db"
+## Perfil de teste: iniciar com o argumento --perfil=B (ou 2, etc.) faz esta
+## cópia do jogo usar banco, id de dispositivo e servidor próprios. Serve para
+## abrir duas janelas no MESMO computador sem uma pisar nos dados da outra.
+static func perfil() -> String:
+	for a in OS.get_cmdline_args():
+		if a.begins_with("--perfil="):
+			return a.substr(9).strip_edges()
+	return ""
+
+
+static func arquivo_usuario(nome: String, extensao: String) -> String:
+	var p := perfil()
+	return "user://%s%s.%s" % [nome, ("_" + p) if p != "" else "", extensao]
+var DB_PATH: String = arquivo_usuario("progresso", "db")
 
 
 func _ready() -> void:
@@ -195,7 +208,7 @@ func turma_pendente(user_id: String) -> bool:
 
 
 func _get_ou_criar_device_id() -> String:
-	var path := "user://device_id.txt"
+	var path := arquivo_usuario("device_id", "txt")
 	if FileAccess.file_exists(path):
 		return FileAccess.open(path, FileAccess.READ).get_as_text().strip_edges()
 

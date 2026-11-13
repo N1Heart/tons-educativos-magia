@@ -83,6 +83,13 @@ var monstro_age_ao_fim: bool = true
 var resultado_empate: bool = false
 var _log_turno: Array = []
 var _coletando_log := false
+## Magias resolvidas no turno local, uma a uma (com o estado depois de cada
+## uma e as linhas de log), para os outros jogadores reproduzirem em sequência.
+var _eventos_turno: Array = []
+var _eventos_ultimo_log := 0
+## Nome de quem jogou o turno que está sendo reproduzido ("" = turno local).
+var replay_autor: String = ""
+var _reproduzindo := false
 
 func _ready() -> void:
 	# Guarda as mensagens do turno pra mandar junto com o resultado em rede.
@@ -230,6 +237,8 @@ func end_player_turn() -> void:
 
 func _encerrar_turno_rede() -> void:
 	_log_turno = []
+	_eventos_turno = []
+	_eventos_ultimo_log = 0
 	_coletando_log = true
 	if modo_rede == "coop" and monstro_age_ao_fim:
 		_queue_enemy_actions()
@@ -264,6 +273,8 @@ func resolver_rodada_pvp(lista_oponente: Array) -> void:
 		sp.repeticoes = maxi(1, int(d.get("c", 1)))
 		pending_spells.append(sp)
 	_log_turno = []
+	_eventos_turno = []
+	_eventos_ultimo_log = 0
 	_coletando_log = true
 	await resolve_turn()
 	_coletando_log = false
@@ -305,6 +316,8 @@ func gerar_snapshot() -> Dictionary:
 		"sm": player_status.duplicate(),
 		"so": monster_status.duplicate(),
 		"log": _log_turno.duplicate(),
+		"ev": _eventos_turno.duplicate(true),
+		"pos": _log_turno.slice(_eventos_ultimo_log),
 	}
 
 
@@ -313,14 +326,34 @@ func gerar_snapshot() -> Dictionary:
 func aplicar_snapshot(s: Dictionary, espelhar: bool, minha_vez: bool, tempo_esgotado: bool = false) -> void:
 	if not combat_active:
 		return
+	# Um turno por vez: se chegar outro durante a reprodução, espera.
+	while _reproduzindo:
+		await get_tree().process_frame
+		if not combat_active:
+			return
+	_reproduzindo = true
+	replay_autor = str(s.get("nome", ""))
+
+	var eventos: Array = s.get("ev", [])
+	if eventos.is_empty():
+		for linha in s.get("log", []):
+			log_message.emit(str(linha))
+	else:
+		await _reproduzir_eventos(eventos, espelhar)
+		for linha in s.get("pos", []):
+			_emitir_linha_replay(str(linha))
+
+	replay_autor = ""
+	_reproduzindo = false
+	if not combat_active:
+		return
+
 	var meus: Array = s.get("ou", []) if espelhar else s.get("mi", [])
 	var outros: Array = s.get("mi", []) if espelhar else s.get("ou", [])
 	_aplicar_unidades(player_units, meus)
 	_aplicar_unidades(enemy_units, outros)
 	player_status = _status_limpo(s.get("so", {}) if espelhar else s.get("sm", {}))
 	monster_status = _status_limpo(s.get("sm", {}) if espelhar else s.get("so", {}))
-	for linha in s.get("log", []):
-		log_message.emit(str(linha))
 	units_changed.emit(player_units, enemy_units)
 	if _check_combat_end():
 		return
@@ -331,6 +364,34 @@ func aplicar_snapshot(s: Dictionary, espelhar: bool, minha_vez: bool, tempo_esgo
 		start_player_turn()
 	else:
 		aguardar_turno_rede()
+
+
+## Reproduz, uma a uma, as magias que o outro jogador resolveu: animação,
+## vida e log aparecem no mesmo ritmo de quem jogou.
+func _reproduzir_eventos(eventos: Array, espelhar: bool) -> void:
+	for ev in eventos:
+		if not combat_active:
+			return
+		var autor := str(ev.get("c", "player"))
+		if espelhar:
+			autor = "monster" if autor == "player" else "player"
+		var tt := SpellLoadout.get_tile_type(str(ev.get("f", "")), str(ev.get("e", "")))
+		var sp := SpellCast.new(autor, tt, int(ev.get("t", 3)))
+		sp.repeticoes = maxi(1, int(ev.get("r", 1)))
+		spell_resolving.emit(sp)
+		_aplicar_unidades(player_units, ev.get("ou", []) if espelhar else ev.get("mi", []))
+		_aplicar_unidades(enemy_units, ev.get("mi", []) if espelhar else ev.get("ou", []))
+		for linha in ev.get("l", []):
+			_emitir_linha_replay(str(linha))
+		units_changed.emit(player_units, enemy_units)
+		await get_tree().create_timer(0.4).timeout
+
+
+## "Vitória!"/"Derrota..." dependem de quem vê: quem reproduz gera a sua própria.
+func _emitir_linha_replay(linha: String) -> void:
+	if linha == "Vitória!" or linha == "Derrota...":
+		return
+	log_message.emit(linha)
 
 
 ## Fica esperando a vez (não é o turno deste jogador).
@@ -432,6 +493,7 @@ func resolve_turn() -> void:
 	for spell in pending_spells:
 		spell_resolving.emit(spell)
 		_apply_spell(spell)
+		_registrar_evento(spell)
 		units_changed.emit(player_units, enemy_units)
 
 		if _check_combat_end():
@@ -441,6 +503,19 @@ func resolve_turn() -> void:
 		await get_tree().create_timer(0.4).timeout
 
 	pending_spells.clear()
+
+
+## Guarda o resultado de uma magia (só quando o turno vai ser enviado pela rede).
+func _registrar_evento(spell: SpellCast) -> void:
+	if not _coletando_log:
+		return
+	_eventos_turno.append({
+		"c": spell.caster, "f": spell.tile_type.shape_name, "e": spell.tile_type.element_name,
+		"t": spell.match_size, "r": spell.repeticoes,
+		"mi": _dados_unidades(player_units), "ou": _dados_unidades(enemy_units),
+		"l": _log_turno.slice(_eventos_ultimo_log),
+	})
+	_eventos_ultimo_log = _log_turno.size()
 
 
 func _target_count(match_size: int, pool_size: int) -> int:

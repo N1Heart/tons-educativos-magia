@@ -7,7 +7,7 @@ extends Control
 
 const CENA_ALUNO := "res://scenes/Login/TelaAluno.tscn"
 
-var _caixa: VBoxContainer
+var _corpo: Control
 var _titulo: Label
 var _lista: ItemList
 var _status: Label
@@ -19,57 +19,49 @@ var _ids: Array = []
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	var fundo := ColorRect.new()
-	fundo.color = Color(0.1, 0.1, 0.16)
-	fundo.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(fundo)
+	var t := TemaUI.preparar(self, "Arena de duelos amistosos", "‹ Sair da arena", _sair)
+	_titulo = t["titulo"]
+	var colunas := TemaUI.duas_colunas(t["corpo"], "COLEGAS NA ARENA", "DUELO", 240)
 
-	var margem := MarginContainer.new()
-	margem.set_anchors_preset(Control.PRESET_FULL_RECT)
-	for lado in ["left", "top", "right", "bottom"]:
-		margem.add_theme_constant_override("margin_" + lado, 14)
-	add_child(margem)
-	_caixa = VBoxContainer.new()
-	_caixa.add_theme_constant_override("separation", 6)
-	margem.add_child(_caixa)
-
-	_titulo = _rotulo("Arena de duelos amistosos", 18, Color(1.0, 0.85, 0.4))
-	_caixa.add_child(_titulo)
-	_caixa.add_child(_rotulo("Colegas na arena (duelo amistoso: não vale nota nem muda a dificuldade):", 12, Color(0.8, 0.8, 0.8)))
-
-	_lista = ItemList.new()
-	_lista.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_lista.select_mode = ItemList.SELECT_SINGLE
-	_lista.add_theme_font_size_override("font_size", 14)
+	var esq := TemaUI.conteudo(colunas[0])
+	_lista = TemaUI.lista()
 	_lista.item_selected.connect(func(_i): _atualizar_botoes())
 	_lista.item_activated.connect(func(_i): _desafiar())
-	_caixa.add_child(_lista)
+	esq.add_child(_lista)
+	esq.add_child(TemaUI.rotulo("Duelo amistoso não vale nota nem muda a dificuldade.", "Discreto"))
 
-	_status = _rotulo("", 13, Color(1.0, 0.75, 0.4))
-	_caixa.add_child(_status)
+	var dir := TemaUI.conteudo(colunas[1])
+	_status = TemaUI.rotulo("", "Aviso")
+	_status.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	dir.add_child(_status)
 
 	# Convite recebido
 	_painel_convite = PanelContainer.new()
+	_painel_convite.theme_type_variation = "Cartao"
 	var vb := VBoxContainer.new()
-	_texto_convite = _rotulo("", 15, Color(0.6, 0.9, 1.0))
+	vb.add_theme_constant_override("separation", 6)
+	_texto_convite = TemaUI.rotulo("", "Codigo")
+	_texto_convite.remove_theme_font_size_override("font_size")
+	_texto_convite.add_theme_font_size_override("font_size", 14)
 	vb.add_child(_texto_convite)
 	var l2 := HBoxContainer.new()
-	l2.add_child(_botao("Aceitar", func(): ArenaDuelos.responder(true)))
-	l2.add_child(_botao("Recusar", func(): ArenaDuelos.responder(false)))
+	l2.add_theme_constant_override("separation", 6)
+	var aceitar := TemaUI.botao("Aceitar", func(): ArenaDuelos.responder(true), "BotaoPrimario")
+	aceitar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var recusar := TemaUI.botao("Recusar", func(): ArenaDuelos.responder(false))
+	recusar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	l2.add_child(aceitar)
+	l2.add_child(recusar)
 	vb.add_child(l2)
 	_painel_convite.add_child(vb)
 	_painel_convite.visible = false
-	_caixa.add_child(_painel_convite)
+	dir.add_child(_painel_convite)
 
-	var linha := HBoxContainer.new()
-	_btn_desafiar = _botao("Desafiar", _desafiar)
-	_btn_cancelar = _botao("Cancelar desafio", func(): ArenaDuelos.cancelar_desafio())
+	_btn_desafiar = TemaUI.botao("Desafiar", _desafiar, "BotaoPrimario")
+	_btn_cancelar = TemaUI.botao("Cancelar desafio", func(): ArenaDuelos.cancelar_desafio())
 	_btn_cancelar.visible = false
-	linha.add_child(_btn_desafiar)
-	linha.add_child(_btn_cancelar)
-	linha.add_child(_botao("Sair da arena", _sair))
-	_caixa.add_child(linha)
+	dir.add_child(_btn_desafiar)
+	dir.add_child(_btn_cancelar)
 
 	ArenaDuelos.lista_mudou.connect(_atualizar)
 	ArenaDuelos.desafio_recebido.connect(_on_desafio_recebido)
@@ -81,23 +73,6 @@ func _ready() -> void:
 		_atualizar()
 	else:
 		_entrar()
-
-
-func _rotulo(texto: String, tamanho: int = 14, cor: Color = Color.WHITE) -> Label:
-	var l := Label.new()
-	l.text = texto
-	l.add_theme_font_size_override("font_size", tamanho)
-	l.add_theme_color_override("font_color", cor)
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	return l
-
-
-func _botao(texto: String, acao: Callable) -> Button:
-	var b := Button.new()
-	b.text = texto
-	b.add_theme_font_size_override("font_size", 14)
-	b.pressed.connect(acao)
-	return b
 
 
 func _entrar() -> void:
@@ -203,4 +178,4 @@ func _sair() -> void:
 		destino = pedido.get("cena", destino)
 		if pedido.has("posicao"):
 			Engine.set_meta("spawn_proxima_cena", {"cena": destino, "posicao": pedido["posicao"]})
-	get_tree().change_scene_to_file(destino)
+	Transicao.ir_para(destino)

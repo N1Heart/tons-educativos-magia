@@ -382,4 +382,3 @@ sprite_frames = SubResource("SpriteFrames_21r2d")
 animation = &"morte"
 autoplay = ""
 frame_progress = 0.42823175
-flip_h = true

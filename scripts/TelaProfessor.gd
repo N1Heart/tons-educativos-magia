@@ -1,98 +1,158 @@
 extends Control
 
-var codigo_gerado = ""
+## Painel do professor, tela 1: lista das turmas e criação de turma nova.
+## Montada por código com o TemaUI (mesmo visual das outras telas de gestão).
+
+var codigo_gerado := ""
 var _turmas_atuais: Array = []  # cache {id, nome} da última lista carregada
 
-func _ready():
-# Conectando os botões
-	%btnGerarCodigo.pressed.connect(_on_btn_gerar_codigo_pressed)
-	%btnSalvarTurma.pressed.connect(_on_btn_salvar_turma_pressed)
-	%btnLogout.pressed.connect(_on_btn_logout_pressed)
-	# AGORA SIM: Conectando o botão de atualizar!
-	%btnAtualizarLista.pressed.connect(_on_btn_atualizar_lista_pressed)
-	# Duplo clique numa turma abre o detalhe dela (Módulo 4)
-	%listaTurmas.item_activated.connect(_on_turma_ativada)
+var _lista_turmas: ItemList
+var _btn_atualizar: Button
+var _opcao_periodo: OptionButton
+var _campo_ano: SpinBox
+var _campo_letra: LineEdit
+var _display_codigo: Label
+var _btn_gerar: Button
+var _btn_salvar: Button
 
-	# Carrega a lista automaticamente assim que a tela abre
+
+func _ready() -> void:
+	var t := TemaUI.preparar(self, "Minhas turmas", "", Callable(), "Sair", _on_btn_logout_pressed)
+	var colunas := TemaUI.duas_colunas(t["corpo"], "TURMAS CADASTRADAS", "NOVA TURMA", 250)
+	_montar_lista(TemaUI.conteudo(colunas[0]))
+	_montar_formulario(TemaUI.conteudo(colunas[1]))
 	_atualizar_lista_turmas()
 
-func _on_btn_gerar_codigo_pressed():
-	# 1. Pega a primeira letra do período (M, T ou N)
-	var texto_periodo = %opcaoPeriodo.get_item_text(%opcaoPeriodo.selected)
-	var inicial_periodo = texto_periodo.substr(0, 1).to_upper()
-	
-	# 2. Pega o Ano (como o SpinBox retorna float, convertemos para String)
-	var ano = str(%anoTurma.value)
-	
-	# 3. Pega a Letra da Turma (removemos espaços e deixamos maiúsculo)
-	var letra = %LetraTurma.text.strip_edges().to_upper()
-	
+
+func _montar_lista(v: VBoxContainer) -> void:
+	_lista_turmas = TemaUI.lista()
+	_lista_turmas.item_activated.connect(_on_turma_ativada)
+	v.add_child(_lista_turmas)
+	v.add_child(TemaUI.rotulo("Duplo clique numa turma para abrir.", "Discreto"))
+	_btn_atualizar = TemaUI.botao("Atualizar turmas", _on_btn_atualizar_lista_pressed)
+	v.add_child(_btn_atualizar)
+
+
+func _rotulo_curto(texto: String) -> Label:
+	var l := TemaUI.rotulo(texto)
+	l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	return l
+
+
+func _montar_formulario(v: VBoxContainer) -> void:
+	var grade := GridContainer.new()
+	grade.columns = 2
+	grade.add_theme_constant_override("h_separation", 8)
+	grade.add_theme_constant_override("v_separation", 6)
+	v.add_child(grade)
+
+	grade.add_child(_rotulo_curto("Período"))
+	_opcao_periodo = OptionButton.new()
+	for p in ["Matutino", "Vespertino", "Integral", "Noturno"]:
+		_opcao_periodo.add_item(p)
+	_opcao_periodo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grade.add_child(_opcao_periodo)
+
+	grade.add_child(_rotulo_curto("Ano"))
+	_campo_ano = SpinBox.new()
+	_campo_ano.min_value = 1
+	_campo_ano.max_value = 9
+	_campo_ano.value = 1
+	_campo_ano.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grade.add_child(_campo_ano)
+
+	grade.add_child(_rotulo_curto("Turma"))
+	_campo_letra = LineEdit.new()
+	_campo_letra.placeholder_text = "A, B ou C"
+	_campo_letra.max_length = 2
+	_campo_letra.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grade.add_child(_campo_letra)
+
+	_btn_gerar = TemaUI.botao("Gerar código", _on_btn_gerar_codigo_pressed)
+	v.add_child(_btn_gerar)
+
+	_display_codigo = TemaUI.rotulo("", "Aviso")
+	_display_codigo.custom_minimum_size = Vector2(0, 34)
+	v.add_child(_display_codigo)
+
+	var espaco := Control.new()
+	espaco.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	v.add_child(espaco)
+
+	_btn_salvar = TemaUI.botao("Salvar turma", _on_btn_salvar_turma_pressed, "BotaoPrimario")
+	v.add_child(_btn_salvar)
+
+
+func _on_btn_gerar_codigo_pressed() -> void:
+	# Primeira letra do período (M, V, I ou N)
+	var inicial_periodo := _opcao_periodo.get_item_text(_opcao_periodo.selected).substr(0, 1).to_upper()
+	var ano := str(int(_campo_ano.value))
+	var letra := _campo_letra.text.strip_edges().to_upper()
+
 	if letra == "":
-		%DisplayCodigo.text = "Erro: Informe a Letra da turma!"
+		_display_codigo.theme_type_variation = "Aviso"
+		_display_codigo.text = "Informe a letra da turma."
 		return
-		
-	# 4. Gera um identificador aleatório de 3 letras/números para ser único
-	var hash_unico = str(randi() % 899 + 100) # Gera número entre 100 e 999
-	
-	# Monta o código final (Ex: M-6A-452)
+
+	# Identificador aleatório de 3 dígitos para o código ser único
+	var hash_unico := str(randi() % 899 + 100)
+
+	# Código final (ex.: M-6A-452)
 	codigo_gerado = inicial_periodo + "-" + ano + letra + "-" + hash_unico
-	
-	# Exibe na tela
-	%displayCodigo.text = "Código: " + codigo_gerado
+	_display_codigo.theme_type_variation = "Codigo"
+	_display_codigo.add_theme_font_size_override("font_size", 20)
+	_display_codigo.text = codigo_gerado
 
-func _on_btn_salvar_turma_pressed():
+
+func _on_btn_salvar_turma_pressed() -> void:
 	if codigo_gerado == "":
-		print("Gere o código primeiro!")
+		_display_codigo.theme_type_variation = "Aviso"
+		_display_codigo.text = "Gere o código primeiro."
 		return
-		
-	print("Iniciando salvamento da turma: ", codigo_gerado)
-	%btnSalvarTurma.disabled = true
-	
-	var sucesso = await  NakamaManager.criar_turmas(codigo_gerado)
-	
-	if sucesso:
-		print("TUrma salva com sucesso no servido Nakama!")
-		%displayCodigo.text = "Turma Salva: " + codigo_gerado
-		_atualizar_lista_turmas()
-		
-		codigo_gerado = ""
-	else:
-		print("Falha ao salvar turma.")
-		%displayCodigo.text = "erro ao salvar turma"
-	
-	%btnSalvarTurma.disabled = false
-	
-func _on_btn_logout_pressed():
-	NakamaManager.fazer_logout()
-	get_tree().change_scene_to_file("res://scenes/Login/TelaAutenticacao.tscn")
-	# O próximo passo será enviar esse 'codigo_gerado' para o Nakama 
-	# criar um 'Grupo' onde os alunos vão se conectar!
 
-func _on_btn_atualizar_lista_pressed():
+	_btn_salvar.disabled = true
+	var sucesso: bool = await NakamaManager.criar_turmas(codigo_gerado)
+	_btn_salvar.disabled = false
+	if not is_inside_tree():
+		return
+
+	if sucesso:
+		_display_codigo.text = "Salva: " + codigo_gerado
+		codigo_gerado = ""
+		_atualizar_lista_turmas()
+	else:
+		_display_codigo.theme_type_variation = "Aviso"
+		_display_codigo.text = "Erro ao salvar a turma."
+
+
+func _on_btn_logout_pressed() -> void:
+	NakamaManager.fazer_logout()
+	Transicao.ir_para("res://scenes/Login/TelaAutenticacao.tscn")
+
+
+func _on_btn_atualizar_lista_pressed() -> void:
 	_atualizar_lista_turmas()
 
-# A função que faz a mágica na interface
-func _atualizar_lista_turmas():
-	%btnAtualizarLista.disabled = true
 
-	# Limpa a lista atual e mostra um aviso de carregamento
-	%listaTurmas.clear()
-	%listaTurmas.add_item("Carregando turmas...")
+func _atualizar_lista_turmas() -> void:
+	_btn_atualizar.disabled = true
+	_lista_turmas.clear()
+	_lista_turmas.add_item("Carregando turmas...")
 
-	# Busca lá no servidor — agora vem como {id, nome} por turma
+	# Vem como {id, nome} por turma
 	_turmas_atuais = await NakamaManager.listar_minhas_turmas()
+	if not is_inside_tree():
+		return
 
-	# Limpa o "Carregando..."
-	%listaTurmas.clear()
-
-	# Preenche a lista com as turmas encontradas
+	_lista_turmas.clear()
 	if _turmas_atuais.is_empty():
-		%listaTurmas.add_item("Nenhuma turma criada ainda.")
+		_lista_turmas.add_item("Nenhuma turma criada ainda.")
+		_lista_turmas.set_item_disabled(0, true)
 	else:
 		for turma in _turmas_atuais:
-			%listaTurmas.add_item(turma["nome"])
-
-	%btnAtualizarLista.disabled = false
+			_lista_turmas.add_item(turma["nome"])
+	_btn_atualizar.disabled = false
 
 
 func _on_turma_ativada(index: int) -> void:
@@ -101,4 +161,4 @@ func _on_turma_ativada(index: int) -> void:
 	var turma: Dictionary = _turmas_atuais[index]
 	NakamaManager.turma_selecionada_id = turma["id"]
 	NakamaManager.turma_selecionada_nome = turma["nome"]
-	get_tree().change_scene_to_file("res://scenes/Login/TelaTurma.tscn")
+	Transicao.ir_para("res://scenes/Login/TelaTurma.tscn")

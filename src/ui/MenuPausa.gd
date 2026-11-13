@@ -225,7 +225,7 @@ func _abrir_inventario() -> void:
 		pedido["posicao"] = (jogador as Node2D).global_position
 	Engine.set_meta("voltar_para", pedido)
 	fechar()
-	get_tree().change_scene_to_file(CENA_INVENTARIO)
+	Transicao.ir_para(CENA_INVENTARIO)
 
 
 # ------------------------------------------------------------------- saídas
@@ -250,7 +250,7 @@ func _sair_para_menu() -> void:
 	if ArenaDuelos.esta_na_arena():
 		ArenaDuelos.sair()
 	fechar()
-	get_tree().change_scene_to_file(CENA_MENU_ALUNO)
+	Transicao.ir_para(CENA_MENU_ALUNO)
 
 
 func _sair_do_jogo() -> void:

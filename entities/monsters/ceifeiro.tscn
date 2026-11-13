@@ -238,4 +238,3 @@ sprite_frames = SubResource("SpriteFrames_qbbwi")
 animation = &"morte"
 autoplay = ""
 frame_progress = 0.38682872
-flip_h = true

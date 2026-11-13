@@ -120,7 +120,7 @@ func _entrar_na_atividade() -> void:
 	else:
 		if MenuPausa.esta_aberto():
 			MenuPausa.fechar()
-		get_tree().change_scene_to_file(CENA_DUELO)
+		Transicao.ir_para(CENA_DUELO, false)
 
 
 ## Mostra o aviso na sala de espera e, em outras telas, num balão no topo.

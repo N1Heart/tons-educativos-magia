@@ -77,14 +77,44 @@ var _hp_inimigo_antes := -1
 var _hp_time_antes := -1
 
 
+# --- Cenário de fundo do combate ---
+const FUNDO_SOLO := "res://sprites/sala/fundoFloresta.jpg"       # aventura no quintal
+const FUNDO_REDE := "res://sprites/sala/FundosalaDuelos.png"     # sala do professor e arena
+const ESCURECER_FUNDO := 0.22                                     # véu para o HUD continuar legível
+
+
+## Pinta o cenário atrás de tudo (camada -10). Floresta no combate solo; salão
+## de duelos quando o combate é em rede (sala do professor ou arena).
+func _montar_fundo() -> void:
+	var tex := load(FUNDO_REDE if _em_rede else FUNDO_SOLO) as Texture2D
+	if tex == null:
+		return
+	var camada := CanvasLayer.new()
+	camada.layer = -10
+	add_child(camada)
+	var fundo := TextureRect.new()
+	fundo.texture = tex
+	fundo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	fundo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	fundo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	fundo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	camada.add_child(fundo)
+	var veu := ColorRect.new()
+	veu.color = Color(0, 0, 0, ESCURECER_FUNDO)
+	veu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	veu.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	camada.add_child(veu)
+
+
 func _ready() -> void:
 	if not SpellLoadout.pode_entrar_em_combate(LocalDB.get_user_id_ativo()):
 		push_warning("duelos: " + SpellLoadout.motivo_bloqueio_combate(LocalDB.get_user_id_ativo()))
-		get_tree().change_scene_to_file.call_deferred("res://scenes/salas/fundosDoCastelo.tscn")
+		Transicao.ir_para.call_deferred("res://scenes/salas/fundosDoCastelo.tscn")
 		return
 		
 	_em_rede = DueloRede.ativo
 	Combat.modo_rede = DueloRede.modo_combate if _em_rede else ""
+	_montar_fundo()
 	Combat.bind_board(board)
 
 	Combat.units_changed.connect(_on_units_changed)
@@ -255,8 +285,8 @@ func _on_turno_rede_encerrado(snapshot: Dictionary) -> void:
 func _on_turno_recebido(snapshot: Dictionary) -> void:
 	if not Combat.combat_active:
 		return
-	Combat.aplicar_snapshot(snapshot, DueloRede.modo_combate == "pvp", DueloRede.meu_turno(), DueloRede.limite_atingido())
-	_animar_colega(snapshot)
+	# Reproduz as magias do outro jogador uma a uma (animação + log + vida).
+	await Combat.aplicar_snapshot(snapshot, DueloRede.modo_combate == "pvp", DueloRede.meu_turno(), DueloRede.limite_atingido())
 	if Combat.combat_active:
 		_enviar_estado("")
 	_atualizar_rotulo_turno()
@@ -282,7 +312,7 @@ func _on_atividade_encerrada() -> void:
 func _on_sala_perdida(_motivo: String) -> void:
 	Combat.combat_active = false
 	_registrada = true
-	get_tree().change_scene_to_file(CENA_MENU_ALUNO)
+	Transicao.ir_para(CENA_MENU_ALUNO)
 
 
 func _enviar_estado(fim: String) -> void:
@@ -301,11 +331,11 @@ func _voltar_para_sala() -> void:
 		# Duelo amistoso: volta para a lista da arena.
 		DueloRede.limpar_partida()
 		ArenaDuelos.duelo_terminado()
-		get_tree().change_scene_to_file(CENA_ARENA)
+		Transicao.ir_para(CENA_ARENA)
 		return
 	DueloRede.limpar_partida()
 	Engine.set_meta("lobby_modo", "aluno")
-	get_tree().change_scene_to_file(CENA_LOBBY)
+	Transicao.ir_para(CENA_LOBBY)
 
 
 func _on_units_changed(player_units: Array, enemy_units: Array) -> void:
@@ -403,8 +433,12 @@ func _montar_oponente() -> void:
 ## personagem; a do monstro (ou do adversário, no PvP) move o lado de cima.
 func _on_feitico_resolvido(feitico: SpellCast) -> void:
 	if feitico.caster == "player":
-		if _vis_jogador != null:
-			_vis_jogador.tocar(&"ataque")
+		# Reproduzindo o turno de um colega: quem ataca é o personagem dele.
+		var vis: CombatSprite = _vis_jogador
+		if Combat.replay_autor != "" and _vis_por_nome.has(Combat.replay_autor):
+			vis = _vis_por_nome[Combat.replay_autor]
+		if vis != null:
+			vis.tocar(&"ataque")
 	elif _vis_monstro != null:
 		_vis_monstro.tocar(&"ataque")
 
@@ -584,7 +618,7 @@ func _voltar_ao_quintal() -> void:
 func _ir_para_o_quintal() -> void:
 	# O jogador (entities/teste.gd) lê isso ao nascer na cena de destino.
 	Engine.set_meta("spawn_proxima_cena", {"cena": CENA_RETORNO, "posicao": SPAWN_RETORNO})
-	get_tree().change_scene_to_file(CENA_RETORNO)
+	Transicao.ir_para(CENA_RETORNO)
 
 
 ## Encerra o combate em andamento sem vencedor: conta como derrota e fica nas

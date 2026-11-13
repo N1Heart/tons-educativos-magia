@@ -6,9 +6,9 @@ const JUMP_VELOCITY = -400.0
 @onready var char: AnimatedSprite2D = $CollisionShape2D/AnimatedSprite2D
 @onready var zona_interacao: Area2D = $ZonaInteracao
 
-## NPC mais próximo (grupo "interagivel") que o jogador pode interagir agora,
-## ou null se nenhum estiver no alcance. Vários podem se sobrepor; fica
-## guardado o mais recente que entrou, é suficiente pro tamanho das salas.
+## Objetos interativos (grupo "interagivel") ao alcance agora. O E aciona o
+## mais próximo, e só ele mostra o balão "[E] ação".
+var _ao_alcance: Array[Node] = []
 var _interagivel_proximo: Node = null
 
 ## false enquanto uma caixa de diálogo está aberta (aula/prova): o jogador
@@ -46,13 +46,35 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _on_zona_interacao_area_entered(area: Area2D) -> void:
-	if area.is_in_group("interagivel"):
-		_interagivel_proximo = area.get_parent()
+	if area.is_in_group("interagivel") and not _ao_alcance.has(area.get_parent()):
+		_ao_alcance.append(area.get_parent())
+		_escolher_interagivel()
 
 
 func _on_zona_interacao_area_exited(area: Area2D) -> void:
-	if area.is_in_group("interagivel") and area.get_parent() == _interagivel_proximo:
-		_interagivel_proximo = null
+	if area.is_in_group("interagivel"):
+		_ao_alcance.erase(area.get_parent())
+		_escolher_interagivel()
+
+
+## Escolhe o objeto mais próximo e passa o balão para ele.
+func _escolher_interagivel() -> void:
+	var melhor: Node = null
+	var menor := INF
+	for o in _ao_alcance:
+		if not is_instance_valid(o):
+			continue
+		var d := global_position.distance_squared_to((o as Node2D).global_position)
+		if d < menor:
+			menor = d
+			melhor = o
+	if melhor == _interagivel_proximo:
+		return
+	if is_instance_valid(_interagivel_proximo) and _interagivel_proximo.has_method("definir_destaque"):
+		_interagivel_proximo.definir_destaque(false)
+	_interagivel_proximo = melhor
+	if melhor != null and melhor.has_method("definir_destaque"):
+		melhor.definir_destaque(true)
 
 
 func _physics_process(delta: float) -> void:
@@ -73,8 +95,10 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0, SPEED)
 
 	move_and_slide()
-	
-	
+
+	if _ao_alcance.size() > 1:
+		_escolher_interagivel()  # o mais próximo muda enquanto o jogador anda
+
 	if is_on_floor():
 		if direction < 0:
 			char.play("run")

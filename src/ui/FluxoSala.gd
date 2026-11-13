@@ -116,7 +116,7 @@ func _ir_para_a_sala_de_espera() -> void:
 		retorno["posicao"] = (_jogador as Node2D).global_position
 	Engine.set_meta("lobby_retorno", retorno)
 	Engine.set_meta("lobby_modo", "aluno")
-	get_tree().change_scene_to_file(CENA_LOBBY)
+	Transicao.ir_para(CENA_LOBBY)
 
 
 ## Guarda o ponto do mundo pra voltar depois e abre a arena de duelos.
@@ -126,7 +126,7 @@ func _ir_para_a_arena() -> void:
 	if is_instance_valid(_jogador) and _jogador is Node2D:
 		retorno["posicao"] = (_jogador as Node2D).global_position
 	Engine.set_meta("arena_retorno", retorno)
-	get_tree().change_scene_to_file(CENA_ARENA)
+	Transicao.ir_para(CENA_ARENA)
 
 
 # --------------------------------------------------------------------- menu

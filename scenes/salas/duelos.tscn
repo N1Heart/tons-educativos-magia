@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://bjn24elcsa47x" path="res://scripts/duelos.gd" id="1_duelos"]
 [ext_resource type="PackedScene" uid="uid://dndykgsoc0wxi" path="res://scenes/grid/grid.tscn" id="2_grid"]
 [ext_resource type="Script" uid="uid://dfms08m0nh7cy" path="res://scripts/unit_roster.gd" id="3_roster"]
-[ext_resource type="PackedScene" path="res://scenes/combat_ui/UnitIcon.tscn" id="4_icon"]
+[ext_resource type="PackedScene" uid="uid://dre86hijtx25" path="res://scenes/combat_ui/UnitIcon.tscn" id="4_icon"]
 
 [node name="Duelos" type="Node2D" unique_id=1113107024]
 script = ExtResource("1_duelos")
@@ -13,10 +13,10 @@ script = ExtResource("1_duelos")
 [node name="HUD" type="CanvasLayer" parent="." unique_id=746588364]
 
 [node name="EnemyPanel" type="VBoxContainer" parent="HUD" unique_id=2125681318]
-offset_left = 10.0
-offset_top = 6.0
-offset_right = 160.0
-offset_bottom = 150.0
+offset_left = 249.0
+offset_top = 98.0
+offset_right = 399.0
+offset_bottom = 242.0
 
 [node name="Portrait" type="Panel" parent="HUD/EnemyPanel" unique_id=186072506]
 custom_minimum_size = Vector2(90, 90)
@@ -57,25 +57,25 @@ script = ExtResource("3_roster")
 unit_icon_scene = ExtResource("4_icon")
 
 [node name="TicsLabel" type="Label" parent="HUD" unique_id=1488531821]
-offset_left = 190.0
-offset_top = 10.0
-offset_right = 410.0
-offset_bottom = 30.0
+offset_left = 8.0
+offset_top = 7.0
+offset_right = 228.0
+offset_bottom = 27.0
 theme_override_font_sizes/font_size = 12
 text = "Tics: 3/3"
 
 [node name="TurnLabel" type="Label" parent="HUD" unique_id=1878579367]
-offset_left = 190.0
-offset_top = 34.0
-offset_right = 410.0
-offset_bottom = 54.0
+offset_left = 8.0
+offset_top = 31.0
+offset_right = 228.0
+offset_bottom = 51.0
 theme_override_font_sizes/font_size = 10
 text = "Seu turno"
 
 [node name="LogLabel" type="Label" parent="HUD" unique_id=672151551]
-offset_left = 190.0
-offset_top = 62.0
-offset_right = 410.0
-offset_bottom = 170.0
+offset_left = 8.0
+offset_top = 59.0
+offset_right = 228.0
+offset_bottom = 167.0
 theme_override_font_sizes/font_size = 8
 autowrap_mode = 2

@@ -86,18 +86,18 @@ func _on_btn_entrar_turma_pressed():
 
 
 func _on_btn_entrar_mundo_pressed():
-	get_tree().change_scene_to_file("res://scenes/salas/academia.tscn")
+	Transicao.ir_para("res://scenes/salas/academia.tscn")
 
 
 func _on_btn_entrar_sala_pressed():
 	Engine.set_meta("lobby_modo", "aluno")
-	get_tree().change_scene_to_file("res://scenes/Login/TelaLobby.tscn")
+	Transicao.ir_para("res://scenes/Login/TelaLobby.tscn")
 
 
 func _on_btn_magias_pressed():
-	get_tree().change_scene_to_file("res://scenes/Login/TelaLoadout.tscn")
+	Transicao.ir_para("res://scenes/Login/TelaLoadout.tscn")
 
 
 func _on_btn_logout_pressed():
 	NakamaManager.fazer_logout()
-	get_tree().change_scene_to_file("res://scenes/Login/TelaAutenticacao.tscn")
+	Transicao.ir_para("res://scenes/Login/TelaAutenticacao.tscn")

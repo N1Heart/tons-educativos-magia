@@ -18,10 +18,29 @@ class _Linha:
 
 var _linhas: Array = []
 var _elementos_desbloqueados: Array[String] = []
+var _lista_formas: VBoxContainer
+var _aviso_vazio: Label
 
 
 func _ready() -> void:
-	%btnVoltar.pressed.connect(_on_btn_voltar_pressed)
+	var t := TemaUI.preparar(self, "Loadout de magias", "‹ Voltar", _on_btn_voltar_pressed)
+	var linha_tela := HBoxContainer.new()
+	linha_tela.add_theme_constant_override("separation", 10)
+	t["corpo"].add_child(linha_tela)
+	var esq := TemaUI.painel("PERSONAGEM")
+	linha_tela.add_child(esq)
+	TemaUI.conteudo(esq).add_child(TemaUI.retrato_personagem(110))
+	var dir := TemaUI.painel("DISPOSIÇÃO DAS PEÇAS")
+	dir.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	linha_tela.add_child(dir)
+	var v := TemaUI.conteudo(dir)
+	v.add_child(TemaUI.rotulo("Escolha o elemento de cada forma. Só aparecem o que você já desbloqueou.", "Discreto"))
+	_lista_formas = VBoxContainer.new()
+	_lista_formas.add_theme_constant_override("separation", 8)
+	v.add_child(_lista_formas)
+	_aviso_vazio = TemaUI.rotulo("", "Aviso")
+	_aviso_vazio.visible = false
+	v.add_child(_aviso_vazio)
 
 	var uid := LocalDB.get_user_id_ativo()
 
@@ -33,11 +52,11 @@ func _ready() -> void:
 	var formas_desbloqueadas := LocalDB.listar_formas_desbloqueadas(uid)
 
 	if formas_desbloqueadas.is_empty() or _elementos_desbloqueados.is_empty():
-		%avisoVazio.text = "Você ainda não desbloqueou nenhuma forma ou elemento — vá pra sala de aula!"
-		%avisoVazio.visible = true
+		_aviso_vazio.text = "Você ainda não desbloqueou nenhuma forma ou elemento — vá pra sala de aula!"
+		_aviso_vazio.visible = true
 		return
 
-	%avisoVazio.visible = false
+	_aviso_vazio.visible = false
 	_montar_linhas(formas_desbloqueadas)
 	_atualizar_todos_os_icones()
 
@@ -64,7 +83,7 @@ func _montar_linhas(formas_desbloqueadas: Array) -> void:
 			opcoes.add_item(elemento)
 		linha.add_child(opcoes)
 
-		%listaFormas.add_child(linha)
+		_lista_formas.add_child(linha)
 
 		var registro := _Linha.new()
 		registro.icone = icone
@@ -120,4 +139,4 @@ func _on_btn_voltar_pressed() -> void:
 		destino = pedido.get("cena", destino)
 		if pedido.has("posicao"):
 			Engine.set_meta("spawn_proxima_cena", {"cena": destino, "posicao": pedido["posicao"]})
-	get_tree().change_scene_to_file(destino)
+	Transicao.ir_para(destino)

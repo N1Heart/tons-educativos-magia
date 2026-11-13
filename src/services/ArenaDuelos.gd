@@ -280,7 +280,7 @@ func _iniciar_duelo(outro_id: String, outro_nome: String, rid: int, anfitriao: b
 		return
 	if MenuPausa.esta_aberto():
 		MenuPausa.fechar()
-	get_tree().change_scene_to_file(DueloRede.CENA_DUELO)
+	Transicao.ir_para(DueloRede.CENA_DUELO, false)
 
 
 ## O duelo acabou e o jogador voltou para a lista.

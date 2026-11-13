@@ -51,6 +51,8 @@ sources/5 = SubResource("TileSetAtlasSource_3jwn4")
 sources/1 = SubResource("TileSetAtlasSource_k3cnd")
 sources/0 = SubResource("TileSetAtlasSource_vu7bv")
 
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_e2ube"]
+
 [node name="SalaDeaula" type="Node2D" unique_id=1678608197]
 
 [node name="sala" type="Node2D" parent="." unique_id=1702714302]
@@ -79,3 +81,10 @@ position = Vector2(49, 276)
 [node name="PortaSaguao" parent="." unique_id=893083499 instance=ExtResource("9_porta")]
 position = Vector2(1, 303)
 cena_destino = "res://scenes/salas/Saguao.tscn"
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=671339966]
+position = Vector2(-18, 346)
+rotation = 1.577537
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=308376154]
+shape = SubResource("WorldBoundaryShape2D_e2ube")

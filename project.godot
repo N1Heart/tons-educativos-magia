@@ -32,6 +32,7 @@ MenuPausa="*res://src/ui/MenuPausa.gd"
 LobbyManager="*res://src/services/LobbyManager.gd"
 DueloRede="*res://src/services/DueloRede.gd"
 ArenaDuelos="*res://src/services/ArenaDuelos.gd"
+Transicao="*res://src/ui/Transicao.gd"
 
 [display]
 

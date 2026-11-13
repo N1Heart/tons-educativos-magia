@@ -9,37 +9,49 @@ extends Control
 
 var _alunos_atuais: Array = []  # cache da última lista carregada, pra achar o id pelo índice selecionado
 
+var _lista_alunos: ItemList
+var _btn_remover: Button
+var _btn_apagar: Button
+var _confirmando_apagar := false
+
 
 func _ready() -> void:
-	%labelNomeTurma.text = NakamaManager.turma_selecionada_nome
+	var t := TemaUI.preparar(self, NakamaManager.turma_selecionada_nome, "‹ Turmas", _on_btn_voltar_pressed)
+	var colunas := TemaUI.duas_colunas(t["corpo"], "ALUNOS DA TURMA", "AÇÕES", 220)
 
-	%btnVoltar.pressed.connect(_on_btn_voltar_pressed)
-	%btnApagarTurma.pressed.connect(_on_btn_apagar_turma_pressed)
-	%btnRemoverAluno.pressed.connect(_on_btn_remover_aluno_pressed)
-	%listaAlunos.item_activated.connect(_on_aluno_ativado)
+	var esq := TemaUI.conteudo(colunas[0])
+	_lista_alunos = TemaUI.lista()
+	_lista_alunos.item_activated.connect(_on_aluno_ativado)
+	esq.add_child(_lista_alunos)
+	esq.add_child(TemaUI.rotulo("Duplo clique num aluno abre as estatísticas dele.", "Discreto"))
 
-	# Sala em tempo real (PvE/PvP): botão criado aqui pra não mexer na cena.
-	var btn_sala := Button.new()
-	btn_sala.text = "Abrir sala (PvE / PvP)"
-	btn_sala.pressed.connect(_on_btn_abrir_sala_pressed)
-	%btnRemoverAluno.get_parent().add_child(btn_sala)
-	%btnRemoverAluno.get_parent().move_child(btn_sala, 1)
+	var dir := TemaUI.conteudo(colunas[1])
+	dir.add_child(TemaUI.botao("Abrir sala (PvE / PvP)", _on_btn_abrir_sala_pressed, "BotaoPrimario"))
+	dir.add_child(TemaUI.rotulo("Alunos entram com um código e jogam em grupo ou em duelo.", "Discreto"))
+	var espaco := Control.new()
+	espaco.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	dir.add_child(espaco)
+	dir.add_child(TemaUI.rotulo("GESTÃO", "Subtitulo"))
+	_btn_remover = TemaUI.botao("Remover aluno selecionado", _on_btn_remover_aluno_pressed)
+	dir.add_child(_btn_remover)
+	_btn_apagar = TemaUI.botao("Apagar turma", _on_btn_apagar_turma_pressed, "BotaoPerigo")
+	dir.add_child(_btn_apagar)
 
 	_atualizar_lista_alunos()
 
 
 func _on_btn_voltar_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/Login/TelaProfessor.tscn")
+	Transicao.ir_para("res://scenes/Login/TelaProfessor.tscn")
 
 
 func _on_btn_abrir_sala_pressed() -> void:
 	Engine.set_meta("lobby_modo", "professor")
-	get_tree().change_scene_to_file("res://scenes/Login/TelaLobby.tscn")
+	Transicao.ir_para("res://scenes/Login/TelaLobby.tscn")
 
 
 func _atualizar_lista_alunos() -> void:
-	%listaAlunos.clear()
-	%listaAlunos.add_item("Carregando alunos...")
+	_lista_alunos.clear()
+	_lista_alunos.add_item("Carregando alunos...")
 
 	var id_turma := NakamaManager.turma_selecionada_id
 	var membros: Array = await NakamaManager.listar_alunos_da_turma(id_turma)
@@ -48,12 +60,13 @@ func _atualizar_lista_alunos() -> void:
 	# membro (superadmin) do grupo, então ele é filtrado da lista.
 	_alunos_atuais = membros.filter(func(m): return not m["is_professor"])
 
-	%listaAlunos.clear()
+	_lista_alunos.clear()
 	if _alunos_atuais.is_empty():
-		%listaAlunos.add_item("Nenhum aluno nesta turma ainda.")
+		_lista_alunos.add_item("Nenhum aluno nesta turma ainda.")
+		_lista_alunos.set_item_disabled(0, true)
 	else:
 		for aluno in _alunos_atuais:
-			%listaAlunos.add_item(aluno["username"])
+			_lista_alunos.add_item(aluno["username"])
 		_marcar_alertas()
 
 
@@ -65,10 +78,10 @@ func _marcar_alertas() -> void:
 	for i in alunos.size():
 		var dados: Dictionary = await NakamaManager.obter_estatisticas_aluno(alunos[i]["id"])
 		# A tela pode ter sido fechada ou a lista recarregada enquanto esperava
-		if not is_instance_valid(%listaAlunos) or alunos != _alunos_atuais or i >= %listaAlunos.item_count:
+		if not is_instance_valid(_lista_alunos) or alunos != _alunos_atuais or i >= _lista_alunos.item_count:
 			return
 		if dados.get("alerta_dificuldade", false):
-			%listaAlunos.set_item_text(i, "⚠ " + alunos[i]["username"])
+			_lista_alunos.set_item_text(i, "⚠ " + alunos[i]["username"])
 
 
 func _on_aluno_ativado(index: int) -> void:
@@ -77,16 +90,16 @@ func _on_aluno_ativado(index: int) -> void:
 	var aluno: Dictionary = _alunos_atuais[index]
 	NakamaManager.aluno_selecionado_id = aluno["id"]
 	NakamaManager.aluno_selecionado_nome = aluno["username"]
-	get_tree().change_scene_to_file("res://scenes/Login/TelaEstatisticasAluno.tscn")
+	Transicao.ir_para("res://scenes/Login/TelaEstatisticasAluno.tscn")
 
 
 func _on_btn_remover_aluno_pressed() -> void:
-	var indices: PackedInt32Array = %listaAlunos.get_selected_items()
+	var indices: PackedInt32Array = _lista_alunos.get_selected_items()
 	if indices.is_empty():
 		return
 
 	var aluno: Dictionary = _alunos_atuais[indices[0]]
-	%btnRemoverAluno.disabled = true
+	_btn_remover.disabled = true
 
 	var sucesso: bool = await NakamaManager.remover_aluno_da_turma(NakamaManager.turma_selecionada_id, aluno["id"])
 	if sucesso:
@@ -94,15 +107,27 @@ func _on_btn_remover_aluno_pressed() -> void:
 	else:
 		print("Falha ao remover aluno da turma.")
 
-	%btnRemoverAluno.disabled = false
+	_btn_remover.disabled = false
 
 
 func _on_btn_apagar_turma_pressed() -> void:
-	%btnApagarTurma.disabled = true
+	# Duas etapas: o primeiro clique pede confirmação (volta ao normal em 4 s).
+	if not _confirmando_apagar:
+		_confirmando_apagar = true
+		_btn_apagar.text = "Clique de novo para apagar"
+		await get_tree().create_timer(4.0).timeout
+		if is_inside_tree() and _confirmando_apagar:
+			_confirmando_apagar = false
+			_btn_apagar.text = "Apagar turma"
+		return
+
+	_confirmando_apagar = false
+	_btn_apagar.disabled = true
 
 	var sucesso: bool = await NakamaManager.apagar_turma(NakamaManager.turma_selecionada_id)
 	if sucesso:
-		get_tree().change_scene_to_file("res://scenes/Login/TelaProfessor.tscn")
+		Transicao.ir_para("res://scenes/Login/TelaProfessor.tscn")
 	else:
 		print("Falha ao apagar turma.")
-		%btnApagarTurma.disabled = false
+		_btn_apagar.text = "Apagar turma"
+		_btn_apagar.disabled = false
