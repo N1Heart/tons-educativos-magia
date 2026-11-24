@@ -35,9 +35,19 @@ func _ready() -> void:
 	linha_tela.add_child(dir)
 	var v := TemaUI.conteudo(dir)
 	v.add_child(TemaUI.rotulo("Escolha o elemento de cada forma. Só aparecem o que você já desbloqueou.", "Discreto"))
+	# A lista cresce com as formas desbloqueadas; sem rolagem, as últimas
+	# linhas saíam da tela. O ScrollContainer ocupa o espaço que sobra no
+	# painel e mostra a barra vertical só quando precisa.
+	var rolagem := ScrollContainer.new()
+	rolagem.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	rolagem.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rolagem.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	rolagem.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	v.add_child(rolagem)
 	_lista_formas = VBoxContainer.new()
 	_lista_formas.add_theme_constant_override("separation", 8)
-	v.add_child(_lista_formas)
+	_lista_formas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rolagem.add_child(_lista_formas)
 	_aviso_vazio = TemaUI.rotulo("", "Aviso")
 	_aviso_vazio.visible = false
 	v.add_child(_aviso_vazio)

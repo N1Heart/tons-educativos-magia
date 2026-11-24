@@ -79,11 +79,11 @@ position = Vector2(432, 286)
 position = Vector2(49, 276)
 
 [node name="PortaSaguao" parent="." unique_id=893083499 instance=ExtResource("9_porta")]
-position = Vector2(1, 303)
+position = Vector2(-3, 305)
 cena_destino = "res://scenes/salas/Saguao.tscn"
 
 [node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=671339966]
-position = Vector2(-18, 346)
+position = Vector2(-18.000002, 346)
 rotation = 1.577537
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=308376154]

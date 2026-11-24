@@ -9,6 +9,10 @@ extends Area2D
 ## Nome mostrado no balão "[E] Entrar". Vazio = deduzido da cena de destino.
 @export var rotulo: String = ""
 @export var acao: String = "Entrar"
+## false = esconde o desenho da porta (retângulo e sprite) e deixa só a área de
+## interação com o balão. Usado onde o acesso não é uma porta de verdade, como
+## o "Se aventurar no quintal" do Quintal dos Fundos.
+@export var mostrar_porta: bool = true
 
 const Indicador := preload("res://entities/IndicadorInteracao.gd")
 const NOMES_DESTINO := {
@@ -17,7 +21,7 @@ const NOMES_DESTINO := {
 	"saladearte": "Sala de Cores",
 	"saladeduelos": "Sala de Duelos",
 	"fundosdocastelo": "Quintal dos Fundos",
-	"duelos": "Arena de Duelos",
+	"duelos": "Se aventurar no quintal",
 	"academia": "Academia",
 }
 var _indicador: Node = null
@@ -36,6 +40,11 @@ func _ready() -> void:
 	var provisorio := get_node_or_null("Label")
 	if provisorio != null:
 		provisorio.visible = false
+	if not mostrar_porta:
+		for nome_no in ["Visual", "AnimatedSprite2D"]:
+			var no := get_node_or_null(nome_no)
+			if no != null:
+				no.visible = false
 	_indicador = Indicador.new()
 	add_child(_indicador)
 	_indicador.configurar(_nome_do_destino(), acao, 44.0)

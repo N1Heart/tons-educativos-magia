@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://dndykgsoc0wxi"]
 
-[ext_resource type="Texture2D" uid="uid://bfthxdu47k8m7" path="res://assets/UI_Flat_FrameMarker03a.png" id="1_nhv6a"]
-[ext_resource type="Texture2D" uid="uid://b068apfewb7f8" path="res://assets/UI_Flat_Banner03a.png" id="2_yb5af"]
-[ext_resource type="Texture2D" uid="uid://53u18cqni1he" path="res://assets/UI_Flat_Banner01a.png" id="3_eq4v2"]
-[ext_resource type="Script" uid="uid://ds15lpukgsyi1" path="res://scripts/grid.gd" id="4_yb5af"]
+[ext_resource type="Texture2D" uid="uid://bsmqyw677cu1o" path="res://assets/UI_Flat_FrameMarker03a.png" id="1_nhv6a"]
+[ext_resource type="Texture2D" uid="uid://fbtvmpsl3xf8" path="res://assets/UI_Flat_Banner03a.png" id="2_yb5af"]
+[ext_resource type="Texture2D" uid="uid://m1pfb53b2mto" path="res://assets/UI_Flat_Banner01a.png" id="3_eq4v2"]
+[ext_resource type="Script" uid="uid://cnkaepi533yhr" path="res://scripts/grid.gd" id="4_yb5af"]
 
 [node name="combate" type="Node2D" unique_id=1522165575]
 
@@ -15,6 +15,7 @@ offset_bottom = 296.0
 texture = ExtResource("1_nhv6a")
 
 [node name="uiTop" type="TextureRect" parent="." unique_id=1647437112]
+visible = false
 offset_left = 462.0
 offset_top = 7.0
 offset_right = 582.0
@@ -22,6 +23,7 @@ offset_bottom = 47.0
 texture = ExtResource("2_yb5af")
 
 [node name="uiBotton" type="TextureRect" parent="." unique_id=1609486723]
+visible = false
 offset_left = 438.0
 offset_top = 307.0
 offset_right = 604.0

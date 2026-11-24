@@ -31,24 +31,24 @@ position = Vector2(0.04718394, 6.999841)
 shape = SubResource("WorldBoundaryShape2D_msobo")
 
 [node name="PortaSalaDeFormas" parent="." unique_id=449030471 instance=ExtResource("5_porta")]
-position = Vector2(298, 306)
+position = Vector2(298, 309)
 cena_destino = "res://scenes/salas/salaDeaula.tscn"
 
 [node name="PortaSalaDeCores" parent="." unique_id=1262656579 instance=ExtResource("5_porta")]
-position = Vector2(364, 305)
+position = Vector2(365, 309)
 cena_destino = "res://scenes/salas/salaDeArte.tscn"
 
 [node name="PortaSalaDeDuelos" parent="." unique_id=888940118 instance=ExtResource("5_porta")]
-position = Vector2(440, 306)
+position = Vector2(440, 309)
 cena_destino = "res://scenes/salas/salaDeDuelos.tscn"
 
 [node name="PortaQuintalDosFundos" parent="." unique_id=364478204 instance=ExtResource("5_porta")]
-position = Vector2(500, 303)
+position = Vector2(511, 309)
 cena_destino = "res://scenes/salas/fundosDoCastelo.tscn"
 
 [node name="Camera2d" parent="." unique_id=1480513400 instance=ExtResource("5_msobo")]
 position = Vector2(216, 272)
 
 [node name="Porta" parent="." unique_id=782612751 instance=ExtResource("5_porta")]
-position = Vector2(121, 305)
+position = Vector2(117, 310)
 cena_destino = "uid://bvavsyyxyb413"

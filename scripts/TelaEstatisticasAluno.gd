@@ -83,8 +83,9 @@ func _carregar_estatisticas() -> void:
 		_status.text = "Erro: %s" % dados["erro"]
 		return
 
-	if dados.has("nome") and dados["nome"] != "":
-		_titulo.text = dados["nome"]
+	# Mesma regra da lista da turma (conta: nome da conta; convidado: nome do
+	# personagem); se a tela veio com o nome já resolvido, nada muda.
+	_titulo.text = NakamaManager.nome_de_exibicao(_titulo.text, dados)
 
 	var tempo_total_seg: float = dados.get("tempo_jogo_total_segundos", 0.0)
 	_definir("tempo", "%dm %ds" % [int(tempo_total_seg) / 60, int(tempo_total_seg) % 60])
