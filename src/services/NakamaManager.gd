@@ -320,6 +320,19 @@ func listar_alunos_da_turma(id_turma: String) -> Array:
 	return alunos
 
 
+## Nome que o professor vê para um aluno. Conta cadastrada: o nome da conta
+## (o username que o próprio aluno escolheu no cadastro). Convidado: o Nakama
+## gera um username aleatório (ex.: "UdWkJdTiwb"), então vale o nome do
+## personagem, que vem do perfil sincronizado e chega nas estatísticas
+## ("nome" e "eh_convidado", ver modules/estatisticas.lua). Sem dados do
+## servidor, cai no username.
+static func nome_de_exibicao(username: String, estatisticas: Dictionary) -> String:
+	var personagem := str(estatisticas.get("nome", "")).strip_edges()
+	if estatisticas.get("eh_convidado", false) and personagem != "":
+		return personagem
+	return username
+
+
 func remover_aluno_da_turma(id_turma: String, id_aluno: String) -> bool:
 	var ids := PackedStringArray([id_aluno])
 	var result = await client.kick_group_users_async(session, id_turma, ids)

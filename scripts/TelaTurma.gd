@@ -65,23 +65,30 @@ func _atualizar_lista_alunos() -> void:
 		_lista_alunos.add_item("Nenhum aluno nesta turma ainda.")
 		_lista_alunos.set_item_disabled(0, true)
 	else:
+		# O username que o Nakama dá a um convidado é um código aleatório, e o
+		# nome de verdade (do personagem) só vem das estatísticas. Até chegar,
+		# mostra "…" em vez do código.
 		for aluno in _alunos_atuais:
-			_lista_alunos.add_item(aluno["username"])
-		_marcar_alertas()
+			aluno["nome_exibicao"] = aluno["username"]
+			_lista_alunos.add_item("…")
+		_resolver_nomes_e_alertas()
 
 
-## Depois de mostrar a lista, consulta as estatísticas de cada aluno e marca
-## com ⚠ quem está com alerta de dificuldade de aprendizado (RF4). Roda em
-## segundo plano pra não atrasar a tela.
-func _marcar_alertas() -> void:
+## Depois de mostrar a lista, consulta as estatísticas de cada aluno, troca o
+## "…" pelo nome de exibição (conta: nome da conta; convidado: nome do
+## personagem) e marca com ⚠ quem está com alerta de dificuldade de
+## aprendizado (RF4). Roda em segundo plano pra não atrasar a tela.
+func _resolver_nomes_e_alertas() -> void:
 	var alunos := _alunos_atuais
 	for i in alunos.size():
 		var dados: Dictionary = await NakamaManager.obter_estatisticas_aluno(alunos[i]["id"])
 		# A tela pode ter sido fechada ou a lista recarregada enquanto esperava
 		if not is_instance_valid(_lista_alunos) or alunos != _alunos_atuais or i >= _lista_alunos.item_count:
 			return
-		if dados.get("alerta_dificuldade", false):
-			_lista_alunos.set_item_text(i, "⚠ " + alunos[i]["username"])
+		var nome := NakamaManager.nome_de_exibicao(alunos[i]["username"], dados)
+		alunos[i]["nome_exibicao"] = nome
+		var marca := "⚠ " if dados.get("alerta_dificuldade", false) else ""
+		_lista_alunos.set_item_text(i, marca + nome)
 
 
 func _on_aluno_ativado(index: int) -> void:
@@ -89,7 +96,7 @@ func _on_aluno_ativado(index: int) -> void:
 		return
 	var aluno: Dictionary = _alunos_atuais[index]
 	NakamaManager.aluno_selecionado_id = aluno["id"]
-	NakamaManager.aluno_selecionado_nome = aluno["username"]
+	NakamaManager.aluno_selecionado_nome = aluno.get("nome_exibicao", aluno["username"])
 	Transicao.ir_para("res://scenes/Login/TelaEstatisticasAluno.tscn")
 
 

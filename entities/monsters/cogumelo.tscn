@@ -7,4 +7,3 @@ nome_exibicao = "cogumelo"
 
 [node name="AnimatedSprite2D" parent="." index="1" unique_id=312418595]
 frame_progress = 0.14958975
-flip_h = true

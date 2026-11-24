@@ -405,6 +405,8 @@ func _montar_jogador() -> void:
 	var equipe := _em_rede and DueloRede.modo_combate == "coop" and DueloRede.membros.size() > 1
 	if equipe:
 		var n := DueloRede.membros.size()
+		# O retrato é quadrado (90x90); com equipe ele alarga pra caber todos lado a lado.
+		retrato.custom_minimum_size.x = maxf(90.0, 50.0 * n)
 		for i in n:
 			var eu := i == DueloRede.meu_indice
 			var cor: Color = Color.WHITE if eu else CORES_COLEGAS[i % CORES_COLEGAS.size()]

@@ -86,10 +86,18 @@ local function obter_estatisticas_aluno(context, payload)
 	end
 
 	-- Nome do aluno (perfil é sincronizado como um objeto só, key = user_id)
+	-- "eh_convidado" deixa o cliente escolher o que mostrar ao professor: conta
+	-- cadastrada = nome da conta; convidado = nome do personagem (o username que
+	-- o Nakama gera para convidado é um código aleatório).
 	local nome = aluno_id
+	local eh_convidado = false
 	local perfil_objs = listar_colecao(aluno_id, "progresso_perfil")
-	if #perfil_objs > 0 and perfil_objs[1].value.nome ~= nil and perfil_objs[1].value.nome ~= "" then
-		nome = perfil_objs[1].value.nome
+	if #perfil_objs > 0 then
+		local perfil = perfil_objs[1].value
+		if perfil.nome ~= nil and perfil.nome ~= "" then
+			nome = perfil.nome
+		end
+		eh_convidado = (perfil.isConvidado == true or perfil.isConvidado == 1)
 	end
 
 	-- Partidas de Match-3: tempo de jogo, taxa de vitórias, nível máximo e
@@ -138,9 +146,25 @@ local function obter_estatisticas_aluno(context, payload)
 	end
 	local alerta_dificuldade = soma_jogadas > 0 and latencia_recente > LIMIAR_LATENCIA_SEGUNDOS
 
-	-- Desafios/quizzes respondidos: taxa de acertos
+	-- Desafios/quizzes respondidos: taxa de acertos.
+	-- Cada PERGUNTA respondida conta como um desafio. Há duas fontes:
+	--   * progresso_quizzes: as provas do jogo atual (Módulo 2). Uma linha por
+	--     TENTATIVA, com 'total' (perguntas da prova) e 'acertos'.
+	--   * progresso_desafios: perguntas avulsas do fluxo antigo (uma linha por
+	--     pergunta, com 'correta').
+	-- Antes só a segunda era lida, e como as provas gravam na primeira o painel
+	-- mostrava 0 desafios e 0% de acertos para todo aluno.
 	local total_desafios = 0
 	local acertos = 0
+	for _, obj in ipairs(listar_colecao(aluno_id, "progresso_quizzes")) do
+		local perguntas = tonumber(obj.value.total) or 0
+		local certas = tonumber(obj.value.acertos) or 0
+		if certas > perguntas then
+			certas = perguntas
+		end
+		total_desafios = total_desafios + perguntas
+		acertos = acertos + certas
+	end
 	for _, obj in ipairs(listar_colecao(aluno_id, "progresso_desafios")) do
 		total_desafios = total_desafios + 1
 		if obj.value.correta == 1 or obj.value.correta == true then
@@ -160,6 +184,7 @@ local function obter_estatisticas_aluno(context, payload)
 
 	return nk.json_encode({
 		nome = nome,
+		eh_convidado = eh_convidado,
 		tempo_jogo_total_segundos = tempo_total,
 		total_partidas = total_partidas,
 		nivel_maximo = nivel_maximo,

@@ -50,7 +50,7 @@ position = Vector2(520, 314)
 position = Vector2(7, 316)
 
 [node name="PortaSaguao" parent="." unique_id=191787170 instance=ExtResource("6_porta")]
-position = Vector2(0, 302)
+position = Vector2(-3, 307)
 cena_destino = "res://scenes/salas/Saguao.tscn"
 
 [node name="Camera2d" parent="." unique_id=1480513400 instance=ExtResource("8_r5tb0")]
@@ -80,7 +80,7 @@ position = Vector2(-308, 2)
 nome_exibicao = "Mestre das Formas"
 
 [node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=404090524]
-position = Vector2(-18, 346)
+position = Vector2(-17, 345)
 rotation = 1.577537
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1405648418]

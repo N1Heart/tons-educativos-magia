@@ -58,7 +58,7 @@ position = Vector2(6, 318)
 position = Vector2(542, 305)
 
 [node name="PortaSaguao" parent="." unique_id=5956662 instance=ExtResource("8_porta")]
-position = Vector2(1, 305)
+position = Vector2(-4, 307)
 cena_destino = "res://scenes/salas/Saguao.tscn"
 
 [node name="Camera2d" parent="." unique_id=1480513400 instance=ExtResource("9_k3cnd")]

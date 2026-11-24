@@ -14,6 +14,16 @@ class_name UnitIconView
 const ESCUDO_MAX_BARRA := 32
 
 
+## Reduz o ícone para caber numa fileira limitada (ver UnitRoster.largura_maxima).
+## O padrão da cena é 40 px de largura (ícone e barras de 36).
+func definir_largura(largura: float) -> void:
+	custom_minimum_size.x = largura
+	var interno := maxf(largura - 4.0, 16.0)
+	icon_rect.custom_minimum_size = Vector2(interno, interno)
+	hp_bar.custom_minimum_size.x = interno
+	shield_bar.custom_minimum_size.x = interno
+
+
 func set_unit(unit: CombatUnit) -> void:
 	if unit.tile_type:
 		if unit.tile_type.shape_texture:
